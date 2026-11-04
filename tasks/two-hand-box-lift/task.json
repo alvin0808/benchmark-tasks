@@ -1,0 +1,19 @@
+{
+  "title": "Squeeze a handle-less box between both grippers and lift it onto a riser",
+  "category": "Impact on jobs",
+  "keywords": [
+    "bimanual",
+    "two-handed lift",
+    "compression grasp",
+    "box handling",
+    "material handling"
+  ],
+  "instruction": "Lift the cardboard box onto the wooden riser and leave it standing upright in the middle of the riser. The box is too wide for one gripper to grasp, so hold it between both grippers.",
+  "context": "Moving handle-less boxes and totes onto shelves, carts and pallets is everyday material-handling work. When an item is wider than one hand, people squeeze it between both hands, which only works if the two hands press and move together; otherwise the box slips, twists or drops.",
+  "setup": "A table in front of two arms (bases 61 cm apart), seen by one overhead camera and a camera on each wrist. Distances are measured forward from the line between the arm bases and sideways from the midpoint between them. (1) A closed, taped white corrugated cardboard box with no handles or cut-outs, 20 cm wide (side to side) x 14 cm deep (front to back) x 10 cm tall, 400 g (filled with crumpled paper, with a 300 g weight taped to the centre of its floor), lies flat with its centre 16 cm forward on the centre line and its 20 cm sides parallel to the line between the bases. (2) A dark-stained solid wooden riser block, 30 cm wide x 16 cm deep x 5 cm tall, fixed to the table with its centre 33 cm forward on the centre line, so its near face is 2 cm beyond the box's far face. The layout is the same in every trial, as in the screenshot.",
+  "scoring": "1.0: the box stands upright on the riser (its top tilted less than 10 degrees and its underside within 1 cm of the riser's top), with its centre within 3 cm of the riser's centre both front to back and side to side, and stays still for 3 s. 0.5: the box ends upright on the riser in the same way, with its centre over the riser's top face, but more than 3 cm from the riser's centre. 0.0: any other outcome, including the box still on the table, lying on another face or tilted 10 degrees or more, fallen off the riser, or held in the air.",
+  "run_limit": "2,400 steps (2 minutes at 20 Hz)",
+  "reset_notes": "Nothing is consumed: put the box back flat on its start mark. Replace the box if squeezing has dented a side by more than 5 mm.",
+  "fidelity": "Rigid-body simulation (Isaac Sim 6.1 with PhysX, 20 Hz control) of a calibrated two-arm table. Simplified: the box is a rigid block of uniform density (no flex, dents or shifting contents), the riser is fixed in place, the box and riser use a rubber-like friction (static 1.2, dynamic 1.0) where real corrugated board is closer to 0.5, the grippers' squeeze comes only from the arms' joint stiffness, and the cameras render at 320 x 176.",
+  "scores": "Dream-1 run: 0.0; demo: 1.0"
+}
