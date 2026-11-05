@@ -1,0 +1,20 @@
+{
+  "title": "Turn a long parcel a quarter turn in place between two neighbouring boxes",
+  "category": "Impact on jobs",
+  "keywords": [
+    "bimanual",
+    "in-place rotation",
+    "coordinated push",
+    "parcel handling",
+    "logistics"
+  ],
+  "instruction": "Turn the long brown parcel a quarter turn in place, so that its long sides run front to back, without bumping the white boxes on either side of it.",
+  "context": "On induction belts and packing benches a long carton often has to be turned to fit a chute or scanner while other parcels sit close beside it. Pushed at one end, a long box swings about its other end and slides into its neighbours; turning it in place takes both hands pushing its two ends in opposite directions at once.",
+  "setup": "A table in front of two arms (bases 61 cm apart), seen by one overhead camera and a camera on each wrist. Distances are measured forward from the line between the arm bases and sideways from the midpoint between them. (1) A dark grey belt strip (decor, fixed, 1 mm thick), 30 cm deep x 90 cm wide, centred 30 cm forward on the centre line. (2) The long parcel: a closed brown corrugated cardboard box, 42 cm long x 14 cm deep x 10 cm tall, 800 g, lying flat with its centre 30 cm forward on the centre line and its long sides parallel to the line between the bases. Turned about its centre, its corners sweep a circle 22.1 cm in radius. (3) Two closed white cardboard boxes, 20 cm wide x 14 cm deep x 10 cm tall, 1.2 kg each, loose, lying flat 30 cm forward, one on each side of the long parcel with their centres 33.3 cm left and right of the centre line: their inner faces are 2.3 cm beyond the long parcel's ends and 1.2 cm outside the circle its corners sweep. The layout is the same in every trial, as in the screenshot.",
+  "scoring": "Measured from the overhead video and with a tape measure. 1.0: the long parcel lies flat (tilted under 5 degrees) with its long sides within 3 degrees of front to back and its centre within 2 cm of where it started, everything still for 2 s; and at no time during the trial did its centre move more than 4 cm from where it started, or either white box move more than 1 cm. 0.5: those two 'at no time' conditions hold and the parcel ends flat, within 10 degrees of front to back, with its centre within 3 cm of the start, but not within the full-score limits. 0.0: anything else, including any moment when the parcel's centre was more than 4 cm from its start or a white box had moved more than 1 cm, or the parcel ending tipped over or not turned.",
+  "run_limit": "2,400 steps (2 minutes at 20 Hz)",
+  "reset_notes": "Nothing is consumed: put the three cartons back on their start positions (tape outlines on the table make this quick).",
+  "fidelity": "Rigid-body PhysX (Isaac Sim 6.1, 20 Hz control) of a calibrated two-arm table. Simplified: the cartons are rigid, uniformly dense blocks (no flex or shifting contents) and the belt is a fixed strip on the table, not moving. Loose objects get rubber-like friction (1.2 static, 1.0 dynamic); cardboard on a real table is nearer 0.4-0.5, so the turn needs less push. Dream-1 sees the 320 x 176 frames it expects; the demo video is rendered at 1280 x 720.",
+  "scores": "Dream-1 run: 0.0; demo: 1.0",
+  "media": "M-GB4XS2"
+}
