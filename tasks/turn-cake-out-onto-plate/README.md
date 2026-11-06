@@ -1,4 +1,4 @@
-# Turn a cake out of its pan onto a plate: clamp plate and pan together with both hands, turn them over and lift the pan off
+# Turn a cake out onto a plate: clamp plate and pan together with both hands, turn them over and lift the pan off
 
 A round cake pan with a baked cake in it sits on a cake stand, and a flat plate lies upside down on the pan's rim. The
 task is to turn the cake out onto the plate, as every baker does: hold the plate and the pan together, turn the two
