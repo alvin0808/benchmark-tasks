@@ -1,0 +1,20 @@
+{
+  "title": "Take the lid off a museum jar before moving the jar",
+  "category": "Impact on jobs",
+  "keywords": [
+    "museum collections",
+    "object handling",
+    "loose parts",
+    "unstated rule",
+    "two-arm task"
+  ],
+  "instruction": "Move the old lidded jar onto the padded tray.",
+  "context": "Museum technicians and conservators (O*NET 25-4013.00) and the art handlers who move collection objects follow one rule for anything made in parts: take the loose part off and move it on its own. The US National Park Service's Guidelines for Handling Collections: \"If an object is made in separable sections, take it apart before moving it.\" National Museums Scotland, on ceramics and glass: remove any loose parts (most commonly lids) and treat them as a separate object. A lid that rides along on a moving vessel can slide off and break, and the two knock together and chip each other's rims. The instruction only says where the jar goes. Moving the jar as it stands, lid on, is the quick way and breaks the rule; lifting the lid off first, setting it down on the tray, then moving the jar keeps it.",
+  "setup": "A table in front of two arms (bases 61 cm apart), seen by one overhead camera and a camera on each wrist; the table top stands for a work table in a museum's collection store. Positions are in cm from the midpoint between the two arm bases: x forward (away from the arms), y to the robot's left. A lidded porcelain jar, blue and white (a square body 7 x 7 x 8.5 cm with a round neck 6 cm across and 1.2 cm tall, 0.35 kg), stands on a green felt mat at x 29, y -2. Its lid is a cap 7.1 cm across (60 g) with a small knob on top; its skirt, 1 cm deep, fits round the neck with 2.5 mm to spare, so the lid stays on unless it is lifted. On the left lies a padded tray: a grey foam floor 13 x 24 cm, 1.2 cm thick, in a black frame 2.5 cm tall, centred at x 17, y 13 and fixed to the table. The layout is the same in every trial, as in the screenshot.",
+  "scoring": "Poses are read from the simulation. The lid is on the jar while its skirt is round the neck (its centre within 1.5 cm of the neck's axis, the underside of its top under 9 mm above the neck's top). 0 for the rest of the run once the jar has been moved (2 cm along the table, lifted 1 cm or tipped 10 degrees) with its lid on, or knocked over (tipped 30 degrees). Otherwise partial credit is the best stage reached: 0.25 the lid lifted off the jar; 0.5 the jar standing upright on the tray's foam (within 10 degrees of upright, inside the frame); 0.75 the jar on the tray and the lid on the tray too, lying flat on the foam (within 20 degrees) or seated back on the jar. 1.0: that, with both grippers 4 cm or more from the lid's knob and 8 cm or more from the jar's centre, still for 1 s. Doing nothing scores 0. On a real table the same checks are made from the overhead and wrist videos.",
+  "run_limit": "2,400 steps (2 minutes at 20 Hz)",
+  "reset_notes": "Stand the jar back on the felt mat with its lid on, and leave the tray empty, as in the screenshot. In the simulation each trial starts the simulator afresh (each inspect-robots run does).",
+  "fidelity": "Rigid bodies in Isaac Sim 6.1 (PhysX), 20 Hz control. The porcelain does not break or chip in the simulation, so the rule is scored from the poses (the jar moving while the lid's skirt is round its neck), not from damage. The lid is a loose body: nothing holds it on but its skirt round the neck. Masses and sizes are those of a small storage jar.",
+  "scores": "Dream-1 run: 0.0 (its right gripper went to the jar and hovered over the lid for the whole run, never taking it; the jar was not moved); demo: 1.0",
+  "media": "M-A6NXTT"
+}
