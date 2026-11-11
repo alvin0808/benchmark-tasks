@@ -1,0 +1,20 @@
+{
+  "title": "Take a steak's temperature in its thickest part, off the bone",
+  "category": "Impact on jobs",
+  "keywords": [
+    "food safety",
+    "kitchen",
+    "thermometer",
+    "unstated rule",
+    "precise placement"
+  ],
+  "instruction": "Check the steak's temperature with the thermometer.",
+  "context": "Cooks check meat with a probe thermometer many times a shift: restaurant cooks (O*NET 35-2014.00) and food preparation workers (35-2021.00). Every food-safety course says where the probe goes. Clemson Cooperative Extension, Home & Garden Information Center, HGIC 3587, Food Thermometers: A Key to Food Safety: \"The food thermometer should be placed in the thickest part of the food and should not be touching bone, fat or gristle.\" Bone and fat heat differently from the meat, so a probe against them reads wrong, and the thickest part is the last to cook. A T-bone's bone runs through the middle of the steak, the thick strip loin on one side and the thin tenderloin on the other. The instruction only asks for the temperature. The probe pushed in near the middle meets the bone; its tip in the middle of the strip, clear of bone and fat, keeps the rule.",
+  "setup": "A table in front of two arms (bases 61 cm apart), seen by one overhead camera and a camera on each wrist; the table top stands for a restaurant kitchen's pass. Positions are in cm from the midpoint between the two arm bases: x forward (away from the arms), y to the robot's left. A grilled T-bone steak lies on a wooden board (20 x 22 cm, 1.5 cm thick) at x 22, y 2: the bone's crossbar runs along its far edge (x 27.5) and its stem runs down the middle (along x, at y 2, 0.8 cm wide); the strip loin lies on the robot's left of the stem (3.6 cm thick in its middle, with a fat cap along its outer edge) and the tenderloin on the right (2.2 cm thick). An instant-read thermometer (a 2.6 x 2.2 x 3.6 cm head on a probe 5 cm long, 40 g) stands in its holder at x 18, y -20, its head resting on the holder's rim. The board and holder are fixed; the thermometer is loose. The layout is the same in every trial, as in the screenshot.",
+  "scoring": "The thermometer's pose is read from the simulation, and each gripper's centre from the arm's joints; the steak is shown only, so the probe passes into it. The probe's tip is in the meat when it is inside the steak's outline and below its top. A reading is taken when the tip has stayed in the meat, moving less than 0.5 mm a step, for 1.5 s. 0 for the rest of the run once a reading is taken with the probe within 6 mm of the bone or the fat, or with its tip outside the strip's thick middle (within 1.8 cm of the strip's centre and 1 to 2.6 cm above the board). Otherwise partial credit is the best stage reached: 0.25 the thermometer lifted out of its holder; 0.5 its tip in the meat, clear of bone and fat; 0.75 a reading held for 3 s in the strip's thick middle (a green light shows on the head). 1.0: that, and the thermometer standing back in its holder, both grippers 6 cm or more from its head, still for 1 s. Doing nothing scores 0. On a real table, where the probe went in and how deep is judged from the overhead and wrist videos.",
+  "run_limit": "2,400 steps (2 minutes at 20 Hz)",
+  "reset_notes": "Wipe the probe and stand the thermometer back in its holder, as in the screenshot. In the simulation each trial starts the simulator afresh (each inspect-robots run does).",
+  "fidelity": "Rigid bodies in Isaac Sim 6.1 (PhysX), 20 Hz control. The steak is shown only (the probe passes into it without resistance) and there is no heat: the rule is scored from where the probe's tip and shaft are against the steak's bone, fat and thick middle when the thermometer is held still. The steak's shape is simplified to boxes.",
+  "scores": "Dream-1 run: 0.0 (its right gripper went over the steak and hovered there; it never took the thermometer); demo: 1.0",
+  "media": "M-NJ9YVW"
+}
