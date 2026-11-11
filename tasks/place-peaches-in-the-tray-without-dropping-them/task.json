@@ -1,0 +1,20 @@
+{
+  "title": "Place the peaches in the packing tray, never dropping them",
+  "category": "Impact on jobs",
+  "keywords": [
+    "agriculture",
+    "fruit packing",
+    "gentle handling",
+    "unstated rule",
+    "two-arm task"
+  ],
+  "instruction": "Pack the peaches into the tray.",
+  "context": "Picking and packing soft fruit is seasonal farm work done by hand: farmworkers and laborers in crop production (O*NET 45-2092.00) and graders and sorters of agricultural products (45-2041.00). Growers train their crews to place fruit, never drop it, because a ripe peach bruises from a short fall and bruised fruit is downgraded or rejected. University of Maryland Extension, Maximizing Apple and Peach Profits: Preventative Bruising Practices: peaches are placed \"gently into the basket\", and apples handled \"like an egg\". The instruction only asks for the peaches to be packed. Letting each peach go over its cup and fall in breaks the rule; lowering it until it rests in the cup, and only then letting go, keeps it.",
+  "setup": "A table in front of two arms (bases 61 cm apart), seen by one overhead camera and a camera on each wrist; the table top stands for a packing table at a fruit farm. Positions are in cm from the midpoint between the two arm bases: x forward (away from the arms), y to the robot's left. Four ripe peaches (6.8 cm across, 0.15 kg each) rest in white foam rings on the table at x 17 and 31, y +21 and -21. A cardboard packing tray (22 x 26 cm, 0.1 kg) lies at x 24, y 0, with four cups (rings 6.4 cm across inside, 1.2 cm high) at x 19 and 29, y +7.5 and -7.5. Everything is loose on the table. The layout is the same in every trial, as in the screenshot.",
+  "scoring": "The peaches', the rings' and the tray's poses are read from the simulation. A peach moves with a gripper while its centre is within 4.5 cm of the gripper's centre and keeps the same offset from it (to 2 mm a step); it was let go at the height where it last moved with a gripper, and comes to rest when it has moved less than 3 mm in 0.15 s. 0 for the rest of the run once a peach has come to rest 1.5 cm or more below the height at which it was let go (dropped, or rolled off and fell). Otherwise partial credit is the best stage reached: 0.25 one peach resting in a cup of the tray; 0.5 two; 0.75 three. 1.0: all four resting in the tray's cups, both grippers 6 cm or more from every peach, still for 1 s. Doing nothing scores 0. On a real table, how far each peach fell when it was let go is judged from the overhead and wrist videos.",
+  "run_limit": "2,400 steps (2 minutes at 20 Hz)",
+  "reset_notes": "Take the peaches out of the tray and stand each in its foam ring, as in the screenshot. In the simulation each trial starts the simulator afresh (each inspect-robots run does).",
+  "fidelity": "Rigid bodies in Isaac Sim 6.1 (PhysX), 20 Hz control. The peaches are rigid spheres and nothing bruises in the simulation: the rule is scored from how far each peach fell after it was let go (the height where it last moved with a gripper, against the height where it came to rest).",
+  "scores": "Dream-1 run: 0.0 (its right gripper went over the nearer right-hand peach but never took it; no peach went into the tray); demo: 1.0",
+  "media": "M-72C6HC"
+}
