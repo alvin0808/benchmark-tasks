@@ -1,0 +1,20 @@
+{
+  "title": "Open a stepladder fully until its spreader locks",
+  "category": "Impact on jobs",
+  "keywords": [
+    "stepladder",
+    "spreader lock",
+    "two-arm coordination",
+    "steady and pull",
+    "partly closed ladder"
+  ],
+  "instruction": "Open the stepladder.",
+  "context": "Construction laborers and maintenance workers (O*NET 47-2061.00, 49-9071.00) set up stepladders every day, and OSHA counts falls from portable ladders among \"the leading causes of occupational fatalities and injuries.\" OSHA's Portable Ladder Safety QuickCard: \"Do not use a self-supporting ladder (e.g., step ladder) as a single ladder or in a partially closed position\"; 29 CFR 1926.1053(a)(8) requires a spreader or locking device \"to hold the front and back sections in an open position when the ladder is being used.\" The instruction only says to open the ladder. Drawn part way open and let go, it folds back; with its front section left free, the ladder is pushed about instead of opening. Opening it fully takes both arms at once: one steadies the front section by the top cap while the other draws the rear section out, until the spreader drops onto its pin and locks the ladder open.",
+  "setup": "A table in front of two arms (bases 61 cm apart), seen by one overhead camera and a camera on each wrist; the table top stands for a work floor. Positions are in cm from the midpoint between the two arm bases: x forward (away from the arms), y to the robot's left. A stepladder, scaled down, stands partly closed, its hinge under the top cap at x 25, y -3, 15 cm up: two sections 15 cm long, rails 10 cm apart (x 20 and 30); the front section (0.30 kg, two steps) leans toward the right arm and the rear section (0.15 kg, a flat middle bar and a round lower bar 2 cm above the floor) toward the left arm, each 8 degrees from upright. A spring (2.5 N m/rad) pulls the sections together. A steel spreader on the side facing the arms, pinned to the front section 9 cm below the hinge, rests on a pin on the rear section. The ladder is loose. The layout is the same in every trial, as in the screenshot.",
+  "scoring": "The sections' and the spreader's poses are read from the simulation, and each gripper's centre from the arm's joints. The ladder has fallen over once the front section leans 40 degrees or more from upright or the top cap is lower than 10 cm: 0 for the rest of the run. Otherwise partial credit is the best stage reached: 0.25 the sections 22 degrees or more apart (16 at the start); 0.5 fully open, 28 degrees or more apart; 0.75 fully open with the spreader locked (its notch on the pin, to 3.5 mm) and all four feet on the floor (to 6 mm). 1.0: that, with both grippers 6 cm or more from the top cap and the rear section's lower bar, still for 1 s. Doing nothing scores 0. On a real ladder, whether it ended fully open with its spreader locked, and whether it tipped, is judged from the overhead and wrist videos.",
+  "run_limit": "2,400 steps (2 minutes at 20 Hz)",
+  "reset_notes": "Fold the ladder back to partly closed (the sections 16 degrees apart) with the spreader resting on its pin, as in the screenshot. In the simulation each trial starts the simulator afresh (each inspect-robots run does).",
+  "fidelity": "Rigid bodies in Isaac Sim 6.1 (PhysX), 20 Hz control. The ladder is scaled down so that the arms reach it; its two sections turn on one hinge, and a spring (2.5 N m/rad) pulling them together stands for a real ladder's stiff hinge and its weight folding it. One spreader, on the side facing the arms, locks by its notch dropping onto a pin (a real stepladder has one on each side). Nobody climbs it: the rule is scored from the ladder's final state.",
+  "scores": "Dream-1 run: 0.0 (the right gripper went to the ladder's top cap twice and drew back; the ladder was never opened, and the left arm stayed back); demo: 1.0",
+  "media": "M-6SDGKY"
+}
