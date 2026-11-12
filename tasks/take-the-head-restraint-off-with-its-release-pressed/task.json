@@ -1,0 +1,20 @@
+{
+  "title": "Take a head restraint off with its release pressed",
+  "category": "Impact on jobs",
+  "keywords": [
+    "car seat",
+    "head restraint",
+    "release button",
+    "two-arm coordination",
+    "press and pull"
+  ],
+  "instruction": "Take the head restraint off and put it in the box.",
+  "context": "Car detailers and automotive technicians (O*NET 53-7061.00, 49-3023.00) take head restraints off to clean, cover or fold seats, and the lock that holds a head restraint in its seat is what keeps it there in a crash. Hyundai's owner's manual gives the procedure for a rear seat: \"Raise the head restraint as far as it can go. Press the head restraint release button (1) while pulling up the head restraint (2).\" The instruction only says to take the head restraint off and put it in the box. Pulled up on its own, the head restraint stops at the top, and pulled harder it forces the lock and breaks it. One hand cannot hold the release in and pull the head restraint at once, so taking it off takes both arms working together: one holds the release in while the other draws the head restraint out of its holes.",
+  "setup": "A table in front of two arms (bases 61 cm apart), seen by one overhead camera and a camera on each wrist. Positions are in cm from the midpoint between the two arm bases: x forward (away from the arms), y to the robot's left. A car's rear seat, scaled down: the seatback (x 24 to 30, y -9 to 9, 5 cm tall) with the seat cushion in front of it, and the head restraint (a 10 x 4 x 4 cm cushion, 0.15 kg) on two poles standing in holes in the seatback's top at x 27, y -3.5 and 3.5. A lock plate in the seatback's top catches a stop at the foot of the left pole when the head restraint is raised 2.5 cm; its red release tab stands out of the seatback's front at y 5.2 to 6.8. An open box (x 14 to 27, y -23 to -11, walls 5 cm tall) stands to the right of the seat. The seat and the box are fixed; the head restraint is loose. The layout is the same in every trial, as in the screenshot.",
+  "scoring": "The bodies' poses are read from the simulation, and each gripper's centre from the arm's joints. The lock is forced once its plate leaves its slide (the plate's joint breaks under 15 N, as when the head restraint is pulled hard against the lock): 0 for the rest of the run. Otherwise partial credit is the best stage reached: 0.25 the head restraint raised as far as it goes (2 cm or more); 0.5 taken off (its poles out of the holes); 0.75 in the box (its middle inside the walls and its lowest point 1 cm or more below their tops, at rest, no gripper holding it). 1.0: that, with both grippers 6 cm or more from it and from the release tab, still for 1 s. Doing nothing scores 0. On a real seat, whether the release was held in while the head restraint came out, and whether the lock was forced, is judged from the overhead and wrist videos.",
+  "run_limit": "2,400 steps (2 minutes at 20 Hz)",
+  "reset_notes": "Put the head restraint back in its holes, seated, and empty the box, as in the screenshot. In the simulation each trial starts the simulator afresh (each inspect-robots run does).",
+  "fidelity": "Rigid bodies in Isaac Sim 6.1 (PhysX), 20 Hz control. The seat is scaled down so that the arms reach it. The lock is a plate on a spring sliding in the seatback's top: its tongue covers the stop's way up, and pushing its tab in 6 mm or more lets the stop pass; its joint breaks under 15 N, standing for a forced lock. The release is a tab at the seatback's front rather than a button on the pole's collar, so that a gripper reaches it beside the head restraint.",
+  "scores": "Dream-1 run: 0.0 (the right gripper went to the head restraint again and again, beside the red release tab, but never raised it; the left arm stayed back); demo: 1.0",
+  "media": "M-MKDLJA"
+}
