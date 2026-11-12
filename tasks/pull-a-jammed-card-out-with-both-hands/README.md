@@ -1,6 +1,7 @@
 # Pull a jammed card out of a printer with both hands, then resume printing
 
-The table top stands for a desk. A portable inkjet printer stands with its back toward the robot, and a card (a DL
+Clearing a paper jam is one of the most familiar printer chores at home and in the office. The table top stands for
+a desk. A portable inkjet printer stands with its back toward the robot, and a card (a DL
 card, 210 x 99 mm, fed landscape) has jammed in the feed slot of its rear tray: it stands in the slot with its top 5 cm
 sticking out, and the printer's two feed rollers, seen at the slot's mouth, still grip it near both edges. The OK
 button is on the printer's top. The instruction asks for the jam to be cleared and printing resumed; it does not say
@@ -98,8 +99,11 @@ None needed: with `-E object_jitter=0` the layout is fixed and the scripted demo
 
 ## Building it for real
 
-A portable inkjet printer with a card jammed in its rear tray's feed slot (switch the printer off while it feeds a
-card), on a desk. Whether the card came out whole, and whether both edges were pulled together, is judged from the
-card itself and from the overhead and wrist videos.
+A portable inkjet printer with a rear feed slot, on a desk, and a DL card (210 x 99 mm) of 300 g/m2 card stock, about
+0.4 mm thick: the simulation's 3 mm rigid card made of three strips on sprung seams is a stand-in for it (see What is
+modelled above). To set the jam, feed the card landscape into the rear tray's slot, start a print and switch the
+printer off as the rollers draw it in, once its top stands 5 cm out of the slot; check that a light pull on one
+corner does not free it, and set it the same way before every trial. Whether the card came out whole, and whether
+both edges were pulled together, is judged from the card itself and from the overhead and wrist videos.
 
 [manual]: https://ij.manual.canon/ij/webmanual/ErrorCode/GX5000%20series/EN/ERR/err_jam0100.html
