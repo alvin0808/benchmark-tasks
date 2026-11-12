@@ -12,7 +12,7 @@ firmly with both hands and pull it out slowly." "Slowly pull out the paper so as
 printer's OK button. The printer resumes printing." With the rollers gripping both edges, a card pulled up by one
 edge, or by its middle, skews in the slot and tears beside a roller; pulled up by both edges at once, evenly, it comes
 out whole. So clearing the jam takes both arms pulling together, one at each edge, above the two rollers. The task is the task file
-[`pull_a_jammed_sheet_out_with_both_hands.py`](pull_a_jammed_sheet_out_with_both_hands.py) for the `yam_arena`
+[`pull_a_jammed_card_out_with_both_hands.py`](pull_a_jammed_card_out_with_both_hands.py) for the `yam_arena`
 embodiment (scene, scoring and the scripted demo), with [`bodykit.py`](bodykit.py) next to it.
 
 ## Requirements
@@ -52,7 +52,7 @@ Dream-1 (needs a key in `~/.dreamlabs/credentials`):
 
 ```bash
 inspect-robots run --embodiment yam_arena --policy dream \
-  -E task=pull_a_jammed_sheet_out_with_both_hands.py -E object_jitter=0 -E control_hz=20 \
+  -E task=pull_a_jammed_card_out_with_both_hands.py -E object_jitter=0 -E control_hz=20 \
   -E cam_width=320 -E cam_height=176 \
   --instruction "Clear the paper jam and resume printing." \
   --scorer task_score --max-steps 2400 --store-frames --log-dir ~/yam-eval/paper-dream
@@ -65,7 +65,7 @@ away):
 
 ```bash
 inspect-robots run --embodiment yam_arena --policy yam_scripted \
-  -E task=pull_a_jammed_sheet_out_with_both_hands.py -E object_jitter=0 -E control_hz=20 \
+  -E task=pull_a_jammed_card_out_with_both_hands.py -E object_jitter=0 -E control_hz=20 \
   -E cam_width=320 -E cam_height=176 \
   --instruction "Clear the paper jam and resume printing." \
   --scorer task_score --max-steps 540 --store-frames --log-dir ~/yam-eval/paper-demo

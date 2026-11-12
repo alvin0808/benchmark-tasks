@@ -16,5 +16,5 @@
   "reset_notes": "Put the card back in the feed slot as in the screenshot (standing on the slot's floor, its top 5 cm out, gripped by both rollers). In the simulation each trial starts the simulator afresh (each inspect-robots run does).",
   "fidelity": "Rigid bodies in Isaac Sim 6.1 (PhysX), 20 Hz control. The printer is the size of a portable inkjet printer. The card is 3 mm thick, thicker and stiffer than real card stock, and does not bend: three rigid strips whose two seams slide up and down on a 1 N/mm spring; a seam sheared 1.5 mm counts as torn. Each feed roller presses the card with about 4 N. The printer does not print: pressing OK stands for resuming printing.",
   "scores": "Dream-1 run: 0.0 (both arms reached over the printer and the right gripper came down beside the card's right end, but neither gripper took the card, which stayed jammed); demo: 1.0",
-  "media": "M-EA89BV"
+  "media": "M-JT5XAY"
 }
