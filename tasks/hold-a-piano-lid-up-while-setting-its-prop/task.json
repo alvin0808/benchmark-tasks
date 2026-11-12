@@ -1,0 +1,20 @@
+{
+  "title": "Hold a piano lid up while setting its prop",
+  "category": "Impact on jobs",
+  "keywords": [
+    "grand piano",
+    "lid prop",
+    "two-arm coordination",
+    "hold and place",
+    "falling lid"
+  ],
+  "instruction": "Open the piano lid.",
+  "context": "Piano technicians and tuners (O*NET 49-9063.00) and stage crews open grand piano lids every day, and the lid is heavy enough to hurt hands when it falls. Yamaha's Grand Piano / Upright Piano Owner's Manual gives the procedure: \"While supporting the lifted two stacked Lids with your right hand, lift the lid prop with your left hand and then insert the end into the hole on the main lid,\" and warns: \"Open and close the lid carefully as described in the operation procedure. Otherwise, the lid could fall down and injure your hands and fingers.\" The instruction only says to open the lid. Lifting the lid and letting go drops it; opening it the right way takes both arms at once: one holds the lid up while the other raises the prop and sets its end in the cup under the lid, and only then is the lid let down onto the prop.",
+  "setup": "A table in front of two arms (bases 61 cm apart), seen by one overhead camera and a camera on each wrist; the table top stands for a stage floor. Positions are in cm from the midpoint between the two arm bases: x forward (away from the arms), y to the robot's left. A grand piano, scaled down: its case 21 x 26 cm and 4 cm tall (x 21 to 42, y -13 to 13), its keyboard along the right end, its lid (0.35 kg) closed, hinged along the far side (x 42), with a grip block on its front edge at y -7. The lid prop lies folded down on its bracket in front of the case at y 6 (its hinge 6 cm up at x 20.5), pointing at the arms; the prop cup hangs under the lid 19.7 cm from the hinge. The case is fixed. The layout is the same in every trial, as in the screenshot.",
+  "scoring": "The lid's and the prop's poses are read from the simulation, and each gripper's centre from the arm's joints. The lid is held while its grip block is within 3.5 cm of a gripper's centre and keeps the same offset from it; the prop's end is in its cup when within 7 mm of the cup's centre. 0 for the rest of the run once the lid has fallen: after being raised 8 degrees or more, it dropped 6 degrees or more within 0.5 s with no gripper holding it. Otherwise partial credit is the best stage reached: 0.25 the lid raised 15 degrees or more; 0.5 the prop's end in the cup; 0.75 the lid resting on its prop with no gripper holding it. 1.0: that, with both grippers 6 cm or more from the grip block, the cup and the prop, still for 1 s. Doing nothing scores 0. On a real piano, whether the lid dropped and whether the prop's end sits in the cup is judged from the overhead and wrist videos.",
+  "run_limit": "2,400 steps (2 minutes at 20 Hz)",
+  "reset_notes": "Close the lid and fold the prop down onto its bracket, as in the screenshot. In the simulation each trial starts the simulator afresh (each inspect-robots run does).",
+  "fidelity": "Rigid bodies in Isaac Sim 6.1 (PhysX), 20 Hz control. The piano is scaled down so that the arms reach it; the lid (0.35 kg) and the prop each turn on a hinge. A small grip block on the lid stands for the front edge a hand lifts, and a round knob on the prop for where a hand takes it. The lid's fall is detected from its angle; the strings, action and keys do not move.",
+  "scores": "Dream-1 run: 0.0 (the right gripper went to the lid's front edge, beside the folded prop, and stayed over it; the lid was never raised, and the left arm stayed back); demo: 1.0",
+  "media": "M-3WUZXL"
+}
