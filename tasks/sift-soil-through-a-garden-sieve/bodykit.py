@@ -131,13 +131,17 @@ class SphereShape:
 class Body(Box):
     """A loose rigid body made of ``shapes``. It subclasses Box only so yam_arena's task-file checks accept it:
     ``pos`` is the body origin (world, m) and ``size`` its bounding box. ``friction`` is (static, dynamic);
-    ``damping`` is (linear, angular)."""
+    ``damping`` is (linear, angular). ``max_speed`` (m/s, 0 for none) is PhysX's maximum linear velocity for the
+    body and ``max_depenetration`` (m/s) the speed the solver may give it to push it out of another body: small loose
+    pieces jammed between thin parts are otherwise thrown far faster than anything real would be."""
 
     shapes: tuple = ()
     friction: tuple[float, float] = (0.6, 0.5)
     damping: tuple[float, float] = (0.0, 0.05)
     contact_offset: float = 0.002
     solver_iterations: int = 16
+    max_speed: float = 0.0
+    max_depenetration: float = 1.0
 
     @staticmethod
     def build(name: str, pos, mass: float, shapes, yaw: float = 0.0, color: Color = (0.6, 0.6, 0.6), **kw) -> "Body":
@@ -233,7 +237,9 @@ def _spawn_body(prim_path: str, cfg, translation=None, orientation=None, **kwarg
     UsdPhysics.RigidBodyAPI.Apply(prim)
     UsdPhysics.MassAPI.Apply(prim).CreateMassAttr(float(spec.mass))
     rb = PhysxSchema.PhysxRigidBodyAPI.Apply(prim)
-    rb.CreateMaxDepenetrationVelocityAttr(1.0)
+    rb.CreateMaxDepenetrationVelocityAttr(float(spec.max_depenetration))
+    if spec.max_speed > 0:
+        rb.CreateMaxLinearVelocityAttr(float(spec.max_speed))
     rb.CreateSolverPositionIterationCountAttr(int(spec.solver_iterations))
     rb.CreateLinearDampingAttr(float(spec.damping[0]))
     rb.CreateAngularDampingAttr(float(spec.damping[1]))
