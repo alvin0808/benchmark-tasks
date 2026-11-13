@@ -2,11 +2,12 @@
 peduncle running across the table with three tomatoes hanging from it on short pedicels, the two nearest the stem red
 (ripe) and the one at the far end green. A shallow harvest tray stands on the table under the truss.
 
-Task: pick the ripe tomatoes and put them in the crate, leaving the green ones on the truss. A tomato's pedicel has a
-joint, the knuckle (its abscission zone), where it snaps cleanly when the fruit is bent up or twisted past it, leaving
-the calyx on the fruit; it does not give when the fruit is pulled along its stem. A picker therefore takes the fruit in
-the hand and bends it up and over, toward the truss, until the knuckle snaps; pulling drags the stem and tears the
-truss.
+Task: pick the ripe tomatoes and put them in the tray, leaving the green one on the truss, without crushing any. A
+tomato's pedicel has a joint, the knuckle (its abscission zone), where it snaps cleanly when the fruit is bent up or
+twisted past it, leaving the calyx on the fruit; it does not give when the fruit is pulled along its stem. A picker
+therefore takes the fruit in the hand and bends it up and over, toward the truss, until the knuckle snaps; pulling drags
+the stem and the truss. The fruit is held gently: ripe tomatoes squeezed with more than about 30 N show visible damage,
+and their skin fails at about 42 to 46 N in whole-fruit compression tests (Guo et al. 2022, Kuta et al. 2023).
 
 World frame (m): x forward from the arm bases, y to the robot's left, z up; the table top is at z 0.7475.
 - plant: fixed. A stem 1.8 cm thick at (0.37, -0.06), and the truss: a peduncle 5 mm thick from the stem along +y at
@@ -17,10 +18,17 @@ World frame (m): x forward from the arm bases, y to the robot's left, z up; the 
   spring (1,000 N/m).
 - tray: fixed, black plastic, 13 x 26 cm inside and 2.5 cm deep, centred at (0.29, 0.10), under the truss.
 
-Score: 0 for the rest of the run if the green tomato comes off the truss, a tomato is pulled 6 mm along its stem (the
-truss torn), or a tomato falls onto the table outside the tray. Otherwise 0.25 for each red tomato off the truss and 0.25 more for each one in the tray, at most 0.75; full
-score: both red tomatoes in the tray, the green one still on the truss, both grippers 5 cm or more from every tomato,
-still for 1 s.
+Squeeze: every control step (20 times a second) the scorer reads, from PhysX's contact forces, the force with which
+each link of either arm (fingers, gripper body and the rest) presses on each tomato; a tomato's squeeze is the largest
+of them. A tomato squeezed by more than 20 N at any time is crushed for the rest of the run.
+
+Score: 0 for the rest of the run if the green tomato comes off the truss or is crushed, a tomato is pulled 6 mm along
+its stem (6 N: the simulation's stand-in for a torn truss, since the simulated truss cannot tear), or a tomato falls
+onto the table outside the tray. A crushed red tomato earns nothing for the rest of the run. Otherwise each red tomato
+earns the best it has reached: 0.25 once off the truss, 0.5 once off and resting on the tray floor (centre inside the
+walls, lowest point within 3 mm of the floor); the score is their sum, at most 0.75. Full score (1.0): both red
+tomatoes resting on the tray floor, neither crushed, the green one still on the truss, both grippers 5 cm or more from
+every tomato, still for 1 s.
 """
 
 from __future__ import annotations
@@ -59,7 +67,7 @@ FRUIT_KG = 0.06
 KNUCKLE_DEG = 35.0  # how far a tomato swings on its knuckle before the knuckle carries torque
 SNAP_NM = 0.12  # the torque that then snaps it
 PULL_N = 200.0  # it never comes off by pulling: the pedicel stretches instead (a spring along it)
-STRETCH_K, STRETCH_MAX = 1000.0, 0.012  # N/m, m: pulled 6 mm along its stem (6 N), the truss is torn
+STRETCH_K, STRETCH_MAX = 1000.0, 0.012  # N/m, m: pulled 6 mm along its stem (6 N), the truss counts as torn
 TORN_MM = 6.0
 RED, GREEN, CALYX = (0.80, 0.12, 0.08), (0.42, 0.66, 0.24), (0.20, 0.45, 0.16)
 STEM_C = (0.30, 0.50, 0.20)
@@ -135,29 +143,71 @@ OBJECTS = [PLANT, *TOMATOES, CRATE]
 
 # -- scoring ----------------------------------------------------------------------------------------------------------
 OFF_MM = 4.0  # a tomato whose knuckle has moved this far from the pedicel's end has come off
+REST_MM = 3.0  # in the tray: resting on its floor, the fruit's lowest point within this of the floor's top
+# A tomato squeezed harder than this is crushed. Ripe tomatoes squeezed with more than about 30 N show visible damage
+# (Guo et al. 2022, J. Sensors, doi:10.1155/2022/2564952) and their skin fails at about 42-46 N (Kuta et al. 2023,
+# Agriculture, doi:10.3390/agriculture13091831); 20 N stays clear of both. A gripper closed fully presses with 50 N.
+CRUSH_N = 20.0
 CLEAR_HANDS = 0.05
 STILL_STEPS, STILL_MM = 20, 1.0
+ARM_PRIMS = ("LeftArm", "RightArm")  # the two arms' prims in the env (yam_arena.embodiment.SIDES)
 _DEBUG = os.environ.get("TOMATO_DEBUG") == "1"
 _DEBUG_EVERY = int(os.environ.get("TOMATO_DEBUG_EVERY", "10"))
 _EP: dict = {}
 _TCP: dict = {}
 _ARM_IDS: dict = {}
+_FINGER_IDS: dict = {}
+_GRIP: dict = {}  # each gripper's two finger drive forces (N), for the debug lines
+_SQ: dict = {}  # the contact view that measures the squeeze, and this step's squeeze on each tomato
 
 
 @on_reset
 def _reset() -> None:
-    _EP.update(step=0, tick=0, counted=-1, best=0.0, failed="", recent=[])
+    n = len(FRUIT_Y)
+    _EP.update(step=0, tick=0, counted=-1, failed="", recent=[], credit=[0.0] * n, crushed=[False] * n,
+               peak=[0.0] * n)
     _TCP.clear()
+    _GRIP.clear()
+    _SQ["now"] = np.zeros(n)
 
 
 _reset()
 
 
+def _squeeze(base) -> np.ndarray:
+    """The largest contact force (N) with which any link of either arm presses on each tomato, from PhysX's pair-wise
+    contact forces (normal forces) in the last physics step. The links already report contacts (yam_arena spawns the
+    arms with contact reporting on); the view over them is made on the first control step of each simulation."""
+    from isaaclab_physx.physics import PhysxManager
+
+    sim = PhysxManager.get_physics_sim_view()
+    view = _SQ.get("view") if _SQ.get("sim") is sim else None
+    if view is None:
+        from yam_arena.robot import asset_link_paths
+
+        env = base.scene.env_prim_paths[0]
+        links = [f"{env}/{arm}{path}" for arm in ARM_PRIMS for path in asset_link_paths().values()]
+        fruits = [f"{env}/tomato_{i + 1}/body" for i in range(len(FRUIT_Y))]
+        view = sim.create_rigid_contact_view(links, filter_patterns=[fruits] * len(links),
+                                             max_contact_data_count=8 * len(links) * len(fruits))
+        if view.sensor_count != len(links) or view.filter_count != len(fruits):
+            raise RuntimeError(f"tomato squeeze: contact view has {view.sensor_count} links x {view.filter_count} "
+                               f"tomatoes, expected {len(links)} x {len(fruits)}")
+        _SQ.update(sim=sim, view=view, dt=float(base.physics_dt))
+        if _DEBUG:
+            print(f"DBG squeeze view: {view.sensor_count} arm links x {view.filter_count} tomatoes, "
+                  f"dt {_SQ['dt']:.5f} s", flush=True)
+    forces = view.get_contact_force_matrix(dt=_SQ["dt"])
+    a = forces.numpy() if hasattr(forces, "numpy") else as_numpy(forces)
+    return np.linalg.norm(np.asarray(a, float).reshape(-1, len(FRUIT_Y), 3), axis=-1).max(axis=0)
+
+
 @on_step
-def _track_grippers(env) -> None:
-    """Each gripper's centre (TCP) from its arm's joint positions: "let go" needs it."""
+def _track(env) -> None:
+    """Each gripper's centre (TCP) from its arm's joint positions ("let go" needs it), and the squeeze on each tomato:
+    a tomato squeezed by more than CRUSH_N is crushed for the rest of the episode."""
     from yam_arena import ik, station
-    from yam_arena.constants import ARM_JOINTS
+    from yam_arena.constants import ARM_JOINTS, FINGER_JOINTS
 
     _EP["tick"] += 1  # one control step: success() and score() both tally it, the history takes it once
     base = getattr(env, "unwrapped", env)
@@ -165,8 +215,20 @@ def _track_grippers(env) -> None:
         robot = base.scene[f"{side}_robot"]
         if side not in _ARM_IDS:
             _ARM_IDS[side] = list(robot.find_joints(ARM_JOINTS, preserve_order=True)[0])
+            _FINGER_IDS[side] = list(robot.find_joints(FINGER_JOINTS, preserve_order=True)[0])
         q = as_numpy(robot.data.joint_pos)[0]
         _TCP[side] = np.asarray(ik.tcp_pose(q[_ARM_IDS[side]], station.BASES[side])[0], float)
+        if _DEBUG:
+            _GRIP[side] = as_numpy(robot.data.applied_torque)[0][_FINGER_IDS[side]]
+    sq = _squeeze(base)
+    _SQ["now"] = sq
+    for i, f in enumerate(sq):
+        _EP["peak"][i] = max(_EP["peak"][i], float(f))
+        if f > CRUSH_N and not _EP["crushed"][i]:
+            _EP["crushed"][i] = True
+            if _DEBUG:
+                print(f"DBG step={_EP['tick']} tomato_{i + 1} crushed: squeezed with {f:.1f} N "
+                      f"(limit {CRUSH_N:.0f} N)", flush=True)
 
 
 def _tally(o) -> dict:
@@ -180,20 +242,27 @@ def _tally(o) -> dict:
         stretch, lateral = float(gap[2]) * 1000, float(math.hypot(gap[0], gap[1])) * 1000
         off = lateral > OFF_MM or abs(stretch) > STRETCH_MAX * 1000 + 2.0
         if not off and stretch > TORN_MM:
-            _EP["failed"] = _EP["failed"] or f"tomato_{i + 1} was pulled along its stem, tearing the truss"
+            _EP["failed"] = _EP["failed"] or f"tomato_{i + 1} was pulled along its stem (the truss counts as torn)"
         d = f.pos - crate.pos
-        in_crate = off and abs(d[0]) < CRATE_IN[0] / 2 and abs(d[1]) < CRATE_IN[1] / 2 and d[2] < CRATE_H + R_F
-        on_table = off and not in_crate and f.low[2] < TOP + 0.003
+        floor = TOP + CRATE_T  # the tray floor's top
+        in_crate = (off and abs(d[0]) < CRATE_IN[0] / 2 and abs(d[1]) < CRATE_IN[1] / 2
+                    and f.pos[2] - R_F - floor < REST_MM / 1000)
+        inside = off and abs(d[0]) < CRATE_IN[0] / 2 and abs(d[1]) < CRATE_IN[1] / 2 and d[2] < CRATE_H + R_F
+        on_table = off and not inside and f.low[2] < TOP + 0.003
+        crushed = _EP["crushed"][i]
         if off and not ripe:
             _EP["failed"] = _EP["failed"] or f"the green tomato (tomato_{i + 1}) came off the truss"
+        if crushed and not ripe:
+            _EP["failed"] = _EP["failed"] or f"the green tomato (tomato_{i + 1}) was crushed"
         if on_table:
             _EP["failed"] = _EP["failed"] or f"tomato_{i + 1} fell onto the table"
-        fruits.append(dict(off=off, in_crate=in_crate, ripe=ripe, pos=np.array(f.pos, float)))
+        if ripe:  # each red tomato keeps the best it has reached, and nothing once crushed
+            now = 0.25 * off + 0.25 * in_crate
+            _EP["credit"][i] = 0.0 if crushed else max(_EP["credit"][i], now)
+        fruits.append(dict(off=off, in_crate=in_crate, ripe=ripe, crushed=crushed, pos=np.array(f.pos, float)))
     ripe = [f for f in fruits if f["ripe"]]
     n_off, n_in = sum(f["off"] for f in ripe), sum(f["in_crate"] for f in ripe)
-    stage = min(0.75, 0.25 * n_off + 0.25 * n_in)
-    if not _EP["failed"]:
-        _EP["best"] = max(_EP["best"], stage)
+    stage = min(0.75, sum(_EP["credit"]))
     recent = _EP["recent"]
     if _EP["counted"] != _EP["tick"]:
         _EP["counted"] = _EP["tick"]
@@ -203,7 +272,8 @@ def _tally(o) -> dict:
     gaps = [float(np.linalg.norm(v - f["pos"])) - R_F for v in _TCP.values() for f in fruits]
     hands = min(gaps) if len(_TCP) == 2 else 0.0
     greens_on = all(not f["off"] for f in fruits if not f["ripe"])
-    done = n_in == len(ripe) and greens_on and hands >= CLEAR_HANDS and still
+    whole = not any(f["crushed"] for f in fruits)
+    done = n_in == len(ripe) and whole and greens_on and hands >= CLEAR_HANDS and still
     return dict(fruits=fruits, n_off=n_off, n_in=n_in, stage=stage, still=still, hands=hands, done=bool(done))
 
 
@@ -215,36 +285,45 @@ def _debug(o, t) -> None:
     for i, f in enumerate(t["fruits"]):
         p = f["pos"]
         parts.append(f"t{i + 1}=({p[0]:.3f},{p[1]:.3f},{p[2] - TOP:.3f}){'off' if f['off'] else 'on'}"
-                     f"{'/crate' if f['in_crate'] else ''}")
+                     f"{'/tray' if f['in_crate'] else ''}{'/CRUSHED' if f['crushed'] else ''}")
+    credit = "+".join(f"{c:.2f}" for c, ripe in zip(_EP["credit"], RIPE) if ripe)
     print(f"DBG step={_EP['step']} {' '.join(parts)} hands={t['hands']:.3f} still={t['still']} stage={t['stage']} "
-          f"best={_EP['best']} failed={_EP['failed'] or '-'}", flush=True)
+          f"credit={credit} failed={_EP['failed'] or '-'}", flush=True)
+    sq = " ".join(f"{v:.1f}" for v in _SQ["now"])
+    peak = " ".join(f"{v:.1f}" for v in _EP["peak"])
+    grip = " | ".join(f"{k} fingers {v[0]:.1f} {v[1]:.1f} N" for k, v in _GRIP.items())
+    print(f"DBG   squeeze N now=({sq}) peak=({peak}) {grip}", flush=True)
     if len(_TCP) == 2:
         print("DBG   " + " | ".join(f"{k} tcp=({v[0]:.3f},{v[1]:.3f},{v[2] - TOP:.3f})" for k, v in _TCP.items()),
               flush=True)
 
 
 def score(objects) -> float:
-    """The best stage reached (0 for the rest of the run once the green tomato has come off the truss, a tomato has been
-    pulled 6 mm along its stem or a tomato has fallen onto the table outside the tray): 0.25 for each red tomato off the truss and 0.25 more for each one in the
-    tray, at most 0.75. Full score (1.0) is success()."""
+    """0 for the rest of the run once the green tomato has come off the truss or been crushed, a tomato has been
+    pulled 6 mm along its stem or a tomato has fallen onto the table outside the tray. Otherwise the sum over the red
+    tomatoes of the best each has reached (0.25 off the truss, 0.5 off and resting on the tray floor; nothing for a
+    tomato crushed, squeezed by more than 20 N, at any time), at most 0.75. Full score (1.0) is success()."""
     t = _tally(objects)
     if _DEBUG:
         _debug(objects, t)
-    return 0.0 if _EP["failed"] else _EP["best"]
+    return 0.0 if _EP["failed"] else t["stage"]
 
 
 def success(objects) -> bool:
-    """Both red tomatoes in the tray, the green one on the truss, both grippers 5 cm or more from every tomato, still
-    for 1 s, no rule broken."""
+    """Both red tomatoes resting on the tray floor and neither crushed, the green one on the truss, both grippers 5 cm
+    or more from every tomato, still for 1 s, no rule broken."""
     t = _tally(objects)
     return bool(t["done"] and not _EP["failed"])
 
 
 # -- scripted demo ----------------------------------------------------------------------------------------------------
-# The right gripper comes at each red tomato from the front, level, fingers either side of it, and closes on it. It
-# then swings the tomato up and toward itself around the knuckle, bending the pedicel until the knuckle snaps, draws
-# it back and lowers it into the tray, lets go and backs out. The left arm stays where it is. TOMATO_PULL=1 pulls the
-# first tomato straight down along its stem instead of bending it: the stem stretches and the truss counts as torn.
+# The right gripper comes at each red tomato from the front, level, fingers either side of it, and closes on it just
+# enough to hold it (its fingers aimed 3 mm inside the fruit's faces: about 15 N). It then swings the tomato up and
+# toward itself around the knuckle, bending the pedicel until the knuckle snaps, draws it back and lowers it into the
+# tray, lets go and backs out. The left arm stays where it is.
+# TOMATO_PULL=1 pulls the first tomato straight down along its stem instead of bending it: the stem stretches and the
+# truss counts as torn. TOMATO_CRUSH=n closes the gripper fully on the first n red tomatoes (n = 1 or 2), so it presses
+# with its full 50 N, and otherwise picks them the same way: a crushed tomato earns nothing.
 
 
 def _ry(a: float) -> np.ndarray:
@@ -254,6 +333,8 @@ def _ry(a: float) -> np.ndarray:
 
 SIDE = _ry(-math.pi / 2) @ grip_rotation(0.0)  # pointing forward, level, fingers closing along y
 OPEN, PINCH = -0.032, float(os.environ.get("TOMATO_PINCH", str(-(R_F - 0.003))))
+CRUSH = 0.0  # fingers driven fully closed: the drive presses with its 50 N limit
+N_CRUSH = int(os.environ.get("TOMATO_CRUSH", "0"))
 SAG = float(os.environ.get("TOMATO_SAG", "0.0015"))
 BEND_DEG = float(os.environ.get("TOMATO_BEND_DEG", "55"))
 RELEASE_Z = TOP + float(os.environ.get("TOMATO_RELEASE_DZ", "0.07"))  # TCP height when letting go over the tray
@@ -301,23 +382,24 @@ def _idle(arm: str, seconds: float) -> list[Waypoint]:
     return [Waypoint(seconds, tuple(float(v) for v in pos), OPEN, "stay put", rot)]
 
 
-def _pick(y: float, first: bool) -> list[Waypoint]:
+def _pick(y: float, first: bool, crush: bool = False) -> list[Waypoint]:
     centre = np.array([FX, y, FZ + SAG])
     front = centre + [-0.08, 0.0, 0.0]
     knuckle = np.array([FX, y, KZ + SAG])
+    grip = CRUSH if crush else PINCH
     out = (_lead_in("right", front, SIDE, OPEN, "in front of the red tomato, level") if first
            else [_w(2.5, front, OPEN, "in front of the next red tomato, level")])
     out += [_w(2.0, centre, OPEN, "forward, fingers either side of the tomato"),
-            _w(1.0, centre, PINCH, "close on it")]
+            _w(1.0, centre, grip, "close fully on it, crushing it" if crush else "close on it")]
     if os.environ.get("TOMATO_PULL") == "1":
-        return out + [_w(2.0, centre + [0.0, 0.0, -0.03], PINCH, "pull it straight down, along its stem"),
+        return out + [_w(2.0, centre + [0.0, 0.0, -0.03], grip, "pull it straight down, along its stem"),
                       _w(1.0, centre + [0.0, 0.0, -0.03], OPEN, "open")]
     for deg in (15.0, 30.0, 42.0, BEND_DEG):  # swing it up and toward the robot around the knuckle
         a = math.radians(deg)
         p = knuckle + (R_F + STUB) * np.array([-math.sin(a), 0.0, -math.cos(a)])
-        out.append(_w(1.0, p, PINCH, f"bend it up around the knuckle ({deg:.0f} degrees)"))
+        out.append(_w(1.0, p, grip, f"bend it up around the knuckle ({deg:.0f} degrees)"))
     low = np.array([FX - 0.035, y, RELEASE_Z])
-    out += [_w(1.5, low, PINCH, "draw it back and down over the tray"),
+    out += [_w(1.5, low, grip, "draw it back and down over the tray"),
             _w(0.8, low, OPEN, "let it go into the tray"),
             _w(1.2, low + [-0.07, 0.0, 0.0], OPEN, "back out"),
             _w(1.0, low + [-0.10, 0.0, 0.05], OPEN, "back out and up")]
@@ -326,9 +408,11 @@ def _pick(y: float, first: bool) -> list[Waypoint]:
 
 def _right() -> list[Waypoint]:
     out = []
+    n = 0
     for y, ripe in zip(FRUIT_Y, RIPE):
         if ripe:
-            out += _pick(y, first=not out)
+            out += _pick(y, first=not out, crush=n < N_CRUSH)
+            n += 1
             if os.environ.get("TOMATO_PULL") == "1":
                 break
     out.append(_w(3.0, out[-1].pos, OPEN, "wait"))
