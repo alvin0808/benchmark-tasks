@@ -26,9 +26,11 @@ the best stage reached: 0.25 the card in place (flat on the board: every corner 
 board and tilted 2 degrees at most; the midpoint of its left edge within 5 mm of the red line; square within 4 degrees;
 its right edge past the cutting edge); 0.5 the cut: the blade brought down from 10 degrees or more to below 2 degrees
 with the card in place all the way; 0.75 after the cut, the blade down with every part of both grippers 1 cm or more
-from the knob (the handle left down). Full score: cut, the handle left down, the card still in place and flat, both
-grippers' centres 4 cm or more above the board (the card let go of), the card (within 1 mm) and the blade (within 1
-degree) still for 1 s.
+from the knob (the handle left down). Full score: cut, the piece the cut leaves 8 cm wide within 5 mm at both ends,
+the handle left down, that piece flat where it was cut (the midpoint of the card's left edge still within 5 mm of the
+red line, square within 4 degrees), both grippers' centres 4 cm or more above the board (the card let go of), the card
+(within 1 mm) and the blade (within 1 degree) still for 1 s. The simulated card is not cut in two: the piece is the
+part of it between its left edge and the cutting edge when the blade comes down, its width read at the card's two ends.
 """
 
 from __future__ import annotations
@@ -58,6 +60,10 @@ SCORE_OVER = "end"
 # CUTTER_CARD_TILT=1 (a check of the scoring, not the task): a 5 mm strip lies on the board under the card's left edge
 # and the card starts on it, already lined up with the red line but tilted (see the demo's notes).
 CARD_TILT = os.environ.get("CUTTER_CARD_TILT") == "1"
+# CUTTER_CARD_SKEW=1 (a check of the scoring, not the task): the card starts flat and passes the alignment checks (the
+# midpoint of its left edge 3 mm from the red line, turned 3.5 degrees), but the piece a cut leaves is 7.4 cm wide at
+# one end (see the demo's notes).
+CARD_SKEW = os.environ.get("CUTTER_CARD_SKEW") == "1"
 
 # -- layout (world frame) ---------------------------------------------------------------------------------------------
 BX0, BX1, BY0, BY1, BT = 0.20, 0.44, -0.12, 0.10, 0.015  # the board: x, y extent and thickness
@@ -76,6 +82,10 @@ if CARD_TILT:  # lined up with the red line, resting on the strip's near edge an
     _CY = RED_Y - CARD_W / 2
     CARD_C0 = np.array([0.32, _CY, BOARD_TOP + ((_CY - YB) * math.sin(_TILT) + CARD_T / 2) / math.cos(_TILT) + 0.001])
     CARD_QUAT = (math.sin(_TILT / 2), 0.0, 0.0, math.cos(_TILT / 2))
+elif CARD_SKEW:  # flat on the board, the midpoint of its left edge 3 mm right of the red line, turned 3.5 degrees
+    _SKEW = math.radians(3.5)
+    CARD_C0 = np.array([0.32, RED_Y - 0.003 - CARD_W / 2 * math.cos(_SKEW), REST_Z])
+    CARD_QUAT = (0.0, 0.0, math.sin(_SKEW / 2), math.cos(_SKEW / 2))
 else:
     CARD_C0, CARD_QUAT = CARD_START, None
 WOOD, STEEL, BLACK, GREY, RED, WHITE = ((0.55, 0.36, 0.22), (0.74, 0.75, 0.78), (0.08, 0.08, 0.09),
@@ -148,6 +158,10 @@ TOUCH = 0.003  # a finger within this of the knob's surface touches it
 OPPOSITE = 120.0  # degrees around the knob between the two fingers' nearest points: a grip from opposite sides
 LET_GO = 0.01  # every part of both grippers at least this far from the knob: the handle left alone
 EDGE_TOL, SQUARE = 0.005, math.radians(4.0)
+# The piece the cut leaves must be 8 cm wide within 5 mm at both ends. The simulated card is not cut in two, so the
+# piece is a proxy: the part of the card between its left edge and the cutting edge when the blade comes down, its
+# width read at the card's two ends (the two corners of its left edge). A real trial cuts the card and measures it.
+PIECE_W, PIECE_TOL = 0.08, 0.005
 FLAT_GAP, FLAT_TILT = 0.002, 2.0  # m, degrees
 CLEAR_UP = 0.04
 STILL_STEPS, STILL_MM = 20, 1.0
@@ -171,7 +185,7 @@ _PTS: dict = {}
 @on_reset
 def _reset() -> None:
     _EP.update(step=0, tick=0, counted=-1, best=0.0, failed="", recent=[], angle=OPEN_DEG, armed=False, cut=False,
-               card_ok=False, flat=False, let_go=False, knob=None,
+               card_ok=False, flat=False, let_go=False, knob=None, post_ok=False, piece_w=(0.0, 0.0), cut_w=None,
                old=dict(failed=False, cut=False, best=0.0, card_ok=False, exempt=[], near=99.0, held=0, success=False))
     _TCP.clear()
     _ARM.clear()
@@ -301,14 +315,20 @@ def _track_inner(env) -> None:
     yaw = _yaw(cquat)
     flat = float(np.abs(lift).max()) <= FLAT_GAP and tilt <= FLAT_TILT
     card_ok = flat and abs(left_edge - RED_Y) <= EDGE_TOL and abs(yaw) <= SQUARE and right_edge < YB
+    # after the cut: the piece lies flat where it was cut (the card's right edge past the cutting edge is no longer asked:
+    # on a real cutter that part is cut off)
+    post_ok = flat and abs(left_edge - RED_Y) <= EDGE_TOL and abs(yaw) <= SQUARE
+    piece_w = tuple(float((cpos + rot @ np.array([sx * CARD_W / 2, CARD_W / 2, 0.0]))[1] - YB) for sx in (-1, 1))
     let_go = min(a["gap"] for a in _ARM.values()) >= LET_GO
     _EP.update(angle=angle, knob=knob, card_ok=card_ok, flat=flat, lift=lift, tilt=tilt, left_edge=left_edge,
-               cyaw=yaw, let_go=let_go)
+               cyaw=yaw, let_go=let_go, post_ok=post_ok, piece_w=piece_w)
     if not card_ok:  # the card must stay in place from CUT_FROM all the way down
         _EP["armed"] = False
     elif angle >= CUT_FROM:
         _EP["armed"] = True
     elif angle < BLADE_DOWN and _EP["armed"]:
+        if not _EP["cut"]:
+            _EP["cut_w"] = piece_w  # the width of the piece this cut leaves, at both ends
         _EP["cut"] = True
     stage = 0.25 if card_ok else 0.0
     if _EP["cut"]:
@@ -350,7 +370,8 @@ def _tally(o) -> dict:
     still = len(recent) == STILL_STEPS and all(np.abs(p - recent[-1]).max() * 1000 < STILL_MM for p in recent)
     up = min((p[2] - BOARD_TOP for p in _TCP.values()), default=0.0) if len(_TCP) == 2 else 0.0
     down = _EP["angle"] < BLADE_DOWN
-    done = _EP["cut"] and down and _EP["let_go"] and _EP["card_ok"] and up >= CLEAR_UP and still
+    piece_ok = _EP["cut_w"] is not None and all(abs(w - PIECE_W) <= PIECE_TOL for w in _EP["cut_w"])
+    done = _EP["cut"] and piece_ok and down and _EP["let_go"] and _EP["post_ok"] and up >= CLEAR_UP and still
     if _DEBUG and new_tick and _EP["knob"] is not None:
         old = _EP["old"]
         off_knob = min(float(np.linalg.norm(p - _EP["knob"])) for p in _TCP.values())
@@ -370,7 +391,9 @@ def _debug(t) -> None:
     print(f"DBG step={_EP['step']} blade={_EP['angle']:.1f}deg card_left_edge={_EP.get('left_edge', 0) * 100:+.2f}cm "
           f"(red {RED_Y * 100:+.1f}) yaw={math.degrees(_EP.get('cyaw', 0.0)):+.1f} tilt={_EP.get('tilt', 0.0):.1f} "
           f"corners_mm=[{' '.join(f'{v:+.1f}' for v in lift)}] flat={_EP['flat']} card_ok={_EP['card_ok']} "
-          f"cut={_EP['cut']} let_go={_EP['let_go']} up={t['up']:.3f} still={t['still']} best={_EP['best']} "
+          f"piece_cm=({_EP['piece_w'][0] * 100:.2f},{_EP['piece_w'][1] * 100:.2f}) cut={_EP['cut']} cut_piece_cm="
+          f"{'-' if _EP['cut_w'] is None else '(%.2f,%.2f)' % (_EP['cut_w'][0] * 100, _EP['cut_w'][1] * 100)} "
+          f"post_ok={_EP['post_ok']} let_go={_EP['let_go']} up={t['up']:.3f} still={t['still']} best={_EP['best']} "
           f"failed={_EP['failed'] or '-'}", flush=True)
     for side, a in _ARM.items():
         p = _TCP[side]
@@ -395,9 +418,9 @@ def score(objects) -> float:
 
 
 def success(objects) -> bool:
-    """Cut with the card in place, the handle left down (no part of either gripper within 1 cm of the knob), the card
-    still in place and flat, both grippers' centres 4 cm or more above the board, the rule kept, the card and the blade
-    still for 1 s."""
+    """Cut with the card in place, the piece the cut leaves 8 cm wide within 5 mm at both ends, the handle left down (no
+    part of either gripper within 1 cm of the knob), the piece flat where it was cut, both grippers' centres 4 cm or
+    more above the board, the rule kept, the card and the blade still for 1 s."""
     t = _tally(objects)
     return bool(t["done"] and not _EP["failed"])
 
@@ -420,6 +443,10 @@ def success(objects) -> bool:
 # does the left gripper slide the card into place, under the lowered blade (the blade passes through it here), and
 # let go: score 0.25 (the card in place, never cut); the first version credited the cut as soon as the card was in
 # place with the blade down, and gave 1.0.
+# CUTTER_CARD_SKEW=1 (a piece of the wrong size): the card starts flat, the midpoint of its left edge 3 mm right of
+# the red line and turned 3.5 degrees, which the alignment checks pass; the left gripper stays away and the right one
+# makes the cut. The piece it leaves is 7.4 cm wide at one end, so the run scores 0.75 (cut, handle down, no full
+# score); the previous version, which asked only for the card still in place after the cut, gave 1.0.
 
 HAND_NEAR = os.environ.get("CUTTER_HAND_NEAR") == "1"
 HOVER = os.environ.get("CUTTER_HOVER") == "1"
@@ -431,7 +458,7 @@ CARD_GOAL_Y = RED_Y - CARD_W / 2
 HOLD_AT = 0.035 if HAND_NEAR else 0.080  # how far from the cutting edge the left gripper's centre presses, in the end
 DOWN_L = grip_rotation(-math.pi / 2)  # straight down, fingers closing along x
 DOWN_R = grip_rotation(math.pi / 2)
-PARK_L = np.array([0.20, 0.12, BOARD_TOP + 0.12])  # CUTTER_CARD_TILT: where the left gripper waits
+PARK_L = np.array([0.20, 0.12, BOARD_TOP + 0.12])  # CUTTER_CARD_TILT, CUTTER_CARD_SKEW: where the left gripper waits
 
 
 def _good_ik(arm: str, pos, rot):
@@ -517,7 +544,7 @@ def demo():
                  _w(0.8, goal + [0.0, 0.0, 0.06], CLOSED, "lift off the card", DOWN_L),
                  _w(1.5, goal + [-0.04, 0.06, 0.10], CLOSED, "move away", DOWN_L),
                  _w(3.0, goal + [-0.04, 0.06, 0.10], CLOSED, "wait", DOWN_L)]
-    if CARD_TILT:  # the left gripper waits away from the card, which it never touches
+    if CARD_TILT or CARD_SKEW:  # the left gripper waits away from the card, which it never touches
         total = sum(w.duration for w in left)
         left = _lead_in("left", PARK_L, DOWN_L, CLOSED, "wait away from the card")
         left.append(_w(total - 3.0, PARK_L, CLOSED, "wait away from the card", DOWN_L))

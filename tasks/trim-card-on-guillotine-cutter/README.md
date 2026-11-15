@@ -35,8 +35,10 @@ How the cutter is modelled: the board, its guard, fence and lines are one fixed 
 hinge at the back right corner; together they are one PhysX articulation fixed to the world. The hinge has Coulomb
 friction (0.25 N m), standing in for the tension spring that keeps a real blade where it is left, and stops when the
 arm is level with the board. Only the arm's knob collides (so that it can be gripped): the blade passes through the
-card, which is not cut in two, and the cut is the blade coming down level while the card is in place. The latch is not
-modelled. The board is smooth laminate (friction 0.12), so that a card pressed from above slides with the gripper.
+card, which is not cut in two. So the cut and its result are proxies in the simulation: the cut is the blade coming
+down level while the card is in place, and the piece the cut leaves is the part of the card between its left edge and
+the cutting edge at that moment, its width read at the card's two ends (the two corners of its left edge). A real
+trial cuts the card and measures the piece (see Building it for real). The latch is not modelled. The board is smooth laminate (friction 0.12), so that a card pressed from above slides with the gripper.
 
 ## Run and score a trial
 
@@ -58,9 +60,12 @@ wrist link it turns on (about 1.5 mm apart on the fingers, 3 mm on the body and 
 
 Otherwise the score is the best stage reached: 0.25 the card in place; 0.5 the cut: the blade brought down from 10
 degrees or more to below 2 degrees with the card in place all the way; 0.75 after the cut, the blade down with no part
-of either gripper within 1 cm of the knob (the handle left down). Full score: the cut made, the blade down with no part
-of either gripper within 1 cm of the knob, the card still in place and flat on the board, both grippers' centres 4 cm or
-more above the board (the card let go of), and the card (within 1 mm) and the blade (within 1 degree) still for 1 s.
+of either gripper within 1 cm of the knob (the handle left down). Full score: the cut made, and the piece it leaves 8 cm
+wide within 5 mm at both ends (in the simulation, the proxy above, read when the blade comes down); then the blade down
+with no part of either gripper within 1 cm of the knob, that piece flat where it was cut (the midpoint of the card's
+left edge still within 5 mm of the red line, square within 4 degrees; the card's right edge past the cutting edge is
+not asked after the cut, since on a real cutter that part is cut off), both grippers' centres 4 cm or more above the
+board (the card let go of), and the card (within 1 mm) and the blade (within 1 degree) still for 1 s.
 `-E object_jitter=0` keeps every object exactly where the task file puts it, so every trial starts from the same
 layout.
 
@@ -86,6 +91,9 @@ inspect-robots run --embodiment yam_arena --policy yam_scripted \
   --scorer task_score --max-steps 600 --store-frames --log-dir ~/yam-eval/cutter-demo
 ```
 
+It succeeds after 301 steps; the piece its cut leaves (the proxy above) is 8.1 cm wide at one end and 8.0 cm at the
+other.
+
 Videos, one MP4 per camera next to each run's frames:
 
 ```bash
@@ -101,7 +109,7 @@ whose centre was within 4 cm of the knob counted as on the handle; the card coun
 within 3 mm of its resting height, and as cut at any moment it was in place with the blade down), never used for the
 score.
 
-Four more env vars change the scripted run, to check the scoring:
+Five more env vars change the scripted run, to check the scoring:
 
 - `CUTTER_HAND_NEAR=1`, the wrong way: the left gripper presses the card 3.5 cm from the cutting edge. The run scores
   0: a finger comes 3.9 cm from the cutting edge while the card is slid into place, with the blade still raised.
@@ -117,6 +125,11 @@ Four more env vars change the scripted run, to check the scoring:
   does the left gripper slide the card into place, under the lowered blade (which passes through it here), and let
   go. The run scores 0.25: the card is in place, but the blade never came down onto it. The first version credited
   the cut as soon as the card was in place with the blade down, and gave this run 1.0.
+- `CUTTER_CARD_SKEW=1`, a piece of the wrong size: the card starts flat on the board, the midpoint of its left edge
+  3 mm right of the red line and turned 3.5 degrees, which the alignment checks pass; the left gripper stays away and
+  the right one makes the cut. The run scores 0.75: the cut is made and the handle left down, but the piece it leaves
+  is 7.4 cm wide at one end (8.0 cm at the other), 6 mm short of 8 cm. The previous version, which asked only for the
+  card still in place after the cut, gave this run 1.0.
 
 ## Runtime per trial
 
@@ -132,11 +145,14 @@ None needed: with `-E object_jitter=0` the layout is fixed and the scripted demo
 
 A 12 in (30 cm) guillotine paper trimmer with a finger guard and a blade latch, its tension spring set so that the blade
 stays where it is left, grey lines every 2 cm and a red tape line on the board 8 cm from the cutting edge, a 4 cm tape
-mark on the table beyond the cutting edge, and a 10 x 10 cm piece of 2 mm mount board. For a robot trial, the blade can
-be swapped for a blunt dummy of the same shape. Scoring by hand: a camera above the cutter and the two wrist cameras
+mark on the table beyond the cutting edge, and 10 x 10 cm pieces of 2 mm mount board, a new one for each trial. The
+trial uses the cutter's own sharp blade: a blunt dummy cannot cut the card, so it cannot show a cut. Scoring by hand: a camera above the cutter and the two wrist cameras
 record the trial; frame by frame while the blade is 2 degrees or more off level, no part of a gripper may cross the
 second grey line from the cutting edge (4 cm) or the tape mark beyond it, unless that gripper has both fingers closed on
-the knob (seen in its wrist camera). After the run, a ruler gives the gap between the midpoint of the card's left edge
-and the red line (5 mm at most), a set square against the grey lines its squareness (4 degrees at most), a 2 mm feeler
-gauge must not slide under any corner of the card, and a protractor on the blade's arm shows it within 2 degrees of
-level; the video shows both grippers clear of the knob by 1 cm and their fingertips well above the card.
+the knob (seen in its wrist camera). The cut (0.5) needs the card actually cut in two along the cutting edge as the
+blade comes down, the offcut fully separated. After the run, the piece left on the board is measured: a ruler across it
+at both ends, from its cut edge to its left edge, gives its width (8 cm within 5 mm at each end for full score); a ruler
+between the midpoint of its left edge and the red line (5 mm at most) and a set square against the grey lines (4
+degrees at most) show it stayed where it was cut; a 2 mm feeler gauge must not slide under any of its corners; and a
+protractor on the blade's arm shows it within 2 degrees of level. The video shows both grippers clear of the knob by
+1 cm and their fingertips well above the card.
