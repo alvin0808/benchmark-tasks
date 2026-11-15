@@ -36,7 +36,8 @@ three strips joined along two seams, and a seam lets its strips slide past each 
 1 N per mm. A seam sheared 1.5 mm counts as torn. Each feed roller is a roller on a spring arm that presses its edge of
 the card against the slot's far wall with about 4 N, so drawing that edge out takes about 4.5 N; the rollers sit at the
 slot's mouth, where they can be seen. The OK button is a key on a spring. The printer does not print: pressing OK after
-the card is out stands for resuming printing.
+the card is out stands for resuming printing. A real trial checks that printing actually resumes (see Building it for
+real).
 
 ## Run and score a trial
 
@@ -46,7 +47,10 @@ the score is the best stage reached: 0.25 the card raised 1.5 cm or more; 0.5 ou
 above the printer's top); 0.75 put down on the table in front of the printer (its lowest point within 1.2 cm of the
 table, every strip's middle in front of the printer's back, at rest, no gripper holding it). Full score: that, with the
 OK button pressed (3 mm or more) after the card came out, both grippers 6 cm or more from the card and from the
-button, still for 1 s. Pressing OK while the card is still in the printer does not count. `-E object_jitter=0` keeps
+button, still for 1 s. Pressing OK while the card is still in the printer does not count. With a real printer, full
+score also needs printing to resume: within 20 s of the OK press the printer clears its jam error and feeds the blank
+card waiting in the rear tray to print on it (seen in the overhead video); if it does not, the trial scores at most
+0.75. `-E object_jitter=0` keeps
 every object exactly where the task file puts it, so every trial starts from the same layout.
 
 Dream-1 (needs a key in `~/.dreamlabs/credentials`):
@@ -99,11 +103,24 @@ None needed: with `-E object_jitter=0` the layout is fixed and the scripted demo
 
 ## Building it for real
 
-A portable inkjet printer with a rear feed slot, on a desk, and a DL card (210 x 99 mm) of 300 g/m2 card stock, about
-0.4 mm thick: the simulation's 3 mm rigid card made of three strips on sprung seams is a stand-in for it (see What is
-modelled above). To set the jam, feed the card landscape into the rear tray's slot, start a print and switch the
-printer off as the rollers draw it in, once its top stands 5 cm out of the slot; check that a light pull on one
-corner does not free it, and set it the same way before every trial. Whether the card came out whole, and whether
-both edges were pulled together, is judged from the card itself and from the overhead and wrist videos.
+A portable inkjet printer with a rear feed slot, on a desk, connected to a computer, and DL cards (210 x 99 mm) of
+300 g/m2 card stock, about 0.4 mm thick: the simulation's 3 mm rigid card made of three strips on sprung seams is a
+stand-in for one (see What is modelled above). Before every trial:
+
+1. Load a blank DL card in the rear tray, so the printer has paper to resume on.
+2. Feed the card to be jammed landscape in front of it, start a one-page print and switch the printer off as the
+   rollers draw the card in, once its top stands 5 cm out of the slot. A light pull on one corner must not free it.
+3. Switch the printer back on with the card in place and the print job left queued. Starting up, the printer finds
+   paper in its feed path and shows its paper-jam error (on Canon printers, support code 1300 with the Alarm lamp
+   flashing). The trial starts then, with the printer on.
+
+Some printers instead try to feed or eject paper left in the path while starting up. If the card moves, set the jam
+with the printer on instead: start the print and hold the card's top edge as the rollers draw it in, until the printer
+stops with its jam error, then let go. Never press OK while setting the jam.
+
+Whether the card came out whole, and whether both edges were pulled together, is judged from the card itself and from
+the overhead and wrist videos. Full score also needs printing to resume: within 20 s of the OK press the printer
+clears its jam error and feeds the blank card to print on it, seen in the overhead video; if it does not (for
+instance because OK was pressed while a scrap of the card was left in the slot), the trial scores at most 0.75.
 
 [manual]: https://ij.manual.canon/ij/webmanual/ErrorCode/GX5000%20series/EN/ERR/err_jam0100.html
