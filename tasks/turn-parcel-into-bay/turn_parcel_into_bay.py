@@ -22,8 +22,7 @@ World frame (m): x forward from the arm bases, y to the robot's left, z up; the 
   at x 0.66, the bay's far end.
 
 Score: 1.0 when success() holds for 2 s in a row; otherwise score() at the end of the trial.
-- 0 for the whole trial once the parcel's centre has been more than 4 cm to either side of the centre line, or either
-  neighbour has moved more than 1 cm (both latched, checked after every control step).
+- 0 for the whole trial once either neighbour has moved more than 1 cm (latched, checked after every control step).
 - 1.0 (success): the parcel released (no part of either arm within 1 cm of it: points no more than 1.5 cm apart
   covering the arms' collision meshes, placed by forward kinematics from their measured joint positions), lying flat
   on the table (each of the four corners of its underside within 3 mm of the table top), inside the bay (those four
@@ -142,7 +141,6 @@ AT_BAR = 0.010  # pushed up to the stop bar: both corners of its front end withi
 RELEASED = 0.01  # let go: no part of either arm (gripper, fingers, wrist, forearm) within 1 cm of the parcel
 SAMPLE = 0.015  # the arms' collision meshes are covered with points this close (any surface point within 8.7 mm)
 STILL_V, STILL_W = 0.01, 0.1  # at rest: moving slower than 1 cm/s and turning slower than 0.1 rad/s (6 deg/s)
-SIDE_MAX = 0.04  # "at any time": the parcel's centre more than 4 cm to either side of the centre line scores 0
 BUMP_MAX = 0.01  # "at any time": a neighbour moved more than 1 cm scores 0
 OLD_FLAT = 5.0  # the first version's flatness test (tilt, degrees), kept only to print what it would have said
 ARM_LINKS = ("link2", "link3", "link4", "link5", "gripper", "tip_left", "tip_right")  # what can reach the parcel
@@ -160,7 +158,7 @@ _LINK_PTS: dict = {}  # the same points in each link's own frame (made once from
 
 @on_reset
 def _reset() -> None:
-    _state.update(side=False, bump=False, max_side=0.0, max_bump=0.0, tick=0, measured=-1, m={}, step=0,
+    _state.update(bump=False, max_side=0.0, max_bump=0.0, tick=0, measured=-1, m={}, step=0,
                   old_run=0, old_full_at=0, new_run=0)
     _TCP.clear()
     _ARM_PTS.clear()
@@ -262,7 +260,7 @@ def _gap_to_parcel(points: np.ndarray, pos: np.ndarray, rot: np.ndarray) -> floa
 
 
 def _measure(objects) -> dict:
-    """Everything the rubric looks at, once per control step; also latches the two rules."""
+    """Everything the rubric looks at, once per control step; also latches the neighbour rule."""
     if _state["measured"] == _state["tick"] and _state["m"]:
         return _state["m"]
     p = objects["parcel"]
@@ -281,17 +279,16 @@ def _measure(objects) -> dict:
     released = len(near) == 2 and min(near.values()) >= RELEASED
     parcel_still = p.resting(STILL_V, STILL_W)
     all_still = parcel_still and all(objects[n].resting(STILL_V, STILL_W) for n in NEIGHBOUR_START)
-    # the two rules that hold for the whole trial
-    side = abs(float(pos[1]))
-    _state["max_side"] = max(_state["max_side"], side)
-    if side > SIDE_MAX:
-        _state["side"] = True
+    # how far the parcel's centre has strayed sideways is only printed (TP_DEBUG=1); it no longer scores anything:
+    # the neighbours' movement and the final placement already capture the outcome (review, second round)
+    _state["max_side"] = max(_state["max_side"], abs(float(pos[1])))
+    # the rule that holds for the whole trial: neither neighbour may move more than 1 cm
     for name, start in NEIGHBOUR_START.items():
         moved = float(np.linalg.norm(np.asarray(objects[name].pos[:2], float) - start))
         _state["max_bump"] = max(_state["max_bump"], moved)
         if moved > BUMP_MAX:
             _state["bump"] = True
-    broken = _state["side"] or _state["bump"]
+    broken = _state["bump"]
     full = bool(not broken and released and on_table and in_bay and err <= YAW_TOL and at_bar and all_still)
     half = bool(not broken and released and on_table and parcel_still and err <= YAW_TOL_HALF)
     # what the first version's rule (corners inside the bay in plan view, turned, tilted under 5 degrees, at rest)
@@ -322,7 +319,7 @@ def _debug(m) -> None:
           f"in_bay={m['in_bay']} bar_gap_mm=[{g.min():.1f},{g.max():.1f}] at_bar={m['at_bar']} near({near}) "
           f"released={m['released']} still={m['parcel_still']}/{m['all_still']} "
           f"max_side={_state['max_side'] * 100:.1f}cm max_bump={_state['max_bump'] * 1000:.0f}mm "
-          f"broken={'side' if _state['side'] else ''}{'bump' if _state['bump'] else ''}{'' if m['broken'] else '-'} "
+          f"broken={'bump' if m['broken'] else '-'} "
           f"full={m['full']} run={_state['new_run']} half={m['half']} old_rule={m['old']} old_run={_state['old_run']}",
           flush=True)
     if len(_TCP) == 2:
@@ -332,7 +329,8 @@ def _debug(m) -> None:
 
 def success(objects) -> bool:
     """The parcel released, lying flat on the table inside the bay, turned to within 5 degrees of front to back, both
-    corners of its front end within 1 cm of the stop bar, everything at rest, no rule broken (held for 2 s)."""
+    corners of its front end within 1 cm of the stop bar, everything at rest, neither neighbour moved more than 1 cm
+    (held for 2 s)."""
     return _measure(objects)["full"]
 
 
@@ -344,8 +342,8 @@ def distance(objects) -> float:
 
 def score(objects) -> float:
     """Partial credit, read at the end of the trial (success scores 1.0): 0.5 when the parcel is released, lying flat
-    on the table and at rest, turned to within 10 degrees of front to back; 0 if at any time its centre was more than
-    4 cm to either side of the centre line or a neighbour moved more than 1 cm, or otherwise."""
+    on the table and at rest, turned to within 10 degrees of front to back; 0 if at any time a neighbour moved more
+    than 1 cm, or otherwise."""
     m = _measure(objects)
     if _DEBUG:
         _debug(m)

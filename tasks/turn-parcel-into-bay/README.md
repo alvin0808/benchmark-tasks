@@ -34,9 +34,9 @@ trial (0.5 or 0). The boxes' poses are read from the simulation after every cont
 meshes (links 2 to 5, the gripper and both fingers, as in the robot's URDF, covered with points no more than 1.5 cm
 apart) are placed by forward kinematics from its measured joint positions.
 
-- Two rules hold for the whole trial and are latched: if the long parcel's centre is ever more than 4 cm to either
-  side of the centre line, or either white box ever moves more than 1 cm from its start, the trial scores 0. The task
-  file keeps this state itself and clears it at every reset.
+- One rule holds for the whole trial and is latched: if either white box ever moves more than 1 cm from its start,
+  the trial scores 0. The task file keeps this state itself and clears it at every reset. How far the parcel strays
+  sideways on the way is not scored: bumping a neighbour and the final placement are what count.
 - 1.0: the parcel is let go (no part of either arm within 1 cm of it), lies flat on the table (each of the four
   corners of its underside within 3 mm of the table top), lies inside the bay (those four corners inside the red
   tape's inner edges, or at most 5 mm onto the tape), its long sides within 5 degrees of front to back, both corners of
@@ -91,8 +91,8 @@ Runs that check the scorer (each with `TP_DEBUG=1` as well):
 
 - `TP_ONE=1` runs the demo the wrong way, with one arm: the left arm stays back and the right gripper pushes alone
   near the parcel's right end. The parcel swings instead of turning in place: it turns only about 49 degrees while its
-  centre slides 11 cm back and 5 cm to the left, into the left white box. Its centre passes 4 cm to the side at about
-  step 365 and the white box has moved more than 1 cm by step 381 (11 mm): the run scores 0.
+  centre slides 11 cm back and 5 cm to the left, into the left white box, which has moved more than 1 cm by step 381
+  (11 mm): the run scores 0.
 - `TP_HOVER=1` holds the parcel motionless (made a `bodykit` body with gravity off) in its finished place, turned,
   2 mm from the stop bar, but with its underside 1 cm above the table; the arms stay still. It scores 0 (the first
   version's rule gave it 1.0 after 2 s).
@@ -122,5 +122,4 @@ posts 8 cm tall screwed to the table, a 22 cm long bar (2 x 4 cm section) screwe
 for the bay. Mark the three cartons' start positions with tape so they can be reset quickly. Scoring by hand: a 3 mm
 card must not slide under any corner of the parcel; a ruler at both front corners gives the gaps to the stop bar; a
 protractor against the tape gives the parcel's angle; the overhead video shows whether either arm still touches the
-parcel at the end, whether its centre strayed more than 4 cm to the side, and whether a white box moved from its
-marks by more than 1 cm.
+parcel at the end and whether a white box moved from its marks by more than 1 cm.
