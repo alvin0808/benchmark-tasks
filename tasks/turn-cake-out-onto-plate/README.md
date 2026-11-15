@@ -1,6 +1,7 @@
 # Turn a cake out onto a plate: clamp plate and pan together with both hands, turn them over and lift the pan off
 
-A round cake pan with a baked cake in it sits on a cake stand, and a flat plate lies upside down on the pan's rim. The
+A round cake pan with a baked cake in it sits on a cake stand, and a flat plate lies upside down on the pan's narrow
+rim and its two tab handles. The
 task is to turn the cake out onto the plate, as every home baker does: hold the plate and the pan together, turn the
 two over as one so the cake drops onto the plate, set them down on the stand plate side down and lift the pan off. The
 instruction states only the result (the cake upside down on the plate on the stand, the pan off). The
@@ -16,7 +17,7 @@ Isaac Lab-Arena 0.3.1 / Isaac Sim 6.1, on Linux with an NVIDIA RTX GPU. Its `set
 launchable, installs everything, including the Dream-1 policy. The task needs no models from Arena's object library.
 
 `yam_arena` task files place single boxes, cylinders and spheres. The pan (a floor, 24 wall panels, 24 rim panels and
-two ears), the cake (with its crust) and the plate are loose rigid bodies built from several shapes, so `bodykit.py`
+two tab handles), the cake (with its crust) and the plate are loose rigid bodies built from several shapes, so `bodykit.py`
 adds such bodies: importing it hooks `yam_arena.scene` when the simulator starts, without changing yam_arena, and gives
 `score()` each body's own pose. It also lets the demo's waypoints carry a full gripper rotation, for the side grips.
 
@@ -36,9 +37,9 @@ inspect-robots run --embodiment yam_arena --policy dream \
 ```
 
 The scripted demo, which reaches full score (both grippers come in level from the sides with their fingers upright,
-clamp the plate and the pan's rim together, lift the stack, turn it over about the line between them, set it down on
-the stand plate side down and let go; then each takes one of the pan's ears from above, and they lift the pan off the
-cake, carry it towards the arms and set it down):
+clamp the plate and the pan's handle under it together, as a person holds plate and tin by the tin's handles, lift the
+stack, turn it over about the line between them, set it down on the stand plate side down and let go; then each takes
+one of the pan's handles from above, and they lift the pan off the cake, carry it towards the arms and set it down):
 
 ```bash
 inspect-robots run --embodiment yam_arena --policy yam_scripted \
@@ -68,8 +69,8 @@ None needed: with `-E object_jitter=0` the layout is fixed and the scripted demo
 
 ## Building it for real
 
-A 14 cm round anodised-aluminium cake tin (about 2 mm sheet, 250 g) with a flat 2.5 cm rim and two small ears (or tabs
-riveted to the rim), a flat white ABS plastic plate 21 cm across and 6 mm thick (220 g), a cake stand with a non-slip
+A 14 cm round anodised-aluminium cake tin (about 2 mm sheet, 200 g) with an ordinary narrow rim (about 7 mm) and two
+flat tab handles 3 cm wide reaching 13 cm from its centre (tabs riveted to an ordinary tin's rim do the same), a flat white ABS plastic plate 21 cm across and 6 mm thick (220 g), a cake stand with a non-slip
 silicone top (or any 10 cm pedestal about 13 cm across with a silicone mat on it), and a baked sponge cake 12.8 cm across
 and 2.8 cm tall (or a 160 g foam disc) that fits loosely in the tin. In the simulation the friction is set per material:
 pan and plate 0.6 static / 0.5 dynamic, cake 0.7 / 0.6, the silicone top and the gripper pads 1.2 / 1.0.

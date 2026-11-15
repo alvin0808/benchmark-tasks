@@ -1,6 +1,6 @@
 """On the station table, in front of the arms: a cake stand (a pale blue pedestal 10 cm tall) with a round cake pan on it.
-The pan holds a baked cake, top up, and a flat plate lies upside down on the pan, resting on its flat rim. The pan has
-two small ears on its rim, one towards each arm.
+The pan holds a baked cake, top up, and a flat plate lies upside down on the pan, resting on its narrow rim. The pan
+has two flat tab handles riveted to its rim, one towards each arm.
 
 Task: turn the cake out onto the plate. Hold the plate and the pan together, one hand on each side, turn them over
 together, set them down on the stand plate side down, and lift the pan off: the cake ends upside down on the plate.
@@ -9,8 +9,9 @@ the pan are too wide for one hand: the two hands clamp it from both sides while 
 
 World frame (m): x forward from the arm bases, y to the robot's left, z up; the table top is at z 0.7475.
 - stand: fixed pale blue cylinder, radius 6.5 cm, 10 cm tall, centred at (0.30, 0).
-- pan: a round pan 14 cm across inside and 3.6 cm deep, 250 g, with a flat rim 2.5 cm wide (out to 9.8 cm from its
-  centre) and two ears on the rim reaching 13 cm out along the left-right line.
+- pan: a round pan 14 cm across inside and 3.6 cm deep, 200 g, with a narrow flat rim 7 mm wide (out to 8 cm from its
+  centre), as on ordinary round cake tins, and two flat tab handles 3 cm wide on the rim, reaching 13 cm out along the
+  left-right line.
 - cake: 12.8 cm across and 2.8 cm tall, 160 g, a dark crust on its top.
 - plate: a flat white disc 21 cm across and 6 mm thick, 220 g, lying on the pan's rim.
 
@@ -45,9 +46,9 @@ SCORE_OVER = "best"  # partial credit: the best reached during the run
 # -- objects (each body's origin is the centre of its underside, axis up) --------------------------------------------
 STAND_XY, STAND_R, STAND_H = (0.30, 0.0), 0.065, 0.10
 PAN_R_IN, PAN_T, PAN_FLOOR, PAN_H = 0.070, 0.003, 0.004, 0.036  # inside radius, wall, floor, height to the rim's top
-RIM_IN, RIM_OUT, RIM_T = PAN_R_IN + PAN_T, 0.098, 0.003  # the flat rim (flange) at the top of the wall
-EAR_OUT, EAR_W = 0.130, 0.030  # two ears on the rim, along +-y
-PAN_KG = 0.25
+RIM_IN, RIM_OUT, RIM_T = PAN_R_IN + PAN_T, 0.080, 0.003  # the narrow flat rim at the top of the wall (7 mm wide)
+EAR_OUT, EAR_W = 0.130, 0.030  # two flat tab handles ("ears") riveted to the rim, along +-y
+PAN_KG = 0.20  # 1.9 mm aluminium sheet: floor, wall, rim and handles
 CAKE_R, CAKE_H, CAKE_KG = 0.064, 0.028, 0.16
 PLATE_R, PLATE_T, PLATE_KG = 0.105, 0.006, 0.22
 
@@ -172,8 +173,8 @@ def score(objects):
 
 
 # -- scripted demo --------------------------------------------------------------------------------------------------
-# Both hands come in level from their own sides with the fingers upright and clamp the plate and the pan's rim
-# together, one hand on each side; they lift the stack, turn it over together about the line between them, lower it
+# Both hands come in level from their own sides with the fingers upright and clamp the plate and the pan's handle
+# under it together, one hand on each side; they lift the stack, turn it over together about the line between them, lower it
 # plate side down onto the stand and let go. Then each takes one of the pan's ears from above, they lift the pan off
 # the cake together, carry it towards the arms and set it down upside down on the table.
 
@@ -203,7 +204,7 @@ def _clamp_rot(arm: str, turn: float) -> np.ndarray:
 GRIP_Y = float(os.environ.get("CAKE_GRIP_Y", "0.105"))  # TCPs this far either side of the centre line
 OUT_Y = 0.12  # beyond the plate (radius 10.5 cm); a side grip reaches no further out than ~13 cm
 BESIDE_X = 0.035  # wait this far in front of the ear (3 cm wide), so the fingers come down clear of it
-STACK_MID = PAN_H + 0.0015  # the plate / rim interface, above the pan's underside
+STACK_MID = PAN_H + 0.0015  # the plate / handle interface, above the pan's underside
 CLAMP = float(os.environ.get("CAKE_CLAMP", "-0.0025"))  # 5 mm between the fingers round the 9 mm stack
 OPEN_SIDE = -0.02  # 4 cm apart: enough round the stack, small sweep
 FLIP_Z = STAND_TOP + STACK_MID + float(os.environ.get("CAKE_LIFT", "0.08"))  # turn it over here: clear of the stand
@@ -214,7 +215,7 @@ PLATE_TOP_DOWN = STAND_TOP + PLATE_T  # the plate's top once it lies on the stan
 EAR_Y = 0.118  # grip the ears here: outside the plate (radius 10.5 cm)
 EAR_GRIP = float(os.environ.get("CAKE_EAR_GRIP", "-0.011"))  # 2.2 cm between the fingers round the 3 cm ear
 TIP = 0.013
-# Set the pan down this far forward: its rim (9.8 cm) then passes 1.4 cm short of the plate's edge on the way down.
+# Set the pan down this far forward: its rim (8 cm) then passes 3.5 cm short of the plate's edge on the way down.
 PARK_X = float(os.environ.get("CAKE_PARK_X", "0.08"))
 
 
@@ -271,7 +272,7 @@ def _arm_plan(arm: str) -> list[Waypoint]:
                        "level, beside the stack, fingers upright")
     plan += [
         _w(1.2, beside, OPEN_SIDE, "slide along, the ear between the fingers", start),
-        _w(1.2, grip, OPEN_SIDE, "slide in round the plate and the pan's rim", start),
+        _w(1.2, grip, OPEN_SIDE, "slide in round the plate and the pan's handle", start),
         _w(1.0, grip, CLAMP, "clamp them together", start),
         _w(0.4, grip, CLAMP, "steady", start),
         _w(1.5, up, CLAMP, "lift the stack off the stand", start),
