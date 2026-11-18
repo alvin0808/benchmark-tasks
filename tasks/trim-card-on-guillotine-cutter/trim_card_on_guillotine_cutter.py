@@ -11,12 +11,23 @@ World frame (m): x forward from the arm bases, y to the robot's left, z up; the 
 - cutter: fixed. A board 24 x 22 cm, 1.5 cm thick, from x 0.20 to 0.44 and y -0.12 to 0.10, with a steel cutting edge
   along its right side (y -0.12) and a finger guard, a bar 4 mm wide raised 4 mm off the board, 1.5 cm inside it;
   thin grey lines every 2 cm parallel to the cutting edge and a red line 8 cm from it (y -0.04). The blade's arm is
-  hinged at the back right corner (x 0.43) and starts raised 35 degrees; its handle, a black knob 2 cm across and
-  4.5 cm long, is at its free end, 21 cm from the hinge, just right of the cutting edge (y -0.145). The arm stays where
-  it is left unless pushed with more than 0.25 N m at the hinge (its tension spring), and stops level with the board.
-  The board is smooth laminate (friction 0.12).
-- card: white, 10 x 10 cm, 2 mm thick, 8 g, square to the board, centred at x 0.32, y -0.02 (its right edge 5 cm left
-  of the cutting edge).
+  hinged at the back right corner (x 0.43, 1 cm above the board) and starts raised 35 degrees; the blade under it, its
+  edge 2.2 cm below the arm's axis, passes just outside the cutting edge (1.2 cm below the board's top when the arm is
+  level), so that it cuts from the hinge outward as it comes down. Its handle, a black plastic knob 2 cm across and
+  4.5 cm long, is at the arm's free end, 21 cm from the hinge, just right of the cutting edge (y -0.145). The arm stays
+  where it is left unless pushed with more than 0.25 N m at the hinge (its tension spring), and stops level with the
+  board. The board is smooth laminate (friction 0.12).
+- card: white 300 g/m2 cardstock, 10 x 10 cm, 0.38 mm thick, 3 g, square to the board, centred at x 0.32, y -0.02 (its
+  right edge 5 cm left of the cutting edge).
+
+The card's resistance to the cut (a rule standing in for the card, which the simulation does not cut in two): while
+the blade's edge passes through card lying across the cutting edge, the hinge resists with the torque that cutting it
+takes. By the work balance, that torque is the card's work of cutting per unit area of cut, J_C = 4.9 kJ/m2 (paper cut
+with scissors: Mahvash et al. 2008, IEEE Trans. Biomed. Eng. 55(3):848-856, Table I), times its thickness, times how far
+the cut moves along the cutting edge per radian the blade comes down (which grows as the blade nears the board). For the
+card in place, 6 to 16 cm from the hinge, the blade cuts it between 11.7 and 4.3 degrees, and the torque rises from
+0.5 to 3.9 N m (0.19 J in all), on top of the spring's 0.25 N m: about 3.6 to 20 N at the knob, at right angles to the
+arm. Card already cut does not resist again.
 
 Score: 0 for the rest of the run once, with the blade up (2 degrees or more), any part of a gripper that is not holding
 the handle (its fingers, its body or the wrist link it turns on) has come within 4 cm of the cutting edge, on the board
@@ -24,7 +35,7 @@ or past the edge (y -0.16 to -0.08, x 0.18 to 0.46, up to 10 cm above the board)
 its fingers touch the knob (within 3 mm of it) from opposite sides of it, 120 degrees or more apart around it. Otherwise
 the best stage reached: 0.25 the card in place (flat on the board: every corner of its underside within 2 mm of the
 board and tilted 2 degrees at most; the midpoint of its left edge within 5 mm of the red line; square within 4 degrees;
-its right edge past the cutting edge); 0.5 the cut: the blade brought down from 10 degrees or more to below 2 degrees
+its right edge past the cutting edge); 0.5 the cut: the blade brought down from 15 degrees or more to below 2 degrees
 with the card in place all the way; 0.75 after the cut, the blade down with every part of both grippers 1 cm or more
 from the knob (the handle left down). Full score: cut, the piece the cut leaves 8 cm wide within 5 mm at both ends,
 the handle left down, that piece flat where it was cut (the midpoint of the card's left edge still within 5 mm of the
@@ -72,8 +83,24 @@ YB = BY0  # the cutting edge, along x
 GUARD_Y, RED_Y = YB + 0.015, YB + 0.08
 HINGE = np.array([0.43, YB - 0.005, BOARD_TOP + 0.010])
 ARM_L, OPEN_DEG, KNOB_Y, KNOB_R, KNOB_LEN = 0.21, 35.0, YB - 0.025, 0.010, 0.045
+KNOB_MU = (0.8, 0.7)  # the knob's surface: moulded plastic (static, dynamic friction)
 T_BLADE = 0.25  # N m: the tension spring's hold, as Coulomb friction at the hinge
-CARD_W, CARD_T, CARD_KG = 0.10, 0.002, 0.008
+BLADE_D = 0.022  # m: the blade's edge below the arm's axis (12 mm below the board's top when the arm is level)
+CARD_W, CARD_T, CARD_KG = 0.10, 0.00038, 0.003  # 300 g/m2 cardstock, 0.38 mm thick
+# The card's resistance to the cut (a material rule: the simulated card is not cut in two). For a blade turning on a
+# pivot past a fixed edge, as in scissors, the work balance gives the torque needed to cut a sheet: its work of cutting
+# per unit area of cut (J_C) times its thickness times how far the cut advances per radian the blade turns. Here the cut
+# is at X, where the blade's edge crosses the board's top at the cutting edge, measured from the hinge:
+# X = (BLADE_D - h cos a) / sin a, h the hinge's height above the board, so the torque is
+# J_C * CARD_T * (BLADE_D cos a - h) / sin(a)^2. It acts at the hinge, as added Coulomb friction, while X is inside the
+# card lying on the board at the cutting edge, and only where that card is still uncut.
+J_C = 4900.0  # J/m^2: paper, from the work of cutting it with scissors (Mahvash et al. 2008, Table I)
+RESIST_SCALE = float(os.environ.get("CUTTER_RESIST_SCALE", "1"))  # CUTTER_RESIST_SCALE=2: the resistance doubled
+LIFT_FREE = 0.5  # degrees: the blade lifted this far above the lowest it has cut to moves freely again
+# CUTTER_PROBE=<N m>@<high>-<low> (a check of the arm, not the task): that much added hinge friction while the blade is
+# between those angles (degrees), whatever the card does, to see how hard the right arm can turn the blade.
+_PROBE = (tuple(float(v) for v in os.environ["CUTTER_PROBE"].replace("@", " ").replace("-", " ", 1).split())
+          if os.environ.get("CUTTER_PROBE") else None)
 REST_Z = BOARD_TOP + CARD_T / 2  # the card's centre when it lies flat on the board
 CARD_START = np.array([0.32, -0.02, REST_Z])
 STRIP_H, STRIP_Y = 0.005, (-0.050, -0.042)  # CUTTER_CARD_TILT only: the strip's height and its y extent
@@ -120,8 +147,9 @@ def _base_shapes() -> list:
 
 
 def _blade_shapes() -> list:
-    """The arm in its starting pose, raised OPEN_DEG: a bar along it and the blade under it (visual only, so that it
-    passes through the card), and the knob at its free end (the only part that collides, for gripping)."""
+    """The arm in its starting pose, raised OPEN_DEG: a bar along it and the blade under it, its edge BLADE_D below the
+    arm's axis (visual only, so that it passes through the card), and the knob at its free end (the only part that
+    collides, for gripping)."""
     a = math.radians(OPEN_DEG)
     along = np.array([-math.cos(a), 0.0, math.sin(a)])  # from the hinge toward the handle
     below = np.array([-math.sin(a), 0.0, -math.cos(a)])  # the arm's underside
@@ -129,14 +157,15 @@ def _blade_shapes() -> list:
     mid = HINGE + along * ARM_L / 2
     knob = HINGE + along * ARM_L + [0.0, KNOB_Y - HINGE[1], 0.0]
     return [BoxShape(_rel(mid), (ARM_L, 0.012, 0.012), BLACK, collide=False, quat_xyzw=q),
-            BoxShape(_rel(mid + below * 0.008), (ARM_L - 0.02, 0.002, 0.006), STEEL, collide=False, quat_xyzw=q),
+            BoxShape(_rel(mid + below * (0.006 + BLADE_D) / 2), (ARM_L - 0.02, 0.002, BLADE_D - 0.006), STEEL,
+                     collide=False, quat_xyzw=q),
             CylShape(_rel(knob), KNOB_R, KNOB_LEN, BLACK, axis="Y")]
 
 
 CUTTER = Linkage.build(
     "paper_cutter", pos=tuple(ORIGIN), mass=3.0, color=WOOD, shapes=_base_shapes(), friction=(0.12, 0.10),
     contact_offset=0.001,
-    links=[Link("blade", _blade_shapes(), mass=0.05, anchor=tuple(HINGE), axis="Y", friction=T_BLADE,
+    links=[Link("blade", _blade_shapes(), mass=0.05, anchor=tuple(HINGE), axis="Y", friction=T_BLADE, material=KNOB_MU,
                 limits=(-OPEN_DEG - 0.5, 75.0 - OPEN_DEG))])
 CARD = Body.build("card", pos=tuple(float(v) for v in CARD_C0), mass=CARD_KG, color=WHITE, friction=(0.8, 0.7),
                   contact_offset=0.001, solver_iterations=24, init_quat=CARD_QUAT,
@@ -148,7 +177,8 @@ OBJECTS = [CUTTER, CARD]
 # edge's vertical plane, on the board or past the edge, over the board's length +-2 cm, up to ZONE_TOP above the board.
 CLEAR, ZONE_X, ZONE_TOP = 0.04, (BX0 - 0.02, BX1 + 0.02), 0.10
 BLADE_DOWN = 2.0  # degrees: the blade is down below this
-CUT_FROM = 10.0  # degrees: the cut is the blade coming down from at least this high with the card in place all the way
+CUT_FROM = 15.0  # degrees: the cut is the blade coming down from at least this high (above where it meets the card) with
+# the card in place all the way
 # The parts of each arm checked: both fingers, the gripper's body and the wrist link it turns on. Points every 2 mm or
 # less over the surfaces of their collision hulls (the hulls the arm's URDF lists), placed each step by the links'
 # simulated poses; one point is kept per 1.5 mm cube on the fingers and per 3 mm cube on the body and the wrist.
@@ -174,6 +204,7 @@ CARD_CORNERS = np.array([[sx * CARD_W / 2, sy * CARD_W / 2, -CARD_T / 2] for sx 
 OLD_ON_KNOB, OLD_CLEAR, OLD_HIGH, OLD_LIFT = 0.04, 0.05, 30.0, 0.003
 _DEBUG = os.environ.get("CUTTER_DEBUG") == "1"
 _DEBUG_EVERY = int(os.environ.get("CUTTER_DEBUG_EVERY", "10"))
+_BLADE_LOG = os.environ.get("CUTTER_BLADE_LOG") == "1"  # with CUTTER_DEBUG=1: the blade's line every 2 control steps
 _EP: dict = {}
 _TCP: dict = {}
 _ARM: dict = {}
@@ -185,6 +216,9 @@ _PTS: dict = {}
 @on_reset
 def _reset() -> None:
     _EP.update(step=0, tick=0, counted=-1, best=0.0, failed="", recent=[], angle=OPEN_DEG, armed=False, cut=False,
+               fric=None, low=90.0, low_pose=None, resist=0.0, chord=None, hinge_tq=0.0, peak_tq=0.0, peak_all=0.0,
+               peak_resist=0.0,
+               work=0.0, prev_angle=OPEN_DEG,
                card_ok=False, flat=False, let_go=False, knob=None, post_ok=False, piece_w=(0.0, 0.0), cut_w=None,
                old=dict(failed=False, cut=False, best=0.0, card_ok=False, exempt=[], near=99.0, held=0, success=False))
     _TCP.clear()
@@ -212,6 +246,86 @@ def _knob_dist(w: np.ndarray, knob: np.ndarray) -> tuple[np.ndarray, np.ndarray]
     da = np.abs(w[:, 1] - knob[1]) - KNOB_LEN / 2
     out = np.where((dr > 0) | (da > 0), np.hypot(np.maximum(dr, 0.0), np.maximum(da, 0.0)), np.maximum(dr, da))
     return out, np.degrees(np.arctan2(dz, dx))
+
+
+H_HINGE = float(HINGE[2] - BOARD_TOP)  # the hinge's axis above the board
+
+
+def _cut_at(angle_deg: float) -> tuple[float, float]:
+    """Where the blade's edge crosses the cutting edge (the board's top) with the blade at this angle: its distance X
+    from the hinge along the cutting edge (m; inf when the edge does not reach the board), and dX/da (m per radian the
+    blade comes down)."""
+    a = math.radians(angle_deg)
+    if a <= 1e-4 or BLADE_D - H_HINGE * math.cos(a) <= 0.0:
+        return math.inf, 0.0
+    s = math.sin(a)
+    return (BLADE_D - H_HINGE * math.cos(a)) / s, (BLADE_D * math.cos(a) - H_HINGE) / (s * s)
+
+
+def _angle_at(x: float) -> float:
+    """The blade's angle (degrees) at which its edge crosses the cutting edge X from the hinge: X sin a + h cos a =
+    BLADE_D."""
+    return math.degrees(math.asin(BLADE_D / math.hypot(x, H_HINGE)) - math.atan2(H_HINGE, x))
+
+
+def _chord(cpos: np.ndarray, rot: np.ndarray):
+    """The part of the cutting edge's line (y = YB) the card covers while lying on the board there: its two ends'
+    distances from the hinge (m, near and far); None when the card does not reach across the line or is not down on the
+    board at it (its mid-plane more than 3 mm from where a card lying flat has it)."""
+    lo, hi = -math.inf, math.inf
+    for k in (0, 1):  # inside the card's two pairs of sides: |along its axis k| <= CARD_W / 2
+        ax, ay = rot[0, k], rot[1, k]
+        b = -cpos[0] * ax + (YB - cpos[1]) * ay
+        if abs(ax) < 1e-9:
+            if abs(b) > CARD_W / 2:
+                return None
+            continue
+        s0, s1 = sorted(((-CARD_W / 2 - b) / ax, (CARD_W / 2 - b) / ax))
+        lo, hi = max(lo, s0), min(hi, s1)
+    if hi - lo < 0.002:
+        return None
+    for x in (lo, hi):  # the card's mid-plane at the chord's ends
+        local = rot.T @ (np.array([x, YB, cpos[2]]) - cpos)
+        z = float((cpos + rot @ np.array([local[0], local[1], 0.0]))[2])
+        if abs(z - REST_Z) > 0.003:
+            return None
+    return HINGE[0] - hi, HINGE[0] - lo
+
+
+def _resistance(angle: float, cpos: np.ndarray, rot: np.ndarray) -> float:
+    """The card's resistance to the blade at this angle (N m at the hinge, see J_C), where the card is still uncut: the
+    lowest the blade has come with the card where it lies now, plus LIFT_FREE, bounds the part already cut."""
+    pose = np.array([cpos[0], cpos[1], math.degrees(math.atan2(rot[1, 0], rot[0, 0]))])
+    if _EP["low_pose"] is None or np.abs(pose[:2] - _EP["low_pose"][:2]).max() > 0.002 \
+            or abs(pose[2] - _EP["low_pose"][2]) > 1.0:
+        _EP.update(low=90.0, low_pose=pose)  # the card has moved: the blade meets uncut card
+    chord = _chord(cpos, rot)
+    _EP["chord"] = chord
+    out = 0.0
+    if chord is not None:
+        x, dxda = _cut_at(angle)
+        if chord[0] <= x <= chord[1] and angle <= _EP["low"] + LIFT_FREE:
+            out = RESIST_SCALE * J_C * CARD_T * dxda
+        _EP["low"] = min(_EP["low"], angle)
+    return out
+
+
+def _set_friction(cutter, torque: float) -> None:
+    """The hinge's Coulomb friction (static and dynamic, N m), written to the simulation when it changes."""
+    if _EP["fric"] is not None and abs(_EP["fric"] - torque) < 1e-4:
+        return
+    import torch
+
+    val = torch.tensor([[torque]], dtype=torch.float32, device=cutter.device)
+    cutter.write_joint_friction_coefficient_to_sim_index(joint_friction_coeff=val, joint_dynamic_friction_coeff=val,
+                                                         joint_ids=[_JOINT["blade"]])
+    _EP["fric"] = torque
+
+
+def _hinge_torque(cutter) -> float:
+    """The torque the hinge carries about its axis (N m: its friction, or its stop), as PhysX reports it."""
+    arr = np.asarray(cutter.root_view.get_dof_projected_joint_forces().numpy(), float).reshape(-1)
+    return float(arr[_JOINT["blade"]])
 
 
 def _link_points() -> dict:
@@ -308,6 +422,25 @@ def _track_inner(env) -> None:
     card = as_numpy(base.scene["card"].data.root_link_pose_w)[0]
     cpos, cquat = card[:3] - origin, card[3:7]
     rot = rotation(cquat)
+    _EP["angle"] = angle
+    resist = _resistance(angle, cpos, rot)  # the card's resistance to the blade, for the next control step
+    if _PROBE is not None:
+        resist = _PROBE[0] if _PROBE[2] <= angle <= _PROBE[1] else 0.0
+    if _EP["prev_angle"] > angle:  # the work the blade has done against the card coming down (J)
+        _EP["work"] += _EP["resist"] * math.radians(_EP["prev_angle"] - angle)
+    _EP["prev_angle"] = angle
+    _EP["resist"] = resist
+    _EP["peak_resist"] = max(_EP["peak_resist"], resist)
+    _set_friction(cutter, T_BLADE + resist)
+    if _BLADE_LOG and _EP["tick"] % 2 == 0:
+        print(f"BLD tick={_EP['tick']} {_blade_line()} right_tcp_z={(_TCP.get('right', np.zeros(3))[2] - BOARD_TOP) * 100:.2f}cm",
+              flush=True)
+    if _DEBUG:
+        tq = _hinge_torque(cutter)
+        _EP["hinge_tq"] = tq
+        _EP["peak_all"] = max(_EP["peak_all"], abs(tq))
+        if angle > BLADE_DOWN - 1.0:  # not pressed onto its stop
+            _EP["peak_tq"] = max(_EP["peak_tq"], abs(tq))
     lift = (cpos + CARD_CORNERS @ rot.T)[:, 2] - BOARD_TOP  # the underside's corners above the board
     tilt = math.degrees(math.acos(max(-1.0, min(1.0, float(rot[2, 2])))))
     left_edge = float((cpos + rot @ np.array([0.0, CARD_W / 2, 0.0]))[1])  # the midpoints of its left and right edges
@@ -404,12 +537,22 @@ def _debug(t) -> None:
     print(f"DBG   first version's rules (not scored): exempt={old['exempt'] or '-'} free_centre_near_cm="
           f"{old['near'] * 100:.1f} broken={old['failed']} card_ok={old['card_ok']} cut={old['cut']} "
           f"success={old['success']} score={old_score}", flush=True)
+    print(f"DBG   blade: {_blade_line()}", flush=True)
+
+
+def _blade_line() -> str:
+    ch = _EP["chord"]
+    where = "-" if ch is None else (f"{ch[0] * 100:.1f}-{ch[1] * 100:.1f}cm from the hinge, cut from "
+                                    f"{_angle_at(ch[0]):.2f} to {_angle_at(ch[1]):.2f}deg")
+    return (f"angle={_EP['angle']:.2f}deg resist={_EP['resist']:.3f}Nm friction={_EP['fric'] or 0.0:.3f}Nm "
+            f"hinge_torque={_EP['hinge_tq']:+.3f}Nm peak_above_1deg={_EP['peak_tq']:.3f}Nm peak_all={_EP['peak_all']:.3f}Nm "
+            f"peak_resist={_EP['peak_resist']:.3f}Nm work={_EP['work']:.4f}J low={_EP['low']:.2f}deg card_at_edge={where}")
 
 
 def score(objects) -> float:
     """The best stage reached (0 for the rest of the run once, with the blade up, a part of a gripper not holding the
     handle has come within 4 cm of the cutting edge): 0.25 the card in place and flat; 0.5 the blade brought down from
-    10 degrees or more with the card in place all the way (the cut); 0.75 the handle then left down. Full score (1.0) is
+    15 degrees or more with the card in place all the way (the cut); 0.75 the handle then left down. Full score (1.0) is
     success()."""
     t = _tally(objects)
     if _DEBUG:
@@ -428,9 +571,13 @@ def success(objects) -> bool:
 # -- scripted demo ----------------------------------------------------------------------------------------------------
 # The left gripper, fingers closed (closing along x), presses on the card at its left edge, its centre over the edge,
 # slides it right until that edge is on the red line and keeps pressing there: every part of it stays 4.8 cm or more
-# from the cutting edge while the blade is up. The right gripper takes the knob between its fingers and brings the blade
-# down along its arc, its wrist turning with the handle, lets go with the handle down and moves away; then the left
-# gripper lifts off and moves away.
+# from the cutting edge while the blade is up. The right gripper closes its fingers on the knob and brings the blade
+# down along its arc, its wrist turning with the handle: quickly to 14 degrees, then slowly through the card, pulling
+# the knob down against the card's resistance (in the scripted run the hinge carries up to 3.9 N m while the blade cuts),
+# and presses the handle onto its stop; it lets go with the handle down and moves away; then the left gripper lifts off
+# and moves away.
+# CUTTER_RESIST_SCALE=2 (a check of the margin): the card resists twice as hard; the blade comes through more slowly
+# and the run still scores 1.0 (the hinge carries up to 7.6 N m).
 # CUTTER_HAND_NEAR=1 (the wrong way) presses the card 3.5 cm from the cutting edge instead: score 0 (a finger comes
 # within 4 cm of the cutting edge while the blade is up).
 # CUTTER_HOVER=1 (the first version's loophole): the right gripper lets go of the knob with the blade 17 degrees up,
@@ -453,7 +600,8 @@ HOVER = os.environ.get("CUTTER_HOVER") == "1"
 CARD_LATE = os.environ.get("CUTTER_CARD_LATE") == "1"
 PRESS = 0.006  # the closed fingertips are aimed this far into the card, so that they press on it
 CLOSED, OPEN = 0.0, -0.030
-PINCH_KNOB = -(KNOB_R - 0.003)
+PINCH_KNOB = CLOSED  # closed on the knob: the fingers squeeze it with the gripper's full force
+PUSH_DEG = 5.0  # the handle is pushed toward 5 degrees below level, onto its stop (at -0.5)
 CARD_GOAL_Y = RED_Y - CARD_W / 2
 HOLD_AT = 0.035 if HAND_NEAR else 0.080  # how far from the cutting edge the left gripper's centre presses, in the end
 DOWN_L = grip_rotation(-math.pi / 2)  # straight down, fingers closing along x
@@ -518,18 +666,24 @@ def demo():
     right += [_w(max(0.5, t_hold - 3.0), knob0 + [0.0, 0.0, 0.035], OPEN, "wait for the card to be in place", DOWN_R),
               _w(1.0, knob0, OPEN, "fingers either side of the knob", DOWN_R),
               _w(0.8, knob0, PINCH_KNOB, "grip the knob", DOWN_R)]
-    for k in range(1, 7):  # bring the blade down along its arc, slowly, the wrist turning with the handle
-        turn = (OPEN_DEG + 1.0) * k / 6
-        at, rot = _knob(OPEN_DEG - turn), _ry(-turn) @ DOWN_R
-        right.append(_w(0.6, at, PINCH_KNOB, "bring the blade down", rot))
-        if HOVER and k == 3:  # let go with the blade part-way down, hover beside the knob, then take it again
+    # bring the blade down along its arc, the wrist turning with the handle: to 14 degrees, then slowly through the card
+    # (the blade cuts it between about 12 and 4 degrees), then press the handle down onto its stop
+    for angle, secs in ((29.0, 0.6), (23.0, 0.6), (17.0, 0.6), (14.0, 0.4), (10.0, 0.8), (6.0, 0.8), (3.0, 0.8),
+                        (-1.0, 0.8)):
+        turn = OPEN_DEG - angle
+        at, rot = _knob(angle), _ry(-turn) @ DOWN_R
+        right.append(_w(secs, at, PINCH_KNOB, "bring the blade down" if angle > 14.0 else "cut the card", rot))
+        if HOVER and angle == 17.0:  # let go with the blade part-way down, hover beside the knob, then take it again
             right += [_w(0.6, at, OPEN, "let go of the knob, the blade part-way down", rot),
                       _w(0.8, at + [0.0, 0.0, 0.015], OPEN, "hover beside the knob", rot),
                       _w(1.5, at + [0.0, 0.0, 0.015], OPEN, "hover beside the knob", rot),
                       _w(0.8, at, OPEN, "fingers either side of the knob again", rot),
                       _w(0.8, at, PINCH_KNOB, "grip the knob again", rot)]
     end, knob1 = _ry(-(OPEN_DEG + 1.0)) @ DOWN_R, _knob(-1.0)
-    right += [_w(0.6, knob1, OPEN, "let go, the handle down", end),
+    right += [_w(0.8, _knob(-PUSH_DEG), PINCH_KNOB, "press the handle down onto its stop", end),
+              _w(0.5, _knob(-PUSH_DEG), PINCH_KNOB, "press the handle down onto its stop", end),
+              _w(0.4, knob1, PINCH_KNOB, "ease off", end),
+              _w(0.6, knob1, OPEN, "let go, the handle down", end),
               _w(0.8, knob1 + [0.0, 0.0, 0.06], OPEN, "rise", end),
               _w(1.5, knob1 + [-0.02, -0.04, 0.10], OPEN, "move away", DOWN_R),
               _w(3.5, knob1 + [-0.02, -0.04, 0.10], OPEN, "wait", DOWN_R)]

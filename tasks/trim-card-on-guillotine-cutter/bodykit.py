@@ -247,7 +247,8 @@ class Link:
     ``pos``, world-aligned) on a revolute joint about the world axis ``axis`` ("X", "Y" or "Z") through ``anchor``
     (world, m), held to ``parent`` (an earlier link's name; None: the linkage's fixed base). ``friction`` (N m) is the
     joint's Coulomb friction: it does not turn while the torque across it stays below this. ``damping`` (N m s/rad)
-    adds viscous friction; ``limits`` (degrees from the start pose) stop it."""
+    adds viscous friction; ``limits`` (degrees from the start pose) stop it. ``material`` (static, dynamic), when
+    given, is the surface friction of this link's colliding shapes (otherwise the linkage's ``friction``)."""
 
     name: str
     shapes: tuple
@@ -258,6 +259,7 @@ class Link:
     friction: float = 0.0
     damping: float = 0.0
     limits: tuple | None = None  # (lower, upper) joint angles in degrees from the start pose; None: free
+    material: tuple | None = None  # (static, dynamic) surface friction of its shapes; None: the linkage's
 
 
 @dataclass(frozen=True)
@@ -546,7 +548,7 @@ def _spawn_linkage(prim_path: str, cfg, translation=None, orientation=None, **kw
             looks[color] = path
         return looks[color]
 
-    def rigid(path: str, mass: float, shapes) -> None:
+    def rigid(path: str, mass: float, shapes, material: str = phys) -> None:
         xform = UsdGeom.Xform.Define(stage, path)
         xform.AddTranslateOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(Gf.Vec3d(0.0, 0.0, 0.0))
         xform.AddOrientOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(Gf.Quatd(1, 0, 0, 0))
@@ -581,14 +583,19 @@ def _spawn_linkage(prim_path: str, cfg, translation=None, orientation=None, **kw
                 collision = PhysxSchema.PhysxCollisionAPI.Apply(geom.GetPrim())
                 collision.CreateContactOffsetAttr(float(spec.contact_offset))
                 collision.CreateRestOffsetAttr(0.0)
-                bind_physics_material(spath, phys, stage=stage)
+                bind_physics_material(spath, material, stage=stage)
 
     base_path = f"{prim_path}/base"
     rigid(base_path, spec.mass, spec.shapes)
     origin = np.asarray(spec.pos, float)
     for link in spec.links:
         path = f"{prim_path}/{link.name}"
-        rigid(path, link.mass, link.shapes)
+        own = phys
+        if link.material is not None:  # this link's own surface friction
+            own = f"{prim_path}/Looks/physics_{link.name}"
+            cfg_m = sim_utils.RigidBodyMaterialCfg(static_friction=link.material[0], dynamic_friction=link.material[1])
+            cfg_m.func(own, cfg_m)
+        rigid(path, link.mass, link.shapes, own)
         joint = UsdPhysics.RevoluteJoint.Define(stage, f"{path}/{link.name}_turn")
         joint.CreateAxisAttr(link.axis)
         parent = base_path if link.parent is None else f"{prim_path}/{link.parent}"
