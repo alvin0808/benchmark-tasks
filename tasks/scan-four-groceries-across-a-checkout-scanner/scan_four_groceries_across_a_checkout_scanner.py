@@ -1,30 +1,29 @@
-"""A checkout counter on the station table: the end of the conveyor belt on the robot's left, an in-counter bioptic
-barcode scanner in the middle (a Zebra MP7000 short: horizontal window flush with the counter, a tower with a vertical
-window facing the robot, a two-colour LED), and the bagging shelf on the robot's right. Four groceries stand or lie at
-the belt's end, each with a real UPC-A barcode printed on one side, none facing either window.
+"""A checkout counter on the station table: the end of the conveyor belt on the robot's left, a hands-free presentation
+barcode scanner in the middle (a Zebra DS9308-SR, USD 385, standing on the counter, its window facing the robot), and
+the bagging shelf on the robot's right. Four groceries stand or lie at the belt's end, each with a real UPC-A barcode
+printed on one side, none facing the scanner.
 
 Task (instruction): ring up the four groceries on the scanner, each read once, and put them on the bagging shelf. The
 instruction does not say how. The belt's end and the bagging shelf are farther apart than one arm reaches: the right
 arm's gripper reaches no further left than 45 cm from the middle and the groceries stand 45 to 64 cm to the left; the
 left arm's gripper reaches no further right than 45 cm and the shelf starts 46 cm to the right. So a cashier's two-hand
-relay is needed: one hand takes an item from the belt, turns its barcode to a window and passes it across the scanner,
-the other takes it on to the bagging shelf.
+relay is needed: one hand takes an item from the belt, turns its barcode to the scanner and presents it in front of the
+window, the other takes it on to the bagging shelf.
 
-The scanner model is disclosed and follows Zebra's documents for the MP7000. A code is read at a control step (20 Hz)
-when (1) its centre is within 15 cm of a window and over (or in front of) the glass, up to 2 cm past its edge; (2) it
-faces that window within 45 degrees; (3) it moves slower than 1.5 m/s; and (4) nothing of either arm (links, gripper,
-fingers) is between the window and any of nine points spread over the code. After a read the same code is not read
-again until it has been out of view for 0.5 s, the MP7000's default "Timeout Between Decodes, Same Symbol" ("The
-barcode must be out of the field of view for the timeout period before the scanner reads the same consecutive
-symbol"); passing it across again after that rings it up a second time (a double charge). Each read flashes the
-scanner's LED bright green for 0.5 s (Zebra: "The scanner beeps to indicate a successful decode, and the green LED
-flashes momentarily").
+The scanner model is disclosed and uses the DS9308's own numbers (Zebra's DS9300 Series spec sheet and DS9308 Product
+Reference Guide). A code is read at a control step (20 Hz) when (1) its centre is inside the imager's 52 x 33 degree
+field of view, which opens toward the robot from the window's middle, 0 to 22.4 cm in front of the window (the range
+for a 100 % UPC-A); (2) it faces the window within 60 degrees (skew and pitch tolerance); (3) it moves slower than
+3.05 m/s (swipe speed); and (4) nothing of either arm (links, gripper, fingers) is between the window's middle and any
+of nine points spread over the code. After a read the same code is not read again until it has been out of view for
+0.5 s, the scanner's default "Timeout Between Decodes, Same Symbol" ("The barcode must be out of the field of view for
+the timeout period before the scanner reads the same consecutive symbol"); presenting it again after that rings it up a
+second time (a double charge). In hands-free mode the scanner's LED is solid green and "turns off after decode": it
+goes out for 0.5 s on each read.
 
 World frame (m): x forward from the arm bases, y to the robot's left, z up; the table top (the counter) is at z 0.7475.
-- scanner, fixed: 351 mm along y (centred at y 0.153) x 292 mm along x (x 0.020 to 0.312); its platter flush with the
-  counter, the horizontal window (sapphire, 150 x 100 mm) at x 0.090 to 0.190; the tower at x 0.237 to 0.312, 128 mm
-  tall, its vertical window (220 x 92 mm, 18 to 110 mm above the counter) on its front face at x 0.237; the LED on the
-  tower's right end, dim green when ready.
+- scanner, fixed: 14.5 cm tall, 8.6 cm wide, 8.3 cm deep, its oval base centred at (0.373, 0.150); the head's front face
+  at x 0.335 carries the window (64 x 50 mm, its middle 10 cm above the counter); the LED lens on the head's top.
 - belt end, fixed (flush black rubber): x 0.02 to 0.40, y 0.455 to 0.645.
 - groceries, loose, each with a 12-digit UPC-A (100 % size: 0.33 mm modules, 22.85 mm bars), bars upright:
   spaghetti box 264 x 71 x 41 mm, 0.48 kg, lying along x at (0.20, 0.49), its code on its left face (+y) 7 cm from its
@@ -114,8 +113,9 @@ INK, WHITE, PAPER = (0.03, 0.03, 0.04), (0.97, 0.97, 0.96), (0.93, 0.92, 0.88)
 STEEL, TIN, DARK, GLASS = (0.70, 0.72, 0.74), (0.78, 0.79, 0.80), (0.10, 0.10, 0.11), (0.06, 0.09, 0.12)
 RED, YELLOW, BLUE, CAP_BLUE = (0.78, 0.10, 0.08), (0.96, 0.80, 0.25), (0.18, 0.42, 0.82), (0.10, 0.30, 0.78)
 SALSA, LID, WATER, PASTA_BLUE = (0.55, 0.16, 0.08), (0.12, 0.32, 0.16), (0.80, 0.88, 0.94), (0.10, 0.22, 0.55)
-LED_DIM, LED_ON, RUBBER, LINE = (0.08, 0.30, 0.10), (0.35, 1.00, 0.35), (0.09, 0.09, 0.10), (0.95, 0.80, 0.10)
+LED_ON, RUBBER, LINE = (0.35, 1.00, 0.35), (0.09, 0.09, 0.10), (0.95, 0.80, 0.10)
 SHELF_STEEL = (0.50, 0.53, 0.57)  # brushed stainless, darker than the counter
+LED_OFF, SCAN_GREY = (0.07, 0.10, 0.08), (0.30, 0.31, 0.33)
 
 
 # -- the groceries ----------------------------------------------------------------------------------------------------
@@ -243,20 +243,22 @@ ITEMS = [
 BY_NAME = {it.name: it for it in ITEMS}
 JAR = "salsa_jar"
 
-# -- the scanner (Zebra MP7000 short), the belt's end and the bagging shelf --------------------------------------------
-SCAN_YC = 0.153
-SCAN_X = (0.020, 0.312)
-SCAN_HALF_Y = 0.1755
-TOWER_X0, TOWER_H = 0.237, 0.128
-H_WIN = ((0.090, 0.190), (SCAN_YC - 0.075, SCAN_YC + 0.075))  # horizontal window: x range, y range (at the counter)
-V_WIN = ((SCAN_YC - 0.110, SCAN_YC + 0.110), (0.018, 0.110))  # vertical window: y range, z range above the counter
-XV = TOWER_X0  # the vertical window's plane
-READ_RANGE, READ_MARGIN, FACING_DEG, MAX_SPEED = 0.15, 0.02, 45.0, 1.5
+# -- the scanner (Zebra DS9308-SR presentation imager), the belt's end and the bagging shelf ---------------------------
+# 14.5 cm tall, 8.6 cm wide, 8.3 cm deep; it stands on the counter upright, its window facing the robot. Its imager
+# looks out of the window's middle (W): field of view 52 x 33 deg (half angles 26 and 16.5), 100 % UPC-A read from 0
+# to 22.4 cm, skew and pitch tolerance 60 deg, swipe speed up to 3.05 m/s (Zebra DS9300 Series spec sheet).
+SCAN_C = (0.373, 0.150)  # the middle of its base on the counter
+HEAD_X, HEAD_D, HEAD_W, HEAD_Z = -0.008, 0.060, 0.086, (0.048, 0.145)  # head: centre x (from SCAN_C), depth, width, z
+BASE_R, BASE_H = 0.042, 0.024
+WIN_W, WIN_H, WIN_ZC = 0.064, 0.050, 0.100  # the window on the head's front face: width, height, centre height
+XW = SCAN_C[0] + HEAD_X - HEAD_D / 2  # the window's plane (0.335)
+W_LENS = np.array([XW, SCAN_C[1], TOP + WIN_ZC])  # where the imager looks out from
+FOV_H, FOV_V = 26.0, 16.5  # half angles (deg)
+READ_RANGE, FACING_DEG, MAX_SPEED = 0.224, 60.0, 3.05
 SAME_SYMBOL_STEPS = 10  # 0.5 s out of view before the same code reads again
-FLASH_STEPS = 10  # the LED flashes 0.5 s per read
-LED_Y = SCAN_YC - SCAN_HALF_Y + 0.016  # the LED, at the tower's right end
-LED_POS = np.array([(TOWER_X0 + SCAN_X[1]) / 2, LED_Y, TOP + TOWER_H])
-HIDE = np.array([0.15, 0.0, TOP - 0.30])  # where the flash body waits, under the counter
+BLINK_STEPS = 10  # the solid green LED goes out for 0.5 s on each decode
+LED_POS = np.array([XW + 0.010, SCAN_C[1], TOP + HEAD_Z[1]])  # the LED lens on the head's top, near its front
+HIDE = np.array([0.15, 0.0, TOP - 0.30])  # where the lit lens waits, under the counter, while the LED is out
 
 BELT_X, BELT_Y = (0.02, 0.40), (0.455, 0.645)
 SHELF_X, SHELF_Y = (-0.05, 0.40), (-0.645, -0.46)
@@ -264,31 +266,23 @@ SHELF_LINE = SHELF_Y[1]
 
 
 def _scanner_shapes() -> list:
-    """In the frame of the scanner's middle on the counter: platter (flush), horizontal window, tower with its vertical
-    window, and the LED (dim green) on the tower's right end, on its top and front."""
-    xm = (SCAN_X[0] + SCAN_X[1]) / 2
-    w = 2 * SCAN_HALF_Y
-    out = [BoxShape(((SCAN_X[0] + TOWER_X0) / 2 - xm, 0.0, 0.0006), (TOWER_X0 - SCAN_X[0], w, 0.0012), STEEL,
-                    collide=False)]
-    (hx0, hx1), (hy0, hy1) = H_WIN
-    out.append(BoxShape(((hx0 + hx1) / 2 - xm, (hy0 + hy1) / 2 - SCAN_YC, 0.0014), (hx1 - hx0, hy1 - hy0, 0.0004),
-                        GLASS, collide=False))
-    out.append(BoxShape(((TOWER_X0 + SCAN_X[1]) / 2 - xm, 0.0, TOWER_H / 2), (SCAN_X[1] - TOWER_X0, w, TOWER_H),
-                        DARK))
-    (vy0, vy1), (vz0, vz1) = V_WIN
-    out.append(BoxShape((TOWER_X0 - xm - 0.0003, (vy0 + vy1) / 2 - SCAN_YC, (vz0 + vz1) / 2),
-                        (0.0006, vy1 - vy0, vz1 - vz0), GLASS, collide=False))
-    out.append(BoxShape((LED_POS[0] - xm, LED_Y - SCAN_YC, TOWER_H + 0.0006), (0.040, 0.020, 0.0012), LED_DIM,
-                        collide=False))
-    out.append(BoxShape((TOWER_X0 - xm - 0.0003, LED_Y - SCAN_YC, TOWER_H - 0.010), (0.0006, 0.020, 0.014), LED_DIM,
-                        collide=False))
-    return out
+    """The DS9308 in the frame of its base's middle on the counter: an oval base, a neck, the head with its window on
+    the front (facing -x, the robot) and its LED lens on top (dark: the lit lens is a separate body)."""
+    hx0 = HEAD_X - HEAD_D / 2
+    return [CylShape((0.0, 0.0, BASE_H / 2), BASE_R, BASE_H, DARK),
+            BoxShape((0.006, 0.0, (BASE_H + HEAD_Z[0]) / 2), (0.030, 0.040, HEAD_Z[0] - BASE_H), DARK),
+            BoxShape((HEAD_X, 0.0, (HEAD_Z[0] + HEAD_Z[1]) / 2), (HEAD_D, HEAD_W, HEAD_Z[1] - HEAD_Z[0]), DARK),
+            BoxShape((hx0 - 0.0003, 0.0, WIN_ZC), (0.0006, WIN_W, WIN_H), GLASS, collide=False),
+            BoxShape((hx0 - 0.0003, 0.0, (HEAD_Z[0] + WIN_ZC - WIN_H / 2) / 2), (0.0006, WIN_W, WIN_ZC - WIN_H / 2 -
+                                                                                   HEAD_Z[0] - 0.006), SCAN_GREY,
+                     collide=False),
+            BoxShape((LED_POS[0] - SCAN_C[0], 0.0, HEAD_Z[1] + 0.0006), (0.012, 0.030, 0.0012), LED_OFF,
+                     collide=False)]
 
 
-def _flash_shapes() -> list:
-    """The lit LED (bright green), slightly larger than the dim lens, in the frame of LED_POS."""
-    return [BoxShape((0.0, 0.0, 0.0014), (0.042, 0.022, 0.0016), LED_ON, collide=False),
-            BoxShape((TOWER_X0 - LED_POS[0] - 0.0008, 0.0, -0.010), (0.0012, 0.022, 0.016), LED_ON, collide=False)]
+def _led_shapes() -> list:
+    """The lit LED lens (solid green), slightly larger than the dark one, in the frame of LED_POS."""
+    return [BoxShape((0.0, 0.0, 0.0014), (0.014, 0.032, 0.0016), LED_ON, collide=False)]
 
 
 def _belt_shapes() -> list:
@@ -308,10 +302,10 @@ def _shelf_shapes() -> list:
                      collide=False)]
 
 
-SCANNER = Body.build("checkout_scanner", pos=((SCAN_X[0] + SCAN_X[1]) / 2, SCAN_YC, TOP), mass=5.5, color=DARK,
-                     fixed=True, shapes=_scanner_shapes())
-FLASH = Body.build("good_read_led", pos=tuple(float(v) for v in HIDE), mass=0.01, color=LED_ON, gravity=False,
-                   damping=(5.0, 5.0), shapes=_flash_shapes())
+SCANNER = Body.build("presentation_scanner", pos=(SCAN_C[0], SCAN_C[1], TOP), mass=0.318, color=DARK, fixed=True,
+                     shapes=_scanner_shapes())
+FLASH = Body.build("good_decode_led", pos=tuple(float(v) for v in LED_POS), mass=0.01, color=LED_ON, gravity=False,
+                   damping=(5.0, 5.0), shapes=_led_shapes())
 BELT = Body.build("belt_end", pos=((BELT_X[0] + BELT_X[1]) / 2, (BELT_Y[0] + BELT_Y[1]) / 2, TOP), mass=1.0,
                   color=RUBBER, fixed=True, shapes=_belt_shapes())
 SHELF = Body.build("bagging_shelf", pos=((SHELF_X[0] + SHELF_X[1]) / 2, (SHELF_Y[0] + SHELF_Y[1]) / 2, TOP), mass=1.0,
@@ -412,29 +406,23 @@ CODE_PTS = {it.name: it.code_points() for it in ITEMS}
 
 
 def window_view(c: np.ndarray, n: np.ndarray) -> list:
-    """The windows a code (centre c, outward normal n, world) is in view of, by position and facing."""
-    out = []
-    cosf = math.cos(math.radians(FACING_DEG))
-    (hx0, hx1), (hy0, hy1) = H_WIN
-    m = READ_MARGIN
-    if (hx0 - m <= c[0] <= hx1 + m and hy0 - m <= c[1] <= hy1 + m and 0.0 <= c[2] - TOP <= READ_RANGE
-            and -n[2] >= cosf):
-        out.append("horizontal")
-    (vy0, vy1), (vz0, vz1) = V_WIN
-    if (vy0 - m <= c[1] <= vy1 + m and vz0 - m <= c[2] - TOP <= vz1 + m and 0.0 <= XV - c[0] <= READ_RANGE
-            and n[0] >= cosf):
-        out.append("vertical")
-    return out
+    """["window"] when a code (centre c, outward normal n, world) is in the imager's view: inside its 52 x 33 deg field
+    of view, 0 to 22.4 cm in front of the window, facing the window within 60 deg."""
+    d = XW - c[0]
+    if not 0.0 < d <= READ_RANGE:
+        return []
+    if abs(c[1] - W_LENS[1]) > d * math.tan(math.radians(FOV_H)) or abs(c[2] - W_LENS[2]) > d * math.tan(
+            math.radians(FOV_V)):
+        return []
+    to_lens = W_LENS - c
+    if float(n @ to_lens) / float(np.linalg.norm(to_lens)) < math.cos(math.radians(FACING_DEG)):
+        return []
+    return ["window"]
 
 
 def window_targets(window: str, pts: np.ndarray) -> np.ndarray:
-    """For each point, the nearest point of the window's glass along its normal."""
-    if window == "horizontal":
-        (hx0, hx1), (hy0, hy1) = H_WIN
-        return np.stack([np.clip(pts[:, 0], hx0, hx1), np.clip(pts[:, 1], hy0, hy1), np.full(len(pts), TOP)], 1)
-    (vy0, vy1), (vz0, vz1) = V_WIN
-    return np.stack([np.full(len(pts), XV), np.clip(pts[:, 1], vy0, vy1), np.clip(pts[:, 2], TOP + vz0, TOP + vz1)],
-                    1)
+    """Each code point's line of sight ends at the imager (the window's middle)."""
+    return np.repeat(W_LENS[None], len(pts), axis=0)
 
 
 # -- tracking -------------------------------------------------------------------------------------------------------
@@ -553,10 +541,10 @@ def _track_inner(env) -> None:
         if seen and _EP["armed"][n]:
             _EP["reads"][n] += 1
             _EP["armed"][n] = False
-            _EP["flash_until"] = tick + FLASH_STEPS
+            _EP["flash_until"] = tick + BLINK_STEPS
             _EP["log"].append((tick, n, why))
             if _DEBUG:
-                print(f"DBG READ {n} #{_EP['reads'][n]} at step {tick} by the {why} window: code at "
+                print(f"DBG READ {n} #{_EP['reads'][n]} at step {tick} through the {why}: code at "
                       f"({c[0]:.3f},{c[1]:.3f},{c[2] - TOP:.3f}) speed {speed:.2f} m/s", flush=True)
         if seen:
             _EP["unseen"][n] = 0
@@ -587,7 +575,7 @@ def _track_inner(env) -> None:
         still = len(hist) == STILL_STEPS and max(float(np.linalg.norm(h - pos)) for h in hist) * 1000 < STILL_MM
         st.update(on=on, still=still, bagged=bool(on and still and near >= CLEAR_FINGER))
         _EP["state"][n] = st
-    lit = tick < _EP["flash_until"]
+    lit = tick >= _EP["flash_until"]  # solid green, out for 0.5 s after each decode
     _place(base, FLASH.name, LED_POS if lit else HIDE)
     _EP["led_on"] = lit
 
@@ -645,11 +633,11 @@ def success(objects) -> bool:
 # -- scripted demo ----------------------------------------------------------------------------------------------------
 # The left hand takes each grocery from the belt's end with its fingers on two sides away from the code (the box 2.5 cm
 # from its middle, on the side away from its code; the bottle, too tall to reach over, from the side), draws it clear
-# of the others and turns it in the hand by a quarter or half turn so that its code faces the scanner's vertical window
-# (the box is lifted above the tower to turn), passes it across at about 0.15 m/s 4-6 cm in front of the window (one
-# read, the LED flashes) and sets it down on the counter just past the scanner. The right hand takes it from there round
-# to the bagging shelf. The spaghetti box goes first (it lies along the shelf's outer edge), then the can, the jar and
-# the bottle (in a row along the shelf's inner side).
+# of the others and turns it in the hand by a quarter or half turn so that its code faces the scanner's window (the
+# box is lifted to turn), raises it until its code is level with the window and passes it across at about 0.2 m/s 14 to
+# 16 cm in front of the window (one read, the LED goes out for 0.5 s) and sets it down on the counter past the
+# scanner. The right hand takes it from there round to the bagging shelf. The spaghetti box goes first (it lies along
+# the shelf's outer edge), then the can, the jar and the bottle (in a row along the shelf's inner side).
 # SCAN_ONE=1 runs it the wrong way: the left hand alone, which passes every item across the scanner and then sets it
 # down on the counter as far toward the shelf as it reaches; the right arm stays where it is. Nothing reaches the shelf,
 # so it scores 0.
@@ -659,7 +647,7 @@ OPEN = -0.047
 PASS_X = 0.14
 PASS_Y0 = 0.36  # the pass starts here (the code is still out of view)
 HAND_Y = -0.07  # where the left hand sets each item down (the TCP's y)
-LIFT = 0.015  # items are carried 1.5 cm above the counter across the scanner
+PRESENT_Z = WIN_ZC  # each code is passed across at the window's height (10 cm above the counter)
 SIDE = ("water_bottle",)  # taken from the side at its grip height: the arms cannot reach over its 20 cm
 L_SAFE = (0.20, 0.25, TOP + 0.17)  # the left hand's start, over the scanner's left part, clear of the groceries
 L_BACK = (0.16, 0.20, TOP + 0.17)
@@ -743,8 +731,8 @@ def _approach(it: Item, x: float, y: float, zg: float, yaw: float, op: float, t_
 
 
 BOX_GRIP = 0.025  # the left hand takes the box 2.5 cm from its middle, on the side away from the code
-L_TURN_BOX = (0.16, 0.385, TOP + 0.16)  # the box is turned here, lifted above the scanner's tower, its code out of
-# view (it leads the hand by 9.5 cm); the wrist's last joint is 3 deg from its limit there
+L_TURN_BOX = (0.16, 0.385, TOP + 0.16)  # the box is turned here, lifted clear, its code out of the scanner's view
+# (it leads the hand by 9.5 cm); the wrist's last joint is 3 deg from its limit there
 
 
 def _left_item(it: Item, first: bool, waits: dict, set_spot=None) -> tuple[list, dict]:
@@ -775,7 +763,7 @@ def _left_item(it: Item, first: bool, waits: dict, set_spot=None) -> tuple[list,
     k = max(1, int(math.ceil(abs(turn) / 85.0)))
     for i in range(1, k + 1):
         out.append(_w(1.0, turn_at, cl, "turn the code toward the scanner", yaw0 + turn * i / k))
-    zp = TOP + zg + LIFT
+    zp = TOP + zg + (PRESENT_Z - float(it.code_c[2]))  # the item raised so that its code is level with the window
     hand = (PASS_X, HAND_Y)
     sx, sy = hand if set_spot is None else set_spot
     px, y_start = (L_TURN_BOX[0], L_TURN_BOX[1]) if box else (PASS_X, PASS_Y0)  # the box's code leads by 9.5 cm
@@ -785,7 +773,7 @@ def _left_item(it: Item, first: bool, waits: dict, set_spot=None) -> tuple[list,
     pass_end = hand[1] + 0.02 if set_spot is None else ONE_PASS_END
     out.append(_w(2.8, (px, pass_end, zp), cl, "pass it across the scanner", yaw1))
     out.append(_w(0.8, (sx, sy, zp), cl, "on past the scanner", yaw1))
-    out.append(_w(0.6, (sx, sy, TOP + zg + 0.002), cl, "set it down", yaw1))
+    out.append(_w(1.0, (sx, sy, TOP + zg + 0.002), cl, "set it down", yaw1))
     t_set = _dur(out)
     out.append(_w(0.7, (sx, sy, TOP + zg + 0.002), op, "let go", yaw1))
     out.append(_w(0.5, (sx, sy, TOP + zg + 0.012), op, "lift off", yaw1))

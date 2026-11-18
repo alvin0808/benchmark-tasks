@@ -1,42 +1,72 @@
 # Scan four groceries across a checkout scanner, one read each, and put them on the bagging shelf
 
-A checkout counter on the station table. In the middle, set into the counter, is an in-counter bioptic barcode scanner
-at true size (a Zebra MP7000 short: a horizontal window in a platter flush with the counter, a tower with a vertical
-window facing the robot, and a two-colour LED). On the robot's left is the end of the conveyor belt with four
-groceries on it: a 1 lb spaghetti box, a 10.75 oz can of condensed soup, a 16 oz glass jar of salsa and a 16.9 fl oz
-bottle of water. Each carries a real 12-digit UPC-A barcode on one side, and none starts with its barcode facing either
-window. On the robot's right is the bagging shelf. The instruction asks for the four groceries to be rung up on the
-scanner, each item read once, and put on the bagging shelf; it does not say how.
+A checkout counter on the station table. In the middle, standing on the counter with its window facing the robot, is
+a hands-free presentation barcode scanner at true size: a Zebra DS9308-SR, the kind of scanner used at convenience
+store, pharmacy and small-store checkouts (USD 410.19 with its USB cable; where to buy it is below). On the robot's
+left is the end of the conveyor belt with four groceries on it: a 1 lb spaghetti box, a 10.75 oz can of condensed soup,
+a 16 oz glass jar of salsa and a 16.9 fl oz bottle of water. Each carries a real 12-digit UPC-A barcode on one side, and
+none starts with its barcode facing the scanner. On the robot's right is the bagging shelf. The instruction asks for
+the four groceries to be rung up on the scanner, each item read once, and put on the bagging shelf; it does not say
+how.
 
 ## Why it matters, and the procedure
 
 Cashiers ([O*NET 41-2011.00][onet]; 3,106,300 US jobs in 2025) "Establish or identify prices of goods, services, or
 admission, and tabulate bills, using calculators, cash registers, or optical price scanners", and "Bag, box, wrap, or
-gift-wrap merchandise". The same hand skill is asked of every shopper at a self-checkout. At a bioptic scanner the
-cashier passes each item so that its barcode faces one of the two windows, with no finger over the code, and listens
-for the beep. Zebra's documents for the MP7000 give what the task checks:
+gift-wrap merchandise". The same hand skill is asked of every shopper at a self-checkout. At a presentation scanner
+the cashier presents each item with its barcode toward the window, with no finger over the code, and listens for the
+beep. Zebra's documents for the DS9308 give what the task checks:
 
-- [MP7000 Integrator Guide][ig] (MN-002914), "Scanning": "Position the barcode anywhere within the MP70XX's field of
-  view. [...] The scanner beeps to indicate a successful decode, and the green LED flashes momentarily"; Table 5-1:
-  "Barcode decoded: [...] Bright green [...] One bright green LED flash"; "System is idle: [...] Dim green [...] LED
-  constant on; ready for decode".
-- [MP7000 Bar Code Programming Guide][prg] (MN-002912-12EN), p. 6-32, "Timeout Between Decodes, Same Symbol": "Use this
-  option in presentation mode to prevent the scanner from continuously decoding the same barcode when it is left in the
+- [DS9308 Product Reference Guide][prg] (MN-003532-08EN), p. 45, "Hands-free Scanning": "The scanner is in hands-free
+  (presentation) mode when it sits on a counter top [...] In this mode, the scanner operates in continuous (constant-on)
+  mode, where it automatically decodes a barcode presented in its field of view. In hands-free mode the LED indicator
+  turns solid green." Table 3 (p. 42), "A barcode was successfully decoded": "Medium beep (or as configured)",
+  "Hands-free - solid green LED; turns off after decode."
+- The same guide, p. 80, "Timeout Between Decodes, Same Symbol": "Use this option in presentation mode or Continuous
+  Barcode Read mode to prevent the scanner from continuously decoding the same barcode when it is left in the
   scanner's field of view. The barcode must be out of the field of view for the timeout period before the scanner reads
-  the same consecutive symbol. [...] The default interval is 0.5 seconds." And p. 14-4, among the reasons "a
-  label/barcode may not be decoded while in the field of view": "The label is presented at extreme angle to scanner."
-- [MP7000 specification sheet][spec]: short scanner 351 mm L x 292 mm W x 102 mm D x 128 mm H; "Large two-color LED";
-  "Beeper: adjustable volume and beep tones"; horizontal glass "Sapphire".
+  the same consecutive symbol. [...] The default interval is 0.5 seconds." Table 4 (p. 47), decode ranges: "13 mil
+  (100%) UPC 0 in. / 0 cm 8.8 in. / 22.4 cm"; Table 6 (p. 55-56) lists the size, weight, field of view and
+  tolerances quoted from the specification sheet below.
+- [DS9300 Series specification sheet][spec]: 14.5 cm H x 8.6 cm W x 8.3 cm D, 318 g; imager field of view "52° H x
+  33° V nominal"; skew and pitch tolerance "+/-60°", roll "360°"; swipe speed "Up to 120 in./305 cm. per second for 13
+  mil UPC in optimized mode"; user indicators "Good decode LEDs, rear view LEDs, beeper (Adjustable tone and volume)";
+  "The flexible ratcheting base offers four positions, from 15° back to 45° forward."
 
-So an item must be read exactly once: an item put in the bag unread leaves the store unpaid, and an item passed back
-across the windows after its barcode has been out of view for 0.5 s is rung up twice and overcharges the customer.
+So an item must be read exactly once: an item put in the bag unread leaves the store unpaid, and an item presented
+again after its barcode has been out of view for 0.5 s is rung up twice and overcharges the customer.
 
 How this differs from turning parcels' labels toward a fixed scanner on a moving line: there the cartons stay on their
 carriers and are only yawed, without being picked up. Here each item is picked up and turned in the hand (by a quarter
 or half turn), the grip has to be chosen so that no finger covers the code (the box is held 2.5 cm from its middle, on
-the side away from its code), the code is passed across the windows within reading range and the reads are counted
+the side away from its code), the code is passed in front of the window within reading range and the reads are counted
 (none missed, none doubled), and the item is handed on and set down; the four items are different real shapes (a long
 box, a squat can, a heavy glass jar, a tall bottle).
+
+## The scanner, and where to get it
+
+The scanner is an off-the-shelf Zebra DS9308-SR (standard range). Its USB kit, the scanner with its shielded USB cable
+(part DS9308-SR4U2100AZW), costs USD 410.19 at [Barcode Factory][buy], a US reseller (seen on 17 November 2026; MSRP
+USD 569.71; the scanner alone, part DS9308-SR00004ZZWW, USD 384.97). Zebra's locking-mount bracket that holds
+it on the counter (BRKT-LM0093C-04) costs USD 14.09 there, so the scanner set-up costs about USD 425. It plugs into any
+PC by USB as a keyboard and needs nothing else.
+
+It is a checkout scanner, used the way cashiers use it. Zebra's specification sheet lists retail point of sale first
+among the DS9300 Series' uses, "From convenience and drug stores to quick serve restaurants and other retail
+environments", and its locking mount for "self checkout". Supermarket lanes also use larger in-counter scanners with two
+windows (bioptic scanners), which cost much more. The presentation scanner keeps what this task tests and how it is
+scored:
+
+- The hand skill is the same. Each item is picked up and turned in the hand until its code faces the window, held with
+  no finger over the code, presented once within reading range, handed on and set down on the bagging shelf. With one
+  window, a code has to face that window within 60 degrees, and inside its field of view no code facing left (as three
+  of them start) can: every item has to be turned to be read.
+- The score is the same. An item counts once it is read exactly once and rests, released, on the bagging shelf; a
+  second read after the 0.5 s same-symbol timeout is a double charge, and an item that reaches the shelf unread has
+  left unpaid. In a real trial every read is the scanner's own: one beep, the LED going out, one decode in the log.
+- The read model uses the DS9308's own numbers (field of view, range, skew and pitch tolerance, swipe speed,
+  same-symbol timeout, LED), from its specification sheet and guide, so the simulated reads follow the scanner that a
+  real trial uses.
 
 ## Why it takes both arms, as seen in the scene
 
@@ -70,12 +100,12 @@ and the arms after every control step and move the LED's lit lens into place.
 Positions are in cm from the midpoint between the two arm bases: x forward (away from the arms), y to the robot's
 left; heights above the counter (the table top).
 
-- Scanner, fixed: a Zebra MP7000 short, 35.1 cm along y by 29.2 cm along x (x 2.0 to 31.2, y -2.3 to 32.9), its
-  platter flush with the counter. The horizontal window (sapphire, 15 x 10 cm) is at x 9 to 19, y 7.8 to 22.8. The
-  tower, 12.8 cm tall, is at x 23.7 to 31.2; its vertical window (22 x 9.2 cm) is on its front face at x 23.7, y 4.3 to
-  26.3, 1.8 to 11.0 cm above the counter, facing the robot. The LED lens is on the tower's right end (y -0.7), dim green
-  when the scanner is ready; on each read it flashes bright green for 0.5 s. (Zebra's sheet gives only the outside
-  dimensions; the windows' sizes are estimated from Zebra's photos.)
+- Scanner, fixed to the counter (in Zebra's locking-mount bracket, or its multi-mount bracket on the bracket's adhesive
+  pad, both in Zebra's guide): a Zebra DS9308-SR, 14.5 cm tall, 8.6 cm wide and 8.3 cm deep, 318 g, standing upright
+  (its base set level, within its 15 degrees back to 45 degrees forward), its oval base centred at x 37.3, y 15. Its
+  head's front face, at x 33.5, carries the window (about 6.4 x 5.0 cm, its middle 10 cm above the counter, at y 15),
+  facing the robot. The LED lens is on the head's top, at its front; it is solid green while the scanner is ready and
+  goes out for 0.5 s after each read.
 - Belt end, fixed: black rubber flush with the counter, x 2 to 40, y 45.5 to 64.5.
 - Groceries, loose, each with a UPC-A barcode at 100 % size (0.33 mm modules, 22.85 mm bars, 37.3 mm wide with its
   quiet zones), bars upright, printed on a label (the box: on its carton). The 95-module patterns are those of the
@@ -94,23 +124,22 @@ left; heights above the counter (the table top).
 
 ## The scanner model
 
-The simulation does not render what the scanner's imagers see. A read is computed every control step (20 Hz) from the
-code's pose and the arms' joints. A code is read when:
+The simulation does not render what the scanner's imager sees. A read is computed every control step (20 Hz) from the
+code's pose and the arms' joints, with the DS9308's own numbers. A code is read when:
 
-1. its centre is within 15 cm of a window: over the horizontal window (up to 2 cm past its edge) and at most 15 cm
-   above it, or in front of the vertical window (up to 2 cm past its edges) and at most 15 cm from it;
-2. it faces that window within 45 degrees (the code's outward normal within 45 degrees of straight down, or of the
-   direction toward the tower);
-3. it moves slower than 1.5 m/s (Zebra rates its single-window in-counter [SP72][sp72] for swipes up to 3.05 m/s);
+1. its centre is in the imager's field of view: inside the 52 x 33 degree pyramid that opens toward the robot from the
+   window's middle (x 33.5, y 15, 10 cm up), and 0 to 22.4 cm in front of the window (its range for a 100 % UPC-A);
+2. it faces the window within 60 degrees (the angle between the code's outward normal and its line to the window's
+   middle; the scanner's skew and pitch tolerance);
+3. it moves slower than 3.05 m/s (the scanner's swipe speed for a 13 mil UPC);
 4. no part of either arm (links, gripper body and fingers, as boxes fitted to the YAM's collision meshes and placed by
-   the arm's joints) lies on the straight line from any of nine points spread over the code's bars to the window.
+   the arm's joints) lies on the straight line from any of nine points spread over the code's bars to the window's
+   middle.
 
 After a read, the same code reads again only once it has been out of view (failed the four tests) for 0.5 s, the
-MP7000's default. The scanner's LED flashes bright green for 0.5 s on every read (the lit lens, a visual-only body, is
-moved into place over the dim one). The reach of 15 cm and the 45 degrees are the task's numbers (the MP7000's sheet
-gives none; Zebra lists 0 to 18.2 cm for a 100 % UPC-A on its single-window horizontal SP72); the real MP7000 also reads
-some codes at steeper angles through its angled views, so the model asks for the barcode to face a window, as a cashier
-presents it.
+DS9308's default. The scanner's solid green LED goes out for 0.5 s on every read, as in hands-free mode (Zebra gives
+no duration; the lit lens, a visual-only body, is moved away and back; the score does not use it). The beep is not
+modelled.
 
 ## Run and score a trial
 
@@ -126,7 +155,7 @@ The scorer is `task_score`: 1.0 when `success()` has held for 1 s, otherwise the
   the run: it left unpaid.
 - Full score (1.0, success): all four checked out, held for 1 s.
 
-Doing nothing scores 0: no code starts in view of a window and nothing starts on the shelf. In a real trial the reads
+Doing nothing scores 0: no code starts in the scanner's view and nothing starts on the shelf. In a real trial the reads
 are the scanner's own: its beeps, and the decoded items on the POS (or in Zebra's 123Scan log), counted per item; a
 photo of the shelf after the robot lets go gives the bagged items; a dropped jar is judged from the videos.
 `-E object_jitter=0` keeps every object exactly where the task file puts it.
@@ -144,17 +173,17 @@ inspect-robots run --embodiment yam_arena --policy dream \
 The scripted demo, which reaches full score (the left gripper takes each grocery from the belt with its fingers on
 two sides away from its code: the box 2.5 cm from its middle, on the side away from its code, and the 20 cm bottle from
 the side, since the arms cannot reach over it; it draws the item clear of the others and turns it by a quarter or half
-turn so that its code faces the vertical window, the box lifted above the tower to turn; it passes the item across 4
-to 7 cm in front of the window at about 0.15 m/s, one read each with the LED flashing, and sets it on the counter just
-past the scanner; the right gripper takes each from there round to the bagging shelf: the box along its outer edge,
-then the jar, the can and the bottle in a row along its inner side):
+turn so that its code faces the scanner, the box lifted to turn; it raises the item until its code is level with the
+window and passes it across 14 to 17 cm in front of the window at about 0.2 m/s, one read each with the LED going out,
+and sets it on the counter past the scanner; the right gripper takes each from there round to the bagging shelf: the
+box along its outer edge, then the jar, the can and the bottle in a row along its inner side):
 
 ```bash
 inspect-robots run --embodiment yam_arena --policy yam_scripted \
   -E task=scan_four_groceries_across_a_checkout_scanner.py -E object_jitter=0 -E control_hz=20 \
   -E cam_width=320 -E cam_height=176 \
   --instruction "Ring up the four groceries on the scanner, each item read once, and put them on the bagging shelf." \
-  --scorer task_score --max-steps 1800 --store-frames --log-dir ~/yam-eval/scan-demo
+  --scorer task_score --max-steps 1900 --store-frames --log-dir ~/yam-eval/scan-demo
 ```
 
 Videos, one MP4 per camera next to each run's frames:
@@ -163,26 +192,27 @@ Videos, one MP4 per camera next to each run's frames:
 for log in ~/yam-eval/scan-dream/*.json; do inspect-robots video "$log"; done
 ```
 
-`SCAN_DEBUG=1` prints, every 10 steps (`SCAN_DEBUG_EVERY=5` for every 5), each grocery's position, tilt, reads, which
-window it is in view of and why it is or is not read (out of view, covered, too fast), how near the nearest finger
-is, whether it is on the shelf and still, and whether it left unpaid; whether the LED is lit, the score and any broken
-rule; and each gripper's centre and finger opening. It also prints a line for every read and every broken rule.
+`SCAN_DEBUG=1` prints, every 10 steps (`SCAN_DEBUG_EVERY=5` for every 5), each grocery's position, tilt, reads,
+whether it is in the scanner's view and why it is or is not read (out of view, covered, too fast), how near the
+nearest finger is, whether it is on the shelf and still, and whether it left unpaid; whether the LED is lit, the score
+and any broken rule; and each gripper's centre and finger opening. It also prints a line for every read and every
+broken rule.
 
 `SCAN_ONE=1` runs the demo the wrong way: the left hand alone, with the right arm left where it starts. It rings up
-all four items exactly as the demo does (four reads, four LED flashes), but with nobody to pass them to it can only set
-them down on the counter just past the scanner, their middles 3 to 17 cm to the right of the middle (pointing down,
-its gripper reaches no further); the bagging shelf starts at 46 cm. The run scores 0: every item was read once, but
-none reached the customer's side, and an item earns its 0.25 only once it is read and on the shelf. The right arm alone
-also scores 0: its gripper centre stops at 45 cm to the left, short of every grocery's middle (49 to 60.5 cm), so it
-cannot even take one off the belt.
+all four items exactly as the demo does (four reads, the LED going out four times), but with nobody to pass them to it
+can only set them down on the counter just past the scanner, their middles 3 to 15 cm to the right of the middle
+(pointing down, its gripper reaches no further); the bagging shelf starts at 46 cm. The run scores 0: every item was
+read once, but none reached the customer's side, and an item earns its 0.25 only once it is read and on the shelf. The
+right arm alone also scores 0: its gripper centre stops at 45 cm to the left, short of every grocery's middle (49 to
+60.5 cm), so it cannot even take one off the belt.
 
 ## Runtime per trial
 
-On one NVIDIA RTX PRO 6000 Blackwell: the scripted demo is 1,751 steps (87.6 s of simulated time; the run ends once
-success has held for 1 s). It took about 6 minutes at 320 x 176 without video with the GPU to itself (363 s), and about
-17 minutes while rendering 1280 x 720 video with the GPU shared with another user's four simulations (996 s). A Dream-1
-trial of 2,400 steps at 320 x 176 took about 5 minutes (295 s: 50 policy calls of 48 steps each, 0.79 s per call on
-average). Isaac Sim's first start on a new machine adds a few minutes while it compiles its shaders.
+On one NVIDIA RTX PRO 6000 Blackwell: the scripted demo is 1,784 steps (89.2 s of simulated time; the run ends once
+success has held for 1 s). It took about 4.5 minutes while rendering 1280 x 720 video (258 s), and about 7 minutes at
+320 x 176 without video with two other simulations on the same GPU (397 s). A Dream-1 trial of 2,400 steps at
+320 x 176 took about 6 minutes (356 s: 50 policy calls of 48 steps each, 0.67 s per call on average). Isaac Sim's
+first start on a new machine adds a few minutes while it compiles its shaders.
 
 ## Seeds
 
@@ -191,15 +221,16 @@ random numbers.
 
 ## Building it for real
 
-A Zebra MP7000 short (or another bioptic scanner) set into a counter, connected to a POS or to a PC running Zebra's
-123Scan, with its default same-symbol timeout (0.5 s); a strip of belt or a black rubber mat as the belt's end; a
+A Zebra DS9308-SR USB kit (DS9308-SR4U2100AZW, about USD 410) on the counter in Zebra's locking-mount bracket
+(BRKT-LM0093C-04, or the multi-mount bracket BRKT-MM0093C-04 on its adhesive pad), upright, in its default hands-free
+mode with the default same-symbol timeout (0.5 s), plugged into a PC by USB, where each decode types the item's number
+into a text file (or Zebra's free 123Scan shows the decodes); a strip of belt or a black rubber mat as the belt's end; a
 stainless sheet or a marked area as the bagging shelf; and the four groceries (a 1 lb spaghetti box, a 10.75 oz can of
 condensed soup, a 16 oz glass jar of salsa, a 16.9 fl oz bottle of water) with their own barcodes, set down on taped
-marks with their barcodes turned away from the windows as in the screenshot. The decode log gives each item's reads;
-a photo of the shelf, the bagged items; the videos, a drop.
+marks with their barcodes turned away from the scanner as in the screenshot. The decode log gives each item's reads; a
+photo of the shelf, the bagged items; the videos, a drop.
 
 [onet]: https://www.onetonline.org/link/summary/41-2011.00
-[ig]: https://www.zebra.com/content/dam/zebra_new_ia/en-us/manuals/barcode-scanners/mp7x00-ig-en.pdf
-[prg]: https://www.zebra.com/content/dam/support-dam/en/documentation/unrestricted/guide/product/mp7x00-prg-en.pdf
-[spec]: https://www.barcodes.com.au/content/Zebra-MP7000-Specification-Sheet.pdf
-[sp72]: https://www.zebra.com/gb/en/products/spec-sheets/scanners/multi-plane-scanners/sp72-series.html
+[prg]: https://www.zebra.com/content/dam/support-dam/en/documentation/unrestricted/guide/product/ds9308-prg-en.pdf
+[spec]: https://www.barcodes.com.au/content/Zebra-DS9300-series-spec-sheet-barcodes.com.au.pdf
+[buy]: https://www.barcodefactory.com/zebra/scanners/ds9308/ds9308-sr4u2100azw
