@@ -15,6 +15,6 @@
   "run_limit": "2,400 steps (2 minutes at 20 Hz)",
   "reset_notes": "Stand or lay the four groceries back on their taped marks on the belt with their barcodes turned as in the screenshot; clear the decode log. Nothing is consumed. Simulation: each trial starts the simulator afresh.",
   "fidelity": "Rigid bodies (PhysX), 20 Hz; everything at true size. The scanner is not simulated optically: a read is computed from the code's pose with the DS9308's field of view, range, skew and pitch tolerance and swipe speed, a line-of-sight test past the arms and its 0.5 s same-symbol timeout. The bars are drawn at true size but not decoded during the run (OpenCV decodes the drawn labels). The LED is modelled, the beep is not. Labels are visual only. No third-party assets.",
-  "scores": "Dream-1 run: 0.0 (the left gripper went down to the water bottle's cap four times and closed its fingers there but never carried it away, and once moved over the scanner with nothing in it; the right arm stayed near its base; the scanner's LED never went out, so nothing was read, and nothing reached the shelf); demo: 1.0",
+  "scores": "Dream-1 run: 0.0 (the left gripper closed on the water bottle's cap four times but never carried it away; the right arm stayed near its base; nothing was read and nothing reached the shelf); demo: 1.0",
   "media": "M-ZQ8TAP"
 }
