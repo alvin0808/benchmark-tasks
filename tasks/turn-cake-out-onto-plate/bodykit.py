@@ -2,7 +2,11 @@
 
 yam_arena's task-file objects are single primitives. A :class:`Body` is one rigid body made of several shapes (a pan
 with a floor, walls and a handle, say), some of which may be visual only (markings that nothing collides with), with
-its own friction. Keep this file next to the task file and import it from there:
+its own friction (and how PhysX combines it with what it touches: ``friction_combine``). Shapes are boxes, cylinders,
+spheres and capsules (:class:`CapsuleShape`, a rod with rounded ends). A body can also be fixed in place
+(``fixed=True``: kinematic, like a pipe clamped to the wall) and start turned by a quaternion (``init_quat``), and be
+held to another body or the world by a joint (``joint=Joint(...)``: a hinge, a ball joint, a slide or a fixed joint,
+which can snap like a stem when bent too far). Keep this file next to the task file and import it from there:
 
     import pathlib, sys
     sys.path.insert(0, str(pathlib.Path(__file__).parent))
@@ -14,8 +18,14 @@ Importing it hooks ``yam_arena.scene`` without changing yam_arena: such a body i
 ``success()``/``score()`` receive a :class:`BodyState` for it whose ``pos`` and ``quat_xyzw`` are the body origin's
 pose (yam_arena reports the bounding-box centre for primitives). It also hooks the embodiment's ``reset()`` and step,
 so a task file can clear what it tracks over an episode (:func:`on_reset`) and look at the simulation after every
-control step (:func:`on_step`), for instance at where the grippers are. Pure Python at import time: everything that needs
-Isaac Sim is imported lazily, so the task file still loads without the simulator.
+control step (:func:`on_step`), for instance at where the grippers are. Pure Python at import time: everything that
+needs Isaac Sim is imported lazily, so the task file still loads without the simulator.
+
+A :class:`Linkage` is a base with parts on revolute joints, one after another (a valve on a pipe, a nut on the
+valve), spawned as one PhysX articulation, so that each joint can have Coulomb friction: a joint does not turn while
+the torque across it stays below its ``friction`` (N m), and turns against that torque once it exceeds it. The base is
+fixed to the world unless ``floating=True`` (then it is a loose body that can be pushed about, like a basket of bottles
+with screw caps). ``score()`` receives a :class:`LinkageState` with the base's pose and each joint's angle.
 """
 
 from __future__ import annotations
@@ -24,13 +34,14 @@ import importlib.abc
 import importlib.util
 import math
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 from yam_arena.task_file import Box, ObjectState
 
-__all__ = ["Body", "BodyState", "BoxShape", "CylShape", "SphereShape", "allow_matrix_grips", "as_numpy", "install",
-           "on_reset", "on_step", "plate", "rotation", "segment"]
+__all__ = ["Body", "BodyState", "BoxShape", "CapsuleShape", "CylShape", "Joint", "Link", "Linkage", "LinkageState",
+           "SphereShape", "allow_matrix_grips", "as_numpy", "install", "on_reset", "on_step", "plate", "rotation",
+           "segment"]
 
 Color = tuple[float, float, float]
 
@@ -115,6 +126,24 @@ class CylShape:
 
 
 @dataclass(frozen=True)
+class CapsuleShape:
+    """A capsule in the body frame: a cylinder ``height`` long (without its two hemispherical ends) of ``radius``,
+    its axis along the body's ``axis`` ("X", "Y" or "Z"); a rod with rounded ends, such as a hinge pin."""
+
+    centre: tuple[float, float, float]
+    radius: float
+    height: float
+    color: Color = (0.6, 0.6, 0.6)
+    collide: bool = True
+    axis: str = "X"
+
+    def half_extent(self) -> np.ndarray:
+        half = np.full(3, self.radius)
+        half["XYZ".index(self.axis)] = self.height / 2 + self.radius
+        return half
+
+
+@dataclass(frozen=True)
 class SphereShape:
     """A sphere in the body frame."""
 
@@ -128,13 +157,53 @@ class SphereShape:
 
 
 @dataclass(frozen=True)
+class Joint:
+    """A joint that holds a body to ``parent`` (another Body's name, listed before it; None: the world) at ``anchor``
+    (world, m). Angles are measured from the bodies' starting poses, in degrees.
+
+    - ``kind="revolute"``: turns about the world axis ``axis`` ("X", "Y" or "Z") through the anchor, within ``limits``
+      (lower, upper); ``damping`` (N m s/rad) resists turning and ``stiffness`` (N m/rad) springs it toward ``target``.
+    - ``kind="ball"``: turns about all three axes but cannot move; ``limits`` = (a,) caps each turn at +-a degrees
+      (about the world x, y and z axes through the anchor), like a stem that only bends so far.
+    - ``kind="slide"``: cannot turn and only slides along the world axis ``axis``, on the spring given by ``axial`` (a
+      ring on a shaft held by its fit, a tube in a stopper's hole). For a slide joint ``axial``'s travel may be a pair
+      (low, high) of limits (m from the start pose) instead of +-travel, and ``target`` (m) is where the spring aims
+      (0: the start pose); a target beyond a limit preloads the spring against that limit, like a detent ball.
+    - ``kind="fixed"``: rigid.
+
+    ``break_force`` (N) and ``break_torque`` (N m), when given, break the joint for good once the force or torque it
+    carries exceeds them (a ball joint carries torque only once it is bent to its limit). The joint does not collide
+    its two bodies with each other."""
+
+    anchor: tuple[float, float, float]
+    kind: str = "revolute"
+    axis: str = "Y"
+    parent: str | None = None
+    limits: tuple | None = None
+    damping: float = 0.0
+    stiffness: float = 0.0
+    target: float = 0.0
+    break_force: float | None = None
+    break_torque: float | None = None
+    child_first: bool = False  # author this body as the joint's body0: PhysX measures the torque that breaks a joint
+    # about body0's centre of mass, so for a fruit on a fixed plant the fruit must be body0
+    axial: tuple | None = None  # ball joints: (stiffness N/m, damping N s/m, travel m) frees sliding along the z axis
+    # (a stem that stretches when pulled) on a spring, within +-travel; slide joints: the same along ``axis``
+
+
+@dataclass(frozen=True)
 class Body(Box):
     """A loose rigid body made of ``shapes``. It subclasses Box only so yam_arena's task-file checks accept it:
     ``pos`` is the body origin (world, m) and ``size`` its bounding box. ``friction`` is (static, dynamic);
     ``damping`` is (linear, angular)."""
 
     shapes: tuple = ()
+    fixed: bool = False  # kinematic: held where it is placed (a pipe fixed to the wall), still a body that others hit
+    init_quat: tuple | None = None  # initial orientation (x, y, z, w); None: ``yaw`` about the vertical
+    joint: Joint | None = None  # a joint to another body or the world (a lid on its hinge, a fruit on its stem)
+    gravity: bool = True  # False: gravity does not act on it (a helper body the task file places itself)
     friction: tuple[float, float] = (0.6, 0.5)
+    friction_combine: str = "average"  # how PhysX combines its friction with what it touches ("min": the lower)
     damping: tuple[float, float] = (0.0, 0.05)
     contact_offset: float = 0.002
     solver_iterations: int = 16
@@ -146,6 +215,11 @@ class Body(Box):
         hi = np.max([np.array(s.centre) + s.half_extent() for s in shapes], axis=0)
         return Body(name=name, pos=tuple(float(v) for v in pos), size=tuple((hi - lo).tolist()), mass=mass, yaw=yaw,
                     color=color, shapes=tuple(shapes), **kw)
+
+    def start_quat(self) -> tuple[float, float, float, float]:
+        if self.init_quat is not None:
+            return tuple(float(v) for v in self.init_quat)
+        return (0.0, 0.0, math.sin(self.yaw / 2), math.cos(self.yaw / 2))
 
     def local_bounds(self) -> tuple[np.ndarray, np.ndarray]:
         lo = np.min([np.array(s.centre) - s.half_extent() for s in self.shapes], axis=0)
@@ -191,9 +265,78 @@ def state_from_pose(spec: Body, pos, quat_xyzw, lin_vel=(0, 0, 0), ang_vel=(0, 0
                      low=pts.min(0), high=pts.max(0))
 
 
+@dataclass(frozen=True)
+class Link:
+    """A moving part of a :class:`Linkage`: one rigid body made of ``shapes`` (centres relative to the linkage's
+    ``pos``, world-aligned) on a revolute joint about the world axis ``axis`` ("X", "Y" or "Z") through ``anchor``
+    (world, m), held to ``parent`` (an earlier link's name; None: the linkage's fixed base). ``friction`` (N m) is the
+    joint's Coulomb friction: it does not turn while the torque across it stays below this. ``damping`` (N m s/rad)
+    adds viscous friction; ``limits`` (degrees from the start pose) stop it."""
+
+    name: str
+    shapes: tuple
+    mass: float
+    anchor: tuple
+    axis: str = "Y"
+    parent: str | None = None
+    friction: float = 0.0
+    damping: float = 0.0
+    limits: tuple | None = None  # (lower, upper) joint angles in degrees from the start pose; None: free
+
+
+@dataclass(frozen=True)
+class Linkage(Box):
+    """A base made of ``shapes`` (centres relative to ``pos``), fixed to the world (or loose: ``floating=True``),
+    with ``links`` on revolute joints, spawned as one PhysX articulation. It subclasses Box only so yam_arena's
+    task-file checks accept it: ``pos`` is the linkage origin, ``size`` the bounding box of all its shapes and ``mass``
+    the base's mass."""
+
+    shapes: tuple = ()
+    links: tuple = ()
+    floating: bool = False  # True: the base is a loose body (no fixed joint to the world)
+    friction: tuple[float, float] = (0.8, 0.7)
+    friction_combine: str = "average"  # how PhysX combines its friction with what it touches ("min": the lower)
+    contact_offset: float = 0.002
+    solver_iterations: int = 32
+
+    @staticmethod
+    def build(name: str, pos, mass: float, shapes, links, color: Color = (0.6, 0.6, 0.6), **kw) -> "Linkage":
+        every = list(shapes) + [s for link in links for s in link.shapes]
+        lo = np.min([np.array(s.centre) - s.half_extent() for s in every], axis=0)
+        hi = np.max([np.array(s.centre) + s.half_extent() for s in every], axis=0)
+        return Linkage(name=name, pos=tuple(float(v) for v in pos), size=tuple((hi - lo).tolist()), mass=mass,
+                       color=color, shapes=tuple(shapes), links=tuple(links), **kw)
+
+    def local_bounds(self) -> tuple[np.ndarray, np.ndarray]:
+        every = list(self.shapes) + [s for link in self.links for s in link.shapes]
+        lo = np.min([np.array(s.centre) - s.half_extent() for s in every], axis=0)
+        hi = np.max([np.array(s.centre) + s.half_extent() for s in every], axis=0)
+        return lo, hi
+
+    def _check(self) -> None:
+        super()._check()
+        if not self.shapes or not self.links:
+            raise ValueError(f"{self.name}: a Linkage needs base shapes and at least one link")
+        seen = set()
+        for link in self.links:
+            if link.parent is not None and link.parent not in seen:
+                raise ValueError(f"{self.name}: link {link.name!r}'s parent {link.parent!r} must come before it")
+            if link.axis not in ("X", "Y", "Z"):
+                raise ValueError(f"{self.name}: link {link.name!r} axis must be X, Y or Z")
+            seen.add(link.name)
+
+
+@dataclass(frozen=True)
+class LinkageState(ObjectState):
+    """The fixed base's pose and bounds, and ``joints``: each link's joint angle (rad, right-handed about its axis,
+    0 at the start)."""
+
+    joints: dict = field(default_factory=dict)
+
+
 # -- spawning (needs Isaac Sim; imported lazily) ------------------------------------------------------------------
 
-_SPECS: dict[str, Body] = {}
+_SPECS: dict = {}
 
 
 def _spawn_body(prim_path: str, cfg, translation=None, orientation=None, **kwargs):
@@ -213,7 +356,8 @@ def _spawn_body(prim_path: str, cfg, translation=None, orientation=None, **kwarg
     root.AddOrientOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(Gf.Quatd(w, x, y, z))
 
     phys = f"{prim_path}/Looks/physics"
-    material = sim_utils.RigidBodyMaterialCfg(static_friction=spec.friction[0], dynamic_friction=spec.friction[1])
+    material = sim_utils.RigidBodyMaterialCfg(static_friction=spec.friction[0], dynamic_friction=spec.friction[1],
+                                              friction_combine_mode=spec.friction_combine)
     material.func(phys, material)
     looks: dict = {}
 
@@ -230,13 +374,17 @@ def _spawn_body(prim_path: str, cfg, translation=None, orientation=None, **kwarg
     xform.AddTranslateOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(Gf.Vec3d(0.0, 0.0, 0.0))
     xform.AddOrientOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(Gf.Quatd(1, 0, 0, 0))
     prim = xform.GetPrim()
-    UsdPhysics.RigidBodyAPI.Apply(prim)
+    rigid = UsdPhysics.RigidBodyAPI.Apply(prim)
+    if spec.fixed:
+        rigid.CreateKinematicEnabledAttr(True)
     UsdPhysics.MassAPI.Apply(prim).CreateMassAttr(float(spec.mass))
     rb = PhysxSchema.PhysxRigidBodyAPI.Apply(prim)
     rb.CreateMaxDepenetrationVelocityAttr(1.0)
     rb.CreateSolverPositionIterationCountAttr(int(spec.solver_iterations))
     rb.CreateLinearDampingAttr(float(spec.damping[0]))
     rb.CreateAngularDampingAttr(float(spec.damping[1]))
+    if not spec.gravity:
+        rb.CreateDisableGravityAttr(True)
 
     for i, shape in enumerate(spec.shapes):
         if isinstance(shape, BoxShape):
@@ -247,6 +395,12 @@ def _spawn_body(prim_path: str, cfg, translation=None, orientation=None, **kwarg
             if (qx, qy, qz) != (0.0, 0.0, 0.0):
                 geom.AddOrientOp().Set(Gf.Quatf(qw, qx, qy, qz))
             geom.AddScaleOp().Set(Gf.Vec3f(*shape.size))
+        elif isinstance(shape, CapsuleShape):
+            geom = UsdGeom.Capsule.Define(stage, f"{body_path}/s{i}")
+            geom.CreateAxisAttr(shape.axis)
+            geom.CreateRadiusAttr(shape.radius)
+            geom.CreateHeightAttr(shape.height)
+            geom.AddTranslateOp().Set(Gf.Vec3d(*shape.centre))
         elif isinstance(shape, SphereShape):
             geom = UsdGeom.Sphere.Define(stage, f"{body_path}/s{i}")
             geom.CreateRadiusAttr(shape.radius)
@@ -265,7 +419,95 @@ def _spawn_body(prim_path: str, cfg, translation=None, orientation=None, **kwarg
             collision.CreateContactOffsetAttr(float(spec.contact_offset))
             collision.CreateRestOffsetAttr(0.0)
             bind_physics_material(path, phys, stage=stage)
+    if spec.joint is not None:
+        _author_joint(stage, prim_path, body_path, spec)
     return root.GetPrim()
+
+
+def _author_joint(stage, prim_path: str, body_path: str, spec: Body) -> None:
+    """A UsdPhysics joint at ``<prim_path>/joint``. Both joint frames are world-aligned at the start (each is the
+    body's start rotation undone), so the joint's axes are the world axes and its zero angles the start pose."""
+    from pxr import Gf, UsdPhysics
+
+    h = spec.joint
+    anchor = np.asarray(h.anchor, float)
+
+    def frame(other: Body | None):
+        if other is None:
+            return anchor, (0.0, 0.0, 0.0, 1.0)
+        x, y, z, w = other.start_quat()
+        r = rotation((x, y, z, w))
+        return r.T @ (anchor - np.asarray(other.pos, float)), (-x, -y, -z, w)
+
+    path = f"{prim_path}/joint"
+    if h.kind == "revolute":
+        joint = UsdPhysics.RevoluteJoint.Define(stage, path)
+        joint.CreateAxisAttr(h.axis)
+    elif h.kind == "fixed":
+        joint = UsdPhysics.FixedJoint.Define(stage, path)
+    elif h.kind in ("ball", "slide"):
+        joint = UsdPhysics.Joint.Define(stage, path)  # a D6 joint: translations locked, rotations limited or free
+        dofs = ("transX", "transY", "transZ") + (("rotX", "rotY", "rotZ") if h.kind == "slide" else ())
+        free = "trans" + (h.axis if h.kind == "slide" else "Z")
+        for dof in dofs:
+            lim = UsdPhysics.LimitAPI.Apply(joint.GetPrim(), dof)
+            if dof == free and h.axial is not None:
+                travel = h.axial[2]
+                low, high = (travel if isinstance(travel, (tuple, list)) else (-travel, travel))
+                lim.CreateLowAttr(float(low))
+                lim.CreateHighAttr(float(high))
+                drive = UsdPhysics.DriveAPI.Apply(joint.GetPrim(), free)
+                drive.CreateTypeAttr("force")
+                drive.CreateStiffnessAttr(float(h.axial[0]))
+                drive.CreateDampingAttr(float(h.axial[1]))
+                drive.CreateTargetPositionAttr(float(h.target) if h.kind == "slide" else 0.0)
+                drive.CreateMaxForceAttr(1.0e6)
+                continue
+            lim.CreateLowAttr(1.0)
+            lim.CreateHighAttr(-1.0)  # low > high: locked
+        if h.kind == "ball" and h.limits is not None:
+            for dof in ("rotX", "rotY", "rotZ"):
+                lim = UsdPhysics.LimitAPI.Apply(joint.GetPrim(), dof)
+                lim.CreateLowAttr(-float(h.limits[0]))
+                lim.CreateHighAttr(float(h.limits[0]))
+    else:
+        raise ValueError(f"{spec.name}: unknown joint kind {h.kind!r}")
+    if h.parent is not None and h.parent not in _SPECS:
+        raise ValueError(f"{spec.name}: joint parent {h.parent!r} must be a Body listed before it")
+    parent_path = f"{prim_path.rsplit('/', 1)[0]}/{h.parent}/body" if h.parent is not None else None
+    p0, q0 = frame(_SPECS[h.parent] if h.parent is not None else None)
+    p1, q1 = frame(spec)
+    if h.child_first:  # this body is body0, the parent body1
+        if h.kind == "revolute":
+            raise ValueError(f"{spec.name}: child_first is for ball and fixed joints")
+        joint.CreateBody0Rel().SetTargets([body_path])
+        if parent_path is not None:
+            joint.CreateBody1Rel().SetTargets([parent_path])
+        p0, q0, p1, q1 = p1, q1, p0, q0
+    else:
+        if parent_path is not None:
+            joint.CreateBody0Rel().SetTargets([parent_path])
+        joint.CreateBody1Rel().SetTargets([body_path])
+    joint.CreateLocalPos0Attr(Gf.Vec3f(*[float(v) for v in p0]))
+    joint.CreateLocalRot0Attr(Gf.Quatf(q0[3], q0[0], q0[1], q0[2]))
+    joint.CreateLocalPos1Attr(Gf.Vec3f(*[float(v) for v in p1]))
+    joint.CreateLocalRot1Attr(Gf.Quatf(q1[3], q1[0], q1[1], q1[2]))
+    if h.break_force is not None:
+        joint.CreateBreakForceAttr(float(h.break_force))
+    if h.break_torque is not None:
+        joint.CreateBreakTorqueAttr(float(h.break_torque))
+    if h.kind == "revolute":
+        if h.limits is not None:
+            joint.CreateLowerLimitAttr(float(h.limits[0]))
+            joint.CreateUpperLimitAttr(float(h.limits[1]))
+        if h.damping or h.stiffness:
+            drive = UsdPhysics.DriveAPI.Apply(joint.GetPrim(), "angular")
+            drive.CreateTypeAttr("force")
+            per_deg = math.pi / 180.0  # USD angular drives take N m per degree (and N m s per degree)
+            drive.CreateStiffnessAttr(float(h.stiffness) * per_deg)
+            drive.CreateDampingAttr(float(h.damping) * per_deg)
+            drive.CreateTargetPositionAttr(float(h.target))
+            drive.CreateMaxForceAttr(1.0e6)
 
 
 def _arena_object(spec: Body):
@@ -285,8 +527,7 @@ def _arena_object(spec: Body):
         name=spec.name,
         object_type=ObjectType.RIGID,
         spawner_cfg=BodySpawnerCfg(body_name=spec.name),
-        initial_pose=Pose(position_xyz=tuple(spec.pos),
-                          rotation_xyzw=(0.0, 0.0, math.sin(spec.yaw / 2), math.cos(spec.yaw / 2))),
+        initial_pose=Pose(position_xyz=tuple(spec.pos), rotation_xyzw=spec.start_quat()),
     )
 
 
@@ -307,6 +548,155 @@ def _body_state(environment, spec: Body) -> BodyState:
     return state_from_pose(spec, pose[:3] - origin, pose[3:7], vel[:3], vel[3:6])
 
 
+# -- linkages: one articulation fixed to the world ---------------------------------------------------------------
+
+
+def _spawn_linkage(prim_path: str, cfg, translation=None, orientation=None, **kwargs):
+    """Author the linkage under ``prim_path`` (the articulation root): the base and each link as sibling rigid
+    bodies, revolute joints between them, and (unless the linkage floats) a fixed joint from the world to the base."""
+    import isaaclab.sim as sim_utils
+    from isaaclab.sim.schemas.schemas import create_world_fixed_joint
+    from isaaclab.sim.utils import bind_physics_material, bind_visual_material
+    from isaaclab.sim.utils.stage import get_current_stage
+    from pxr import Gf, PhysxSchema, Sdf, UsdGeom, UsdPhysics
+
+    from yam_arena.station import linear_rgb
+
+    spec: Linkage = _SPECS[cfg.body_name]
+    stage = get_current_stage()
+    root = UsdGeom.Xform.Define(stage, prim_path)
+    root.AddTranslateOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(Gf.Vec3d(*(translation or (0.0, 0.0, 0.0))))
+    x, y, z, w = orientation if orientation is not None else (0.0, 0.0, 0.0, 1.0)
+    root.AddOrientOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(Gf.Quatd(w, x, y, z))
+
+    phys = f"{prim_path}/Looks/physics"
+    material = sim_utils.RigidBodyMaterialCfg(static_friction=spec.friction[0], dynamic_friction=spec.friction[1],
+                                              friction_combine_mode=spec.friction_combine)
+    material.func(phys, material)
+    looks: dict = {}
+
+    def look(color) -> str:
+        if color not in looks:
+            path = f"{prim_path}/Looks/c{len(looks)}"
+            surface = sim_utils.PreviewSurfaceCfg(diffuse_color=linear_rgb(color), roughness=0.5)
+            surface.func(path, surface)
+            looks[color] = path
+        return looks[color]
+
+    def rigid(path: str, mass: float, shapes) -> None:
+        xform = UsdGeom.Xform.Define(stage, path)
+        xform.AddTranslateOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(Gf.Vec3d(0.0, 0.0, 0.0))
+        xform.AddOrientOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(Gf.Quatd(1, 0, 0, 0))
+        prim = xform.GetPrim()
+        UsdPhysics.RigidBodyAPI.Apply(prim)
+        UsdPhysics.MassAPI.Apply(prim).CreateMassAttr(float(mass))
+        rb = PhysxSchema.PhysxRigidBodyAPI.Apply(prim)
+        rb.CreateMaxDepenetrationVelocityAttr(1.0)
+        for i, shape in enumerate(shapes):
+            if isinstance(shape, BoxShape):
+                geom = UsdGeom.Cube.Define(stage, f"{path}/s{i}")
+                geom.CreateSizeAttr(1.0)
+                geom.AddTranslateOp().Set(Gf.Vec3d(*shape.centre))
+                qx, qy, qz, qw = shape.quat()
+                if (qx, qy, qz) != (0.0, 0.0, 0.0):
+                    geom.AddOrientOp().Set(Gf.Quatf(qw, qx, qy, qz))
+                geom.AddScaleOp().Set(Gf.Vec3f(*shape.size))
+            elif isinstance(shape, SphereShape):
+                geom = UsdGeom.Sphere.Define(stage, f"{path}/s{i}")
+                geom.CreateRadiusAttr(shape.radius)
+                geom.AddTranslateOp().Set(Gf.Vec3d(*shape.centre))
+            else:
+                geom = UsdGeom.Cylinder.Define(stage, f"{path}/s{i}")
+                geom.CreateAxisAttr(shape.axis)
+                geom.CreateRadiusAttr(shape.radius)
+                geom.CreateHeightAttr(shape.height)
+                geom.AddTranslateOp().Set(Gf.Vec3d(*shape.centre))
+            spath = str(geom.GetPrim().GetPath())
+            bind_visual_material(spath, look(tuple(shape.color)), stage=stage)
+            if shape.collide:
+                UsdPhysics.CollisionAPI.Apply(geom.GetPrim())
+                collision = PhysxSchema.PhysxCollisionAPI.Apply(geom.GetPrim())
+                collision.CreateContactOffsetAttr(float(spec.contact_offset))
+                collision.CreateRestOffsetAttr(0.0)
+                bind_physics_material(spath, phys, stage=stage)
+
+    base_path = f"{prim_path}/base"
+    rigid(base_path, spec.mass, spec.shapes)
+    origin = np.asarray(spec.pos, float)
+    for link in spec.links:
+        path = f"{prim_path}/{link.name}"
+        rigid(path, link.mass, link.shapes)
+        joint = UsdPhysics.RevoluteJoint.Define(stage, f"{path}/{link.name}_turn")
+        joint.CreateAxisAttr(link.axis)
+        parent = base_path if link.parent is None else f"{prim_path}/{link.parent}"
+        joint.CreateBody0Rel().SetTargets([Sdf.Path(parent)])
+        joint.CreateBody1Rel().SetTargets([Sdf.Path(path)])
+        at = Gf.Vec3f(*[float(v) for v in np.asarray(link.anchor, float) - origin])  # every body frame is the origin
+        joint.CreateLocalPos0Attr(at)
+        joint.CreateLocalRot0Attr(Gf.Quatf(1, 0, 0, 0))
+        joint.CreateLocalPos1Attr(at)
+        joint.CreateLocalRot1Attr(Gf.Quatf(1, 0, 0, 0))
+        if link.limits is not None:
+            joint.CreateLowerLimitAttr(float(link.limits[0]))
+            joint.CreateUpperLimitAttr(float(link.limits[1]))
+    UsdPhysics.ArticulationRootAPI.Apply(root.GetPrim())
+    art = PhysxSchema.PhysxArticulationAPI.Apply(root.GetPrim())
+    art.CreateEnabledSelfCollisionsAttr(False)
+    art.CreateSolverPositionIterationCountAttr(int(spec.solver_iterations))
+    art.CreateSolverVelocityIterationCountAttr(4)
+    if not spec.floating:
+        create_world_fixed_joint(stage.GetPrimAtPath(base_path), stage)  # the base is fixed: a fixed-base articulation
+    return root.GetPrim()
+
+
+def _linkage_object(spec: Linkage):
+    from isaaclab.actuators import ImplicitActuatorCfg
+    from isaaclab.assets import ArticulationCfg
+    from isaaclab.sim.spawners.spawner_cfg import SpawnerCfg
+    from isaaclab.sim.utils import clone
+    from isaaclab.utils import configclass
+    from isaaclab_arena.assets.object import Object
+    from isaaclab_arena.assets.object_type import ObjectType
+    from isaaclab_arena.utils.pose import Pose
+
+    @configclass
+    class LinkageSpawnerCfg(SpawnerCfg):
+        func: object = clone(_spawn_linkage)
+        body_name: str = ""
+
+    class LinkageObject(Object):
+        def _generate_articulation_cfg(self):
+            # No drives: each joint only has its friction (static = dynamic, Coulomb) and its viscous damping.
+            actuators = {link.name: ImplicitActuatorCfg(joint_names_expr=[f"{link.name}_turn"], stiffness=0.0,
+                                                        damping=0.0, friction=float(link.friction),
+                                                        dynamic_friction=float(link.friction),
+                                                        viscous_friction=float(link.damping))
+                         for link in spec.links}
+            cfg = ArticulationCfg(prim_path=self.prim_path, spawn=self.spawner_cfg, actuators=actuators)
+            return self._add_initial_pose_to_cfg(cfg)
+
+    return LinkageObject(
+        name=spec.name,
+        object_type=ObjectType.ARTICULATION,
+        spawner_cfg=LinkageSpawnerCfg(body_name=spec.name),
+        initial_pose=Pose(position_xyz=tuple(spec.pos), rotation_xyzw=(0.0, 0.0, 0.0, 1.0)),
+    )
+
+
+def _linkage_state(environment, spec: Linkage) -> LinkageState:
+    base = environment.unwrapped
+    asset = base.scene[spec.name]
+    origin = _np(base.scene.env_origins[0])
+    pose = _np(asset.data.root_link_pose_w)[0]
+    names = list(asset.joint_names)
+    q = _np(asset.data.joint_pos)[0]
+    lo, hi = spec.local_bounds()
+    pos = pose[:3] - origin
+    return LinkageState(pos=pos, quat_xyzw=pose[3:7], lin_vel=np.zeros(3), ang_vel=np.zeros(3), low=pos + lo,
+                        high=pos + hi, joints={link.name: float(q[names.index(f"{link.name}_turn")])
+                                               for link in spec.links})
+
+
 # -- hooking yam_arena.scene -------------------------------------------------------------------------------------
 
 
@@ -316,6 +706,9 @@ def _patch_scene(scene) -> None:
     orig_task_object, orig_states = scene.task_object, scene.object_states
 
     def task_object(spec):
+        if isinstance(spec, Linkage):
+            _SPECS[spec.name] = spec
+            return _linkage_object(spec)
         if isinstance(spec, Body):
             _SPECS[spec.name] = spec
             return _arena_object(spec)
@@ -326,7 +719,9 @@ def _patch_scene(scene) -> None:
         out = orig_states(environment, plain) if plain else {}
         for n in names:
             if n in _SPECS:
-                out[n] = _body_state(environment, _SPECS[n])
+                spec = _SPECS[n]
+                out[n] = (_linkage_state(environment, spec) if isinstance(spec, Linkage)
+                          else _body_state(environment, spec))
         return {n: out[n] for n in names}
 
     scene.task_object = task_object
