@@ -1,35 +1,45 @@
-"""On the station table: a server rack's vertical mounting rail (an EIA-310 19-inch rail, 2 mm steel, real 9.53 mm
-square holes), standing in a steel foot clamped to the bench, with its front (the side equipment mounts on) facing away
-from the robot. One hole is marked with a yellow paint-pen square. An M6 cage nut lies face down on the bench behind
-the rail, and a small flat-blade screwdriver lies on the bench to the right.
+"""On the station table: a 9U network cabinet (DIGITUS DN-19 09U-6/6: 600 mm wide, 600 mm deep, 509 mm tall, sheet steel
+in light grey RAL 7035, two pairs of galvanized 19-inch profile rails with square holes for cage nuts), standing on the
+bench with its glass front door taken off and its open front facing the robot, as a technician faces a rack. Its right
+front rail (as seen from the front) is the one worked on: its mounting flange faces the robot, with real 9.53 mm square
+holes; one hole is marked with a yellow paint-pen square. The cabinet's side panel stands just outside that rail and its
+top, bottom and back panels close it, so the back (inside) face of the flange can only be reached through the cabinet's
+front opening, round the flange's inner edge; the opposite front rail stands 465 mm away (hole centres) and the two rear
+rails 400 mm behind. A 1U cantilever shelf (StarTech CABSHELFV1U) is screwed into U1, and an M6 cage nut lies face down
+on it. A small flat-blade screwdriver lies on the bench to the right of the cabinet.
 
-Task (instruction): fit the cage nut into the marked hole on the rack rail. The instruction does not say how. The
-procedure the task checks is the rack makers': from inside the rack, lips facing out, "Hook one lip of the cage nut in
-the square rail hole" (Oracle, SPARC M8/M7 Servers Installation Guide, "Insert Cage Nuts Into Rail Holes"), then, with a
-flat-blade screwdriver, "Hold the cage nut in one hand, and compress the cage-nut clip with a flat-blade screwdriver.
-With the clip compressed, push the edge of the cage nut fully into the hole from the inside of the rack-mounting
-flange. Release the screwdriver pressure on the clip to lock the cage nut into place." (IBM, "Installing the cage nuts
-in a 7014-S25 or 7014-S11 rack"). Turned home with nothing on its far clip, the clip's end swings out past the hole's
-edge and catches behind the flange: the nut jams half in and the hooked clip is levered back out.
+Task (instruction): fit the cage nut into the marked hole on the cabinet's front rail. The instruction does not say how.
+The procedure the task checks is the rack makers': from inside the rack, lips facing out, "Hook one lip of the cage nut
+in the square rail hole" (Oracle, SPARC M8/M7 Servers Installation Guide, "Insert Cage Nuts Into Rail Holes"), then,
+with a flat-blade screwdriver, "Hold the cage nut in one hand, and compress the cage-nut clip with a flat-blade
+screwdriver. With the clip compressed, push the edge of the cage nut fully into the hole from the inside of the
+rack-mounting flange. Release the screwdriver pressure on the clip to lock the cage nut into place." (IBM, "Installing
+the cage nuts in a 7014-S25 or 7014-S11 rack"). Turned home with nothing on its far clip, the clip's end swings out past
+the hole's edge and catches behind the flange: the nut jams half in and the hooked clip is levered back out.
 
 World frame (m): x forward from the arm bases, y to the robot's left, z up; the table top is at z 0.7475.
-- rail: fixed. Mounting flange x 0.215 (its back face, toward the robot) to 0.217, y -0.030 to 0.0075, from 6 mm to
-  210 mm above the table; side flange (web) along its -y edge, 30 mm deep. Holes: 9.53 mm square, three per U
-  (U = 44.45 mm, U1 starting 25 mm above the table; holes 6.35, 22.225 and 38.1 mm above each U line), centred on
-  y 0; U lines and numbers 1-4 on both faces. The marked hole is U3's top hole, its middle 152.2 mm above the table.
-- cage nut, loose, 5.5 g, face down at (0.15, 0.10): an M6 square nut (10 x 10 x 4.8 mm, 5 mm bore) in a spring-steel
-  cage (10.1 x 11.2 x 6.0 mm) with two lips on opposite sides. Each lip is a 5 mm wide strip folded over (inner leg
-  4.75 mm long, outer leg flaring out to 13.72 mm across both lips, its end 2.3 mm in front of the cage's face) on a
-  sprung hinge at its root (0.02 N m/rad, from 50 deg in to 10 deg out): pressed in it passes the 9.53 mm hole, let
-  go it springs out over the flange's front face.
-- screwdriver, loose, 40 g, lying along x with its tip at (0.215, -0.11), pointing toward the robot: tip 0.6 x 3.5 mm,
-  60 mm shank, fluted handle 25 mm across.
+- cabinet: fixed. Front edge at x 0.180, back at 0.780; y -0.0675 (right side panel) to 0.5325; 0 to 509 mm above the
+  table. Worked rail (front right): mounting flange x 0.205 (its front face, toward the robot) to 0.207, y -0.0175 to
+  0.0075 (its inner edge, the 450 mm opening), web 30 mm deep along its -y edge, 40 to 465 mm above the table. Holes:
+  9.53 mm square, three per U (U = 44.45 mm, U1 starting 54.5 mm above the table; holes 6.35, 22.225 and 38.1 mm above
+  each U line), centred on y 0; U lines and numbers 1-9 on its front face. The marked hole is U3's middle hole, its
+  middle 165.6 mm above the table. Opposite front rail: holes centred on y 0.465. Rear rails: back faces at x 0.605.
+- shelf: fixed, in U1: 1U front plate on the front rails, floor 435 mm wide (y 0.015 to 0.450) and 250 mm deep (x 0.205
+  to 0.455), its top 56.0 mm above the table, sides 43.2 mm tall.
+- cage nut, loose, 5.5 g, face down on the shelf, lips toward +-y, its face centre at (0.280, 0.144): an M6 square nut
+  (10 x 10 x 4.8 mm, 5 mm bore) in a spring-steel cage (10.1 x 11.2 x 6.0 mm) with two lips on opposite sides. Each lip
+  is a 5 mm wide strip folded over (inner leg 4.75 mm long, outer leg flaring out to 13.72 mm across both lips, its end
+  2.3 mm in front of the cage's face) on a sprung hinge at its root (0.02 N m/rad, from 50 deg in to 10 deg out):
+  pressed in it passes the 9.53 mm hole, let go it springs out over the flange's front face.
+- screwdriver, loose, 40 g, lying along x with its tip at (0.190, -0.135), pointing away from the robot: tip 0.6 x
+  3.5 mm, 60 mm shank, fluted handle 25 mm across.
 
-Score: 0 for the rest of the run once the nut has fallen onto the bench, a lip has sprung out at another hole, or a lip
-has been forced 30 deg open (its clip bent). Otherwise 0.5 once the nut sits in the marked hole by itself with at least
-one lip sprung out over the front face, both grippers' centres 3 cm or more from it and the screwdriver out of the
-hole. Full score: seated (both lips sprung out over the front face around the marked hole, the nut flat against the
-flange's back face and centred in the hole), released like that, still for 1 s.
+Score: 0 for the rest of the run once the nut has fallen (once lifted, back down on the shelf, the cabinet's floor or
+the bench with no gripper near), a lip has sprung out at another hole, or a lip has been forced 30 deg open (its clip
+bent). Otherwise 0.5 once the nut sits in the marked hole by itself with at least one lip sprung out over the front
+face, both grippers' centres 3 cm or more from it and the screwdriver out of the hole. Full score: seated (both lips
+sprung out over the front face around the marked hole, the nut flat against the flange's back face and centred in the
+hole), released like that, still for 1 s.
 """
 
 from __future__ import annotations
@@ -57,26 +67,40 @@ SUCCESS_HOLD_S = 1.0
 # The file keeps the best stage reached itself and a broken rule latches 0, so the score is read at the end of the run.
 SCORE_OVER = "end"
 
-# -- the rail (world frame, m; heights above the table) ---------------------------------------------------------------
-XB = 0.215  # back face of the rail's mounting flange (toward the robot); its front faces +x
+# -- the worked rail (world frame, m; heights above the table) --------------------------------------------------------
+X0 = 0.205  # front face of the rail's mounting flange (toward the robot)
 FL_T = 0.002  # flange thickness (steel)
+XB = X0 + FL_T  # its back face, inside the cabinet: the cage nut sits against it
 HOLE = 0.00953  # EIA-310 square hole (0.375 in)
 HH = HOLE / 2
 HY = 0.0  # the rail's hole column
-IN_EDGE = 0.0075  # flange edge on the rack-opening side, from the hole centre (EIA-310: 450 mm clear opening)
-OUT_EDGE = 0.030  # flange edge on the outer side, where the side flange (web) runs back
-WEB_D = 0.030  # how far the side flange runs back from the mounting flange
+IN_EDGE = 0.0075  # flange edge on the opening side, from the hole centre (EIA-310: 450 mm opening, 465 mm hole centres)
+OUT_EDGE = 0.0175  # flange edge on the outer side, where the L-rail's web runs back into the cabinet
+WEB_D = 0.030  # how far the web runs back from the flange's front face
 U = 0.04445
-Z_U0 = 0.025  # bottom of U1 above the table
-N_U = 4
-Z_FL0, Z_FL1 = 0.006, 0.210  # the rail's bottom (on its foot) and top
+N_U = 9
+CAB_H = 0.509  # the cabinet's height
+Z_U0 = (CAB_H - N_U * U) / 2  # bottom of U1 above the table (52.5 mm)
+Z_RAIL0, Z_RAIL1 = 0.040, 0.465  # the rail's bottom and top
 HOLE_Z = [Z_U0 + n * U + d for n in range(N_U) for d in (0.00635, 0.022225, 0.0381)]
-MARK_U, MARK_K = 3, 2  # the marked hole: U3, top hole
+MARK_U, MARK_K = 3, 1  # the marked hole: U3, middle hole
 MARK = (MARK_U - 1) * 3 + MARK_K
 HZ = HOLE_Z[MARK]
-STEEL, DARKSTEEL, WHITE, YELLOW, BLACK = (0.32, 0.33, 0.35), (0.20, 0.21, 0.22), (0.92, 0.92, 0.90), (0.98, 0.80, 0.08), (
-    0.04, 0.04, 0.05)
-RAIL_O = (XB, HY, TOP)
+# -- the cabinet (DIGITUS DN-19 09U-6/6, front door off) ---------------------------------------------------------------
+HOLE_PITCH_Y = 0.465  # EIA-310: hole centres across the rack
+CAB_W, CAB_D = 0.600, 0.600
+SETBACK = 0.025  # the front rails' front face behind the cabinet's front edge
+XF = X0 - SETBACK  # the cabinet's front edge
+Y_C = HY + HOLE_PITCH_Y / 2  # the cabinet's middle (y)
+Y_R, Y_L = Y_C - CAB_W / 2, Y_C + CAB_W / 2  # its right and left sides
+MOUNT_D = 0.400  # front rails' front face to rear rails' back face (equipment mounting depth 320-450 mm)
+SHEET_T = 0.0015  # side, top, bottom and back panels (sheet steel)
+RETURN_W, LIP_H = 0.020, 0.035  # the side panels' front returns; the top and bottom panels' front lips
+SHELF_W, SHELF_D, SHELF_H, SHELF_T = 0.435, 0.250, 0.0432, 0.0015  # the 1U shelf: inside width, depth, height, steel
+SHELF_TOP = Z_U0 + SHELF_T  # its floor's top face above the table
+STEEL, DARKSTEEL, PANEL, SHELF_C, PAINT, YELLOW, BLACK = (0.66, 0.68, 0.70), (0.30, 0.31, 0.32), (0.80, 0.81, 0.79), (
+    0.10, 0.10, 0.11), (0.06, 0.06, 0.07), (0.98, 0.80, 0.08), (0.04, 0.04, 0.05)  # galvanized rails, RAL 7035 panels
+RAIL_O = (X0, HY, TOP)
 
 
 def _box(x0, x1, y0, y1, z0, z1, color, origin, collide=True) -> BoxShape:
@@ -85,64 +109,118 @@ def _box(x0, x1, y0, y1, z0, z1, color, origin, collide=True) -> BoxShape:
                     (x1 - x0, y1 - y0, z1 - z0), color, collide=collide)
 
 
-_SEG = {"1": "bc", "2": "abged", "3": "abgcd", "4": "fgbc"}
+_SEG = {"1": "bc", "2": "abged", "3": "abgcd", "4": "fgbc", "5": "afgcd", "6": "afgecd", "7": "abc", "8": "abcdefg",
+        "9": "abcdfg"}
 
 
-def _digit(ch, x, yc, zc, o, mirror: bool, h=0.0045, w=0.0028, t=0.0006) -> list:
-    """A 7-segment digit painted on a face at x (visual): segments a (top) .. g (middle); ``mirror`` for the back face,
-    so that it reads the right way round from behind."""
+def _digit(ch, x, yc, zc, o, h=0.0045, w=0.0028, t=0.0006) -> list:
+    """A 7-segment digit painted on the flange's front face at x (visual), read from the front (from -x): segments a
+    (top) .. g (middle)."""
     out = []
     for s in _SEG[ch]:
         if s in "adg":
             z = {"a": zc + h / 2, "g": zc, "d": zc - h / 2}[s]
-            out.append(_box(x - 0.00015, x + 0.00015, yc - w / 2, yc + w / 2, z - t / 2, z + t / 2, WHITE, o, False))
+            out.append(_box(x - 0.00015, x + 0.00015, yc - w / 2, yc + w / 2, z - t / 2, z + t / 2, PAINT, o, False))
         else:
-            right = (s in "bc") != mirror  # seen from the front, +y is to the right
-            y = yc + w / 2 if right else yc - w / 2
+            right = s in "bc"  # seen from the front (looking +x), the viewer's right is -y
+            y = yc - w / 2 if right else yc + w / 2
             z0, z1 = (zc, zc + h / 2) if s in "bf" else (zc - h / 2, zc)
-            out.append(_box(x - 0.00015, x + 0.00015, y - t / 2, y + t / 2, z0, z1, WHITE, o, False))
+            out.append(_box(x - 0.00015, x + 0.00015, y - t / 2, y + t / 2, z0, z1, PAINT, o, False))
     return out
 
 
-def _rail_shapes() -> list:
-    """The rail in the frame of its marked hole's column at the flange's back face (table height): the mounting
-    flange with real square holes (bars between the holes, strips beside them), the side flange, the foot, and paint."""
+def _rail_boxes(hy: float, x_front: float, facing: float, inner: float, holes: bool) -> list:
+    """An L-shaped 19-inch rail as world boxes (x0, x1, y0, y1, z0, z1, colour, collide): its mounting flange at
+    ``x_front`` (the face equipment mounts on; ``facing`` -1: faces -x, +1: faces +x), its hole column at ``hy``, its
+    inner (opening) edge on the ``inner`` side (+1: +y), its web running into the cabinet along the outer edge. With
+    ``holes`` the holes are cut through; otherwise they are painted on (out of reach)."""
+    xa, xb = sorted((x_front, x_front - facing * FL_T))
+    y_in, y_out = hy + inner * IN_EDGE, hy - inner * OUT_EDGE
+    out = []
+    lo, hi = sorted((y_out, hy - inner * HH))
+    out.append((xa, xb, lo, hi, Z_RAIL0, Z_RAIL1, STEEL, True))
+    lo, hi = sorted((hy + inner * HH, y_in))
+    out.append((xa, xb, lo, hi, Z_RAIL0, Z_RAIL1, STEEL, True))
+    if holes:
+        edges = [Z_RAIL0] + [v for z in HOLE_Z for v in (z - HH, z + HH)] + [Z_RAIL1]
+        for z0, z1 in zip(edges[0::2], edges[1::2]):
+            out.append((xa, xb, hy - HH, hy + HH, z0, z1, STEEL, True))
+    else:
+        out.append((xa, xb, hy - HH, hy + HH, Z_RAIL0, Z_RAIL1, STEEL, True))
+        xp = x_front + facing * 0.0002
+        for z in HOLE_Z:
+            out.append((xp - 0.0001, xp + 0.0001, hy - HH, hy + HH, z - HH, z + HH, BLACK, False))
+    wx = sorted((x_front, x_front - facing * WEB_D))
+    wy = sorted((y_out, y_out - inner * FL_T))
+    out.append((wx[0], wx[1], wy[0], wy[1], Z_RAIL0, Z_RAIL1, STEEL, True))
+    return out
+
+
+def _cabinet_boxes() -> list:
+    """The cabinet as world boxes: four L-rails, side, top, bottom and back panels with the front returns and lips."""
+    xb = XF + CAB_D
+    out = _rail_boxes(HY, X0, -1.0, +1.0, True)
+    out += _rail_boxes(HY + HOLE_PITCH_Y, X0, -1.0, -1.0, False)
+    xr = X0 + MOUNT_D  # the rear rails' back face (equipment's rear brackets mount on it)
+    out += _rail_boxes(HY, xr, +1.0, +1.0, False)
+    out += _rail_boxes(HY + HOLE_PITCH_Y, xr, +1.0, -1.0, False)
+    for y0, y1, r0, r1 in ((Y_R, Y_R + SHEET_T, Y_R + SHEET_T, Y_R + SHEET_T + RETURN_W),
+                           (Y_L - SHEET_T, Y_L, Y_L - SHEET_T - RETURN_W, Y_L - SHEET_T)):
+        out.append((XF, xb, y0, y1, 0.0, CAB_H, PANEL, True))  # side panel
+        out.append((XF, XF + SHEET_T, r0, r1, 0.0, CAB_H, PANEL, True))  # its front return
+    out.append((XF, xb, Y_R, Y_L, 0.0, SHEET_T, PANEL, True))  # bottom panel
+    out.append((XF, XF + SHEET_T, Y_R, Y_L, 0.0, LIP_H, PANEL, True))  # its front lip
+    out.append((XF, xb, Y_R, Y_L, CAB_H - SHEET_T, CAB_H, PANEL, True))  # top panel
+    out.append((XF, XF + SHEET_T, Y_R, Y_L, CAB_H - LIP_H, CAB_H, PANEL, True))  # its front lip
+    out.append((xb - SHEET_T, xb, Y_R, Y_L, 0.0, CAB_H, PANEL, True))  # back panel
+    # the rails are held top and bottom by depth members along the side panels
+    for z0 in (Z_RAIL0 - 0.012, Z_RAIL1):
+        for y0, y1 in ((Y_R + SHEET_T, Y_R + SHEET_T + 0.015), (Y_L - SHEET_T - 0.015, Y_L - SHEET_T)):
+            out.append((X0, xr, y0, y1, z0, z0 + 0.012, DARKSTEEL, True))
+    # a 1U cantilever shelf (StarTech CABSHELFV1U) screwed into U1 of both front rails:
+    # a 1U front plate with ears on the rails' front faces, a floor 435 mm wide and 250 mm deep, sides 1U tall
+    z0, z1 = Z_U0, Z_U0 + SHELF_H
+    out.append((X0 - SHELF_T, X0, Y_C - 0.2415, Y_C + 0.2415, z0, z1, SHELF_C, True))  # front plate and ears
+    out.append((X0, X0 + SHELF_D, Y_C - SHELF_W / 2, Y_C + SHELF_W / 2, z0, z0 + SHELF_T, SHELF_C, True))  # floor
+    for y0 in (Y_C - SHELF_W / 2, Y_C + SHELF_W / 2 - SHELF_T):
+        out.append((X0, X0 + SHELF_D, y0, y0 + SHELF_T, z0, z1, SHELF_C, True))  # sides
+    out.append((X0 + SHELF_D - SHELF_T, X0 + SHELF_D, Y_C - SHELF_W / 2, Y_C + SHELF_W / 2, z0, z0 + 0.012, SHELF_C,
+                True))  # rear lip
+    for k in range(9):  # vent slots in the floor (paint)
+        xs = X0 + 0.030 + k * 0.024
+        out.append((xs, xs + 0.008, Y_C - 0.15, Y_C + 0.15, z0 + SHELF_T, z0 + SHELF_T + 0.0002, DARKSTEEL, False))
+    for hy in (HY, HY + HOLE_PITCH_Y):  # its screws in U1's bottom and top holes
+        for dz in (0.00635, 0.0381):
+            out.append((X0 - SHELF_T - 0.003, X0 - SHELF_T, hy - 0.006, hy + 0.006, z0 + dz - 0.006, z0 + dz + 0.006,
+                        DARKSTEEL, False))
+    return out
+
+
+def _rail_paint() -> list:
+    """Visual paint on the worked rail's front face: U lines and numbers on the outer strip, and the marked hole."""
     o = RAIL_O
     out = []
-    y_out, y_in = HY - OUT_EDGE, HY + IN_EDGE
-    out.append(_box(XB, XB + FL_T, y_out, HY - HH, Z_FL0, Z_FL1, STEEL, o))
-    out.append(_box(XB, XB + FL_T, HY + HH, y_in, Z_FL0, Z_FL1, STEEL, o))
-    edges = [Z_FL0] + [v for z in HOLE_Z for v in (z - HH, z + HH)] + [Z_FL1]
-    for z0, z1 in zip(edges[0::2], edges[1::2]):
-        out.append(_box(XB, XB + FL_T, HY - HH, HY + HH, z0, z1, STEEL, o))
-    out.append(_box(XB - WEB_D, XB + FL_T, y_out, y_out + FL_T, Z_FL0, Z_FL1, STEEL, o))
-    # the steel foot the rail stands in, clamped to the bench: a base plate and an angle bolted to the side flange
-    out.append(_box(XB - 0.060, XB + 0.045, y_out - 0.025, y_in + 0.020, 0.0, Z_FL0, DARKSTEEL, o))
-    out.append(_box(XB - WEB_D, XB - 0.002, y_out - 0.004, y_out, Z_FL0, 0.045, DARKSTEEL, o))
-    for zb in (0.016, 0.034):  # bolt heads on the angle
-        out.append(CylShape((XB - 0.016 - o[0], y_out - 0.0045 - o[1], zb + TOP - o[2]), 0.003, 0.002, BLACK, False,
-                            "Y"))
-    # U lines and numbers on both faces of the flange's outer strip (visual)
-    for xf, mirror in ((XB - 0.00025, True), (XB + FL_T + 0.00025, False)):
-        y0, y1, yc = y_out + 0.002, HY - HH - 0.002, HY - OUT_EDGE / 2 - 0.004
-        for n in range(N_U + 1):
-            z = Z_U0 + n * U
-            out.append(_box(xf - 0.00015, xf + 0.00015, y0, y1, z - 0.0003, z + 0.0003, WHITE, o, False))
-        for n in range(N_U):
-            out += _digit(str(n + 1), xf, yc, Z_U0 + (n + 0.5) * U, o, mirror)
-    # the marked hole: a yellow paint-pen square round it on both faces and a stripe on the outer strip
-    for xf in (XB - 0.0003, XB + FL_T + 0.0003):
+    xf = X0 - 0.00025
+    y_out = HY - OUT_EDGE
+    y0, y1, yc = y_out + 0.0015, HY - HH - 0.0015, HY - (OUT_EDGE + HH) / 2
+    for n in range(N_U + 1):
+        z = Z_U0 + n * U
+        out.append(_box(xf - 0.00015, xf + 0.00015, y0, y1, z - 0.0003, z + 0.0003, PAINT, o, False))
+    for n in range(N_U):
+        out += _digit(str(n + 1), xf, yc, Z_U0 + (n + 0.5) * U, o)
+    for xp in (X0 - 0.0003, XB + 0.0003):  # the marked hole: a yellow paint-pen square round it on both faces
         r0, r1 = HH + 0.0006, HH + 0.0022
-        for (y0, y1, z0, z1) in ((HY - r1, HY + r1, HZ + r0, HZ + r1), (HY - r1, HY + r1, HZ - r1, HZ - r0),
+        for (ya, yb, za, zb) in ((HY - r1, HY + r1, HZ + r0, HZ + r1), (HY - r1, HY + r1, HZ - r1, HZ - r0),
                                  (HY - r1, HY - r0, HZ - r0, HZ + r0), (HY + r0, HY + r1, HZ - r0, HZ + r0)):
-            out.append(_box(xf - 0.0001, xf + 0.0001, y0, y1, z0, z1, YELLOW, o, False))
-        out.append(_box(xf - 0.0001, xf + 0.0001, y_out + 0.003, HY - r1 - 0.001, HZ - 0.0015, HZ + 0.0015, YELLOW, o,
-                        False))
+            out.append(_box(xp - 0.0001, xp + 0.0001, ya, yb, za, zb, YELLOW, o, False))
+    out.append(_box(xf - 0.0001, xf + 0.0001, y_out + 0.0015, HY - HH - 0.0025, HZ - 0.0015, HZ + 0.0015, YELLOW, o,
+                    False))
     return out
 
 
-RAIL = Body.build("rack", pos=RAIL_O, mass=8.0, color=STEEL, fixed=True, friction=(0.45, 0.4), contact_offset=0.001,
-                  shapes=_rail_shapes())
+CAB_BOXES = _cabinet_boxes()
+RAIL = Body.build("rack", pos=RAIL_O, mass=21.0, color=STEEL, fixed=True, friction=(0.45, 0.4), contact_offset=0.001,
+                  shapes=[_box(*b[:6], b[6], RAIL_O, b[7]) for b in CAB_BOXES] + _rail_paint())
 
 # -- the cage nut (its frame: a along its axis, out of the face that goes against the flange; w toward a lip; s = a x w)
 NUT_S, NUT_T = 0.0100, 0.0048  # M6 square nut: 10 mm across flats, 4.8 mm thick
@@ -161,7 +239,9 @@ LIP_K, LIP_C = 0.02, 0.0003  # a lip's spring about its root: N m/rad, N m s/rad
 LIP_OPEN, LIP_CLOSE = 10.0, 50.0  # degrees the lip may open / close from relaxed
 NUT_CO, NUT_IT = 0.0005, 48  # contact offset (m) and solver iterations of the nut and its lips
 ZINC, NUTC, BOREC = (0.78, 0.79, 0.80), (0.55, 0.56, 0.58), (0.12, 0.12, 0.13)
-NUT_START = (0.15, 0.10, TOP + 0.0052 + 0.0006 + 0.001)  # face down on the bench, resting on its lips' folds
+NUT_REST = 0.0052  # face down on the shelf, resting on its lips' folds: its face this high above the shelf's floor
+NUT_START = (0.280, 0.144, TOP + SHELF_TOP + NUT_REST + 0.0016)  # spawned 1.6 mm above where it settles
+NUT_MID0 = SHELF_TOP + NUT_REST + CAGE_D / 2  # its middle's height above the table, at rest on the shelf
 
 
 def _cage_shapes() -> list:
@@ -222,7 +302,7 @@ SD_WEDGE_T, SD_WEDGE_L = 0.0012, 0.004  # then 1.2 mm thick for 4 mm, then the r
 SD_SHANK_R, SD_SHANK_END = 0.00175, 0.060  # 3.5 mm shank, 60 mm from the tip
 SD_HANDLE = (0.066, 0.161, 0.025)  # fluted handle: from, to, 25 mm across
 SD_KG = 0.040
-SD_START = (0.215, -0.11)  # the tip's (x, y) where it lies on the bench, pointing toward the robot (-x)
+SD_START = (0.190, -0.135)  # the tip's (x, y) where it lies on the bench, pointing away from the robot (+x)
 HANDLE_C, BLADE_C, SHANKC = (0.85, 0.55, 0.10), (0.60, 0.61, 0.63), (0.70, 0.71, 0.73)
 
 
@@ -242,16 +322,17 @@ def _screwdriver_shapes() -> list:
 
 
 SCREWDRIVER = Body.build("screwdriver", pos=(SD_START[0], SD_START[1], TOP + SD_HANDLE[2] / 2 + 0.001), mass=SD_KG,
-                         color=HANDLE_C, friction=(0.4, 0.35), contact_offset=0.001, solver_iterations=32,
-                         shapes=_screwdriver_shapes())
+                         color=HANDLE_C, yaw=math.pi, friction=(0.4, 0.35), contact_offset=0.001,
+                         solver_iterations=32, shapes=_screwdriver_shapes())
 
 OBJECTS = [RAIL, *_cage_nut(NUT_START, (0.0, 0.0, -1.0), (0.0, 1.0, 0.0)), SCREWDRIVER]
 
 # -- scoring ----------------------------------------------------------------------------------------------------------
-LIFTED_Z, BENCH_Z = 0.03, 0.02  # the nut lifted: its middle 3 cm above the bench; fallen: back below 2 cm, unheld
+LIFTED_Z, BENCH_Z = 0.03, 0.02  # the nut lifted: its middle 3 cm above where it lay; fallen: back below 2 cm above it
+# (on the shelf, the cabinet's floor or the bench) with no gripper near
 HELD_R = 0.06  # a gripper this close to the nut's middle may be holding it (it has not fallen then)
 CLEAR_R = 0.03  # released: both grippers' centres at least this far from the nut's middle (fingertips 1.7 cm)
-SD_OUT = 0.010  # the screwdriver's tip at least this far in front of the flange (or CLEAR_R from the nut's middle): out of the hole
+SD_OUT = 0.010  # the screwdriver's tip at least this far in front of the flange (or CLEAR_R from the nut's middle)
 FLAT_DEG = 8.0  # seated: the nut's axis within 8 deg of the flange's normal ...
 FACE_BACK, FACE_FWD = 0.0012, 0.0005  # ... its face from 1.2 mm behind to 0.5 mm into the flange's back face ...
 CENTRE_Y, CENTRE_Z = 0.0015, 0.0035  # ... its middle within 1.5 mm (across) and 3.5 mm (up/down) of the hole's middle
@@ -303,8 +384,9 @@ def _lip_end(pl, sign) -> np.ndarray:
 
 
 def _out_at(e, sign):
-    """The hole (index into HOLE_Z) over whose edge this lip's end (world) has sprung out, or None."""
-    if e[0] < XB + FL_T or sign * (e[1] - HY) < HH + OUT_PAST:
+    """The hole (index into HOLE_Z) over whose edge this lip's end (world) has sprung out, or None: the end is in front
+    of the flange's front face (toward the robot) and past that hole's edge on the lip's own side."""
+    if e[0] > X0 or sign * (e[1] - HY) < HH + OUT_PAST:
         return None
     for k, z in enumerate(HOLE_Z):
         if abs(e[2] - TOP - z) < HH:
@@ -339,19 +421,19 @@ def _track_inner(env) -> None:
         angles.append(_lip_angle(P["cage_nut"], P[f"lip_{lab}"], sign))
     near = min(float(np.linalg.norm(v - mid)) for v in _TCP.values())
     sp = P["screwdriver"][0]
-    sd_clear = sp[0] >= XB + FL_T + SD_OUT or float(np.linalg.norm(sp - mid)) >= CLEAR_R
+    sd_clear = sp[0] <= X0 - SD_OUT or float(np.linalg.norm(sp - mid)) >= CLEAR_R
     z = mid[2] - TOP
-    if z > LIFTED_Z:
+    if z > NUT_MID0 + LIFTED_Z:
         _EP["lifted"] = True
     if not _EP["failed"]:
-        if _EP["lifted"] and z < BENCH_Z and near > HELD_R:
-            _EP["failed"] = "the nut fell onto the bench"
+        if _EP["lifted"] and z < NUT_MID0 + BENCH_Z and near > HELD_R:
+            _EP["failed"] = "the nut fell"
         elif any(o is not None and o != MARK for o in outs):
             _EP["failed"] = "a lip sprang out at another hole"
         elif max(angles) > BENT_DEG:
             _EP["failed"] = "a lip was forced open: the nut's clip is bent"
-    flat = A[0] >= math.cos(math.radians(FLAT_DEG))
-    face_ok = XB - FACE_BACK <= pn[0] <= XB + FACE_FWD
+    flat = -A[0] >= math.cos(math.radians(FLAT_DEG))
+    face_ok = XB - FACE_FWD <= pn[0] <= XB + FACE_BACK
     centred = abs(mid[1] - HY) <= CENTRE_Y and abs(z - HZ) <= CENTRE_Z
     seated = outs[0] == MARK and outs[1] == MARK and flat and face_ok and centred
     one_out = (outs[0] == MARK) != (outs[1] == MARK)
@@ -381,7 +463,7 @@ def _debug(t) -> None:
     ax = rn[:, 0]
     ends = ""
     for (lab, sign), e in zip((("A", 1.0), ("B", -1.0)), _EP["ends"]):
-        ends += (f" end{lab}(front+{(e[0] - XB - FL_T) * 1000:.2f} past+{(sign * (e[1] - HY) - HH) * 1000:.2f} "
+        ends += (f" end{lab}(front+{(X0 - e[0]) * 1000:.2f} past+{(sign * (e[1] - HY) - HH) * 1000:.2f} "
                  f"dz{(e[2] - TOP - HZ) * 1000:.1f})")
     print(f"DBG step={_EP['step']} nut face=({pn[0]:.4f},{pn[1]:.4f},{pn[2] - TOP:.4f}) "
           f"axis=({ax[0]:.3f},{ax[1]:.3f},{ax[2]:.3f}) lipA={_EP['angles'][0]:.1f} lipB={_EP['angles'][1]:.1f}{ends}",
@@ -395,9 +477,9 @@ def _debug(t) -> None:
 
 
 def score(objects) -> float:
-    """The best stage reached (0 for the rest of the run once the nut has fallen onto the bench, a lip has sprung out
-    at another hole or been forced open): 0.5 the nut sits in the marked hole by itself, at least one lip sprung out
-    over the front face, nothing touching it. Full score (1.0) is success()."""
+    """The best stage reached (0 for the rest of the run once the nut has fallen, a lip has sprung out at another hole
+    or been forced open): 0.5 the nut sits in the marked hole by itself, at least one lip sprung out over the front
+    face, nothing touching it. Full score (1.0) is success()."""
     t = _tally()
     if _DEBUG:
         _debug(t)
@@ -412,37 +494,35 @@ def success(objects) -> bool:
 
 
 # -- scripted demo ----------------------------------------------------------------------------------------------------
-# As the rack makers' guides say: the left gripper takes the cage nut from the bench, turns it to face the rail and,
-# from behind the rail, tilts it 45 deg and hooks its +y lip through the marked hole (the lip's end over the front face
-# past the hole's +y edge). The right gripper brings the screwdriver and slides its blade into the hole along the hole's
-# -y side, 6.8 mm past the flange, where it keeps the far lip in. The left turns the nut flat about its hooked lip and
-# presses it home: the far lip, kept in line by the blade and then pressed in by the hole's edge, passes the hole. The
-# right draws the blade out and the far lip springs out over the front face; the left lets go and both move away.
-# CAGE_ONE=1 runs it the wrong way: the blade stays out and the left hand turns the nut home alone.
+# As the rack makers' guides say: the left gripper reaches into the cabinet through its front opening, takes the cage
+# nut from the shelf by its two plain sides, turns it lips-first toward the rail and brings it, round the flange's inner
+# edge, to the back of the marked hole; there, tilted 45 deg, it pushes the nut's +y lip through the hole and slides it
+# over the hole's +y edge (hooked). The right gripper brings the screwdriver from the front and slides its blade into
+# the hole along the hole's -y side, 6.8 mm past the flange, where it keeps the far lip in. The left turns the nut flat
+# about its hooked lip and presses it home: the far lip, kept in line by the blade and then pressed in by the hole's
+# edge, passes the hole. The right draws the blade out and the far lip springs out over the front face; the left lets
+# go and both move away. CAGE_ONE=1 runs it the wrong way: the blade stays out and the left hand turns the nut home
+# alone.
 
 WRONG_ONE = os.environ.get("CAGE_ONE") == "1"
 OPEN_C = -0.030
 PINCH, PINCH_LIGHT = -0.0028, -0.0048  # fingers 2.8 mm inside each face of the 11.2 mm cage; 0.8 mm while turning it
-FACE_OUT = 0.002  # the nut's face stands this far past the fingertips
-TIP = 0.013  # fingertips past the TCP
+# The left gripper holds the nut by its two plain sides (11.2 mm apart), its fingers closing across them. In the nut's
+# frame its centre (TCP) sits GRIP_A behind the face and GRIP_W toward lip a, and it points along -w tilted GRIP_DELTA
+# toward the face, so that the tapering fingers stay behind the face (behind the flange) all along the flange.
+GRIP_A, GRIP_W, GRIP_DELTA = -0.0130, 0.0060, math.radians(17.0)
+GRIP_SIGN = -1.0
 HOOK_PHI = math.radians(45.0)  # the nut turned this far (its +y side toward the rail) to hook its +y lip
 HOOK_PAST = 0.0015  # the hooked lip's end this far past the hole's +y edge ...
 HOOK_FRONT = 0.0008  # ... and its middle this far in front of the front face (its back 0.5 mm clear)
-ENTRY_IN = 0.0004  # on the way in, that end this far inside the +y edge
+ENTRY_IN = 0.0020  # on the way in, that end this far inside the +y edge, ...
+PRE_BACK = 0.0030  # ... first this far behind the flange's back face, ...
+ENTRY_FRONT = 0.0028  # ... then pushed through the hole to this far in front of the front face
 PULL_SNUG = 0.0004  # while the nut is turned flat, the hooked lip's end is pulled this far against the front face ...
-PRESS_HOOK = 0.0025  # ... and the nut pressed this far toward the hooked side
-T_TURN = 4.0
-T_HOOKED = 14.9  # the left gripper has the nut hooked by its +y lip at this time (s): checked in _left()
-T_SD_IN = T_HOOKED + 0.5  # the screwdriver goes in ...
-T_PUSH = T_SD_IN + 2.5  # the nut is turned home ...
-T_SD_OUT = T_PUSH + 3.6  # the screwdriver comes out, near the end of the turn ...
-T_LET_GO = T_SD_OUT + 1.5  # the left gripper lets go
-SEAT = np.array([XB - 0.0006, HY + 0.0004, TOP + HZ])  # pressed home: its face aimed 0.6 mm into the flange
-
-
-def _rz(a):
-    c, s = math.cos(a), math.sin(a)
-    return np.array([[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]])
+PRESS_HOOK = 0.0010  # ... and the nut pressed this far toward the hooked side
+T_TURN = 8.0
+SEAT = np.array([XB - 0.0025, HY + 0.0004, TOP + HZ])  # pressed home: its face aimed 2.5 mm into the flange (the arm
+# gives way about 2 mm under the push)
 
 
 def _ry(a):
@@ -450,9 +530,22 @@ def _ry(a):
     return np.array([[c, 0.0, s], [0.0, 1.0, 0.0], [-s, 0.0, c]])
 
 
-DOWN_L = grip_rotation(-math.pi / 2)  # left arm straight down, fingers closing along x
-LEVEL_L = _ry(-math.pi / 2) @ DOWN_L  # the same grip turned to point +x (fingers closing along z)
 DOWN_SD = grip_rotation(0.0)  # right arm straight down, fingers closing along y (across the screwdriver's handle)
+
+
+def _nut_frame(phi: float):
+    """The nut's axis A and lip-a direction W (world) facing the rail, turned ``phi`` about z (+y side forward)."""
+    return (np.array([-math.cos(phi), -math.sin(phi), 0.0]), np.array([-math.sin(phi), math.cos(phi), 0.0]))
+
+
+def _grip(face_centre, A, W):
+    """(TCP, rotation) of the left gripper holding the nut whose face centre, axis and lip-a direction are given."""
+    A, W = np.asarray(A, float), np.asarray(W, float)
+    S = np.cross(A, W)
+    d = math.cos(GRIP_DELTA) * -W + math.sin(GRIP_DELTA) * A
+    xg = GRIP_SIGN * S
+    rot = np.column_stack([xg, np.cross(d, xg), d])
+    return np.asarray(face_centre, float) + GRIP_A * A + GRIP_W * W, rot
 
 
 def _good_ik(arm: str, pos, rot):
@@ -490,83 +583,109 @@ def _w(t, p, finger, label, rot) -> Waypoint:
     return Waypoint(t, tuple(float(v) for v in p), finger, label, rot)
 
 
+def _lip_end_offset(A, W):
+    """Lip a's end (its middle) from the face centre, for a relaxed lip."""
+    return LIP_END[0] * A + (LIP_W_IN + LIP_END[1]) * W
+
+
 def _hook_centres():
-    """The nut's axis and two face centres (world), turned HOOK_PHI about z with its +y side toward the rail: hooked
-    (its +y lip's end over the front face past the hole's +y edge) and entry (that end just inside the edge)."""
-    A = np.array([math.cos(HOOK_PHI), -math.sin(HOOK_PHI), 0.0])
-    W = np.array([math.sin(HOOK_PHI), math.cos(HOOK_PHI), 0.0])
-    end = LIP_END[0] * A + (LIP_W_IN + LIP_END[1]) * W
-    hooked = np.array([XB + FL_T + HOOK_FRONT, HY + HH + HOOK_PAST, TOP + HZ]) - end
-    entry = np.array([XB + FL_T + HOOK_FRONT, HY + HH - SHEET / 2 - ENTRY_IN, TOP + HZ]) - end
-    return A, W, hooked, entry
+    """The nut's axis and lip-a direction, turned HOOK_PHI with its +y side toward the rail, and three face centres
+    (world), from where lip a's end is: pre (the end just behind the hole, inside its +y edge), entry (the end pushed
+    through the hole, in front of the front face) and hooked (the end slid past the hole's +y edge, over the front
+    face)."""
+    A, W = _nut_frame(HOOK_PHI)
+    end = _lip_end_offset(A, W)
+    y_in = HY + HH - ENTRY_IN
+    pre = np.array([XB + PRE_BACK, y_in, TOP + HZ]) - end
+    entry = np.array([X0 - ENTRY_FRONT, y_in, TOP + HZ]) - end
+    hooked = np.array([X0 - HOOK_FRONT, HY + HH + HOOK_PAST, TOP + HZ]) - end
+    return A, W, pre, entry, hooked
+
+
+T_HOOKED = 14.7  # the left gripper has the nut hooked by its +y lip at this time (s): checked in _left()
+T_SD_IN = T_HOOKED + 0.5  # the screwdriver goes in ...
+T_PUSH = T_SD_IN + 3.2  # the nut is turned home ...
+T_SD_OUT = T_PUSH + 7.4  # the screwdriver comes out, near the end of the turn ...
+T_LET_GO = T_SD_OUT + 1.5  # the left gripper lets go
+FACE0 = np.array([NUT_START[0], NUT_START[1], TOP + SHELF_TOP + NUT_REST])  # the nut's face centre, at rest
+STAGE = np.array([XB + 0.030, HY + 0.050, TOP + HZ])  # the nut's face centre on its way to the hole, inside the cabinet
 
 
 def _left() -> list:
-    rot_dn = DOWN_L
-    grab = np.array([NUT_START[0], NUT_START[1], TOP + 0.0052 + FACE_OUT + TIP])
-    out = _lead_in("left", grab + [0.0, 0.0, 0.06], rot_dn, OPEN_C, "above the cage nut")
-    out += [_w(1.2, grab, OPEN_C, "fingers either side of the nut", rot_dn),
-            _w(0.4, grab, OPEN_C, "settle", rot_dn),
-            _w(0.8, grab, PINCH, "take the nut", rot_dn),
-            _w(0.6, grab, PINCH, "settle", rot_dn),
-            _w(1.0, grab + [0.0, 0.0, 0.07], PINCH, "lift it", rot_dn)]
-    A, W, hooked, entry = _hook_centres()
-    rot_h = _rz(-HOOK_PHI) @ LEVEL_L
-    off = (TIP + FACE_OUT) * A  # face centre = TCP + off
-    pre = entry - off - 0.012 * A
-    out += [_w(1.5, np.array([0.16, 0.05, TOP + HZ + 0.02]), PINCH, "turn it to face the rail", _ry(-math.pi / 4) @ DOWN_L),
-            _w(1.5, np.array([0.18, HY + 0.004, TOP + HZ]), PINCH, "turn it to face the rail", LEVEL_L),
-            _w(1.5, pre, PINCH, "behind the marked hole, tilted 45 deg", rot_h),
-            _w(0.5, pre, PINCH, "settle", rot_h),
-            _w(1.5, entry - off, PINCH, "the +y lip into the hole", rot_h),
-            _w(0.4, entry - off, PINCH, "settle", rot_h),
-            _w(1.0, hooked - off, PINCH, "slide it toward +y: the lip's end over the front face (hooked)", rot_h)]
+    # take the nut from the shelf, lying face down, by its two plain sides: straight down onto it, fingers open
+    A0, W0 = np.array([0.0, 0.0, -1.0]), np.array([0.0, 1.0, 0.0])
+    grab, rot0 = _grip(FACE0, A0, W0)
+    out = _lead_in("left", grab + [0.0, 0.0, 0.04], rot0, OPEN_C, "above the cage nut, fingers either side")
+    out += [_w(1.5, grab, OPEN_C, "fingers down either side of the nut", rot0),
+            _w(0.4, grab, OPEN_C, "settle", rot0),
+            _w(0.8, grab, PINCH, "take the nut", rot0),
+            _w(0.6, grab, PINCH, "settle", rot0)]
+    # lift it, turn it lips-first toward the rail (its face toward -x) and bring it behind the marked hole
+    A, W, pre, entry, hooked = _hook_centres()
+    for t, c, (Ak, Wk), lab in ((1.0, FACE0 + [0.0, 0.0, 0.07], (A0, W0), "lift it"),
+                                (2.5, STAGE, (A, W), "turn it lips-first toward the rail, behind the flange"),
+                                (1.5, pre, (A, W), "behind the marked hole, tilted 45 deg"),
+                                (0.5, pre, (A, W), "settle"),
+                                (1.5, entry, (A, W), "the +y lip pushed through the hole"),
+                                (0.4, entry, (A, W), "settle"),
+                                (1.0, hooked, (A, W), "slide it toward +y: the lip's end over the front face")):
+        p, r = _grip(c, Ak, Wk)
+        out.append(_w(t, p, PINCH, lab, r))
     assert abs(sum(w.duration for w in out) - T_HOOKED) < 1e-6, sum(w.duration for w in out)
-    out += [_w(T_PUSH - T_HOOKED, hooked - off, PINCH, "hold it hooked while the blade goes in", rot_h)]
+    p, r = _grip(hooked, A, W)
+    out += [_w(T_PUSH - T_HOOKED, p, PINCH, "hold it hooked while the blade goes in", r)]
     # turn it flat about the hooked lip's end (pulled snug onto the front face and pressed toward that side)
-    end = hooked + LIP_END[0] * A + (LIP_W_IN + LIP_END[1]) * W - [HOOK_FRONT + PULL_SNUG, -PRESS_HOOK, 0.0]
-    n = 4
+    end = hooked + _lip_end_offset(A, W) + [HOOK_FRONT + PULL_SNUG, PRESS_HOOK, 0.0]
+    n = 8
     for k in range(1, n + 1):
-        phi = HOOK_PHI * (1.0 - k / n)
-        Ak = np.array([math.cos(phi), -math.sin(phi), 0.0])
-        Wk = np.array([math.sin(phi), math.cos(phi), 0.0])
-        ck = end - LIP_END[0] * Ak - (LIP_W_IN + LIP_END[1]) * Wk
-        out.append(_w(T_TURN / n, ck - (TIP + FACE_OUT) * Ak, PINCH_LIGHT,
-                      "turn it flat about the hooked lip, pushing it in", _rz(-phi) @ LEVEL_L))
-    seat_tcp = SEAT - (TIP + FACE_OUT) * np.array([1.0, 0.0, 0.0])
-    away = seat_tcp + [-0.016, 0.03, 0.01]
-    out += [_w(0.6, seat_tcp, PINCH_LIGHT, "press it home, flat against the flange", LEVEL_L),
-            _w(T_LET_GO - T_PUSH - T_TURN - 0.6, seat_tcp, PINCH_LIGHT, "hold it there", LEVEL_L),
-            _w(0.8, seat_tcp, OPEN_C, "let go", LEVEL_L),
-            _w(1.0, away, OPEN_C, "back away", LEVEL_L),
-            _w(4.0, away, OPEN_C, "stay clear", LEVEL_L)]
+        Ak, Wk = _nut_frame(HOOK_PHI * (1.0 - k / n))
+        p, r = _grip(end - _lip_end_offset(Ak, Wk), Ak, Wk)
+        out.append(_w(T_TURN / n, p, PINCH_LIGHT, "turn it flat about the hooked lip, pushing it in", r))
+    Af, Wf = _nut_frame(0.0)
+    seat_tcp, rot_f = _grip(SEAT, Af, Wf)
+    away = seat_tcp + [0.015, 0.035, 0.0]
+    park = seat_tcp + [0.030, 0.035, 0.030]
+    out += [_w(0.6, seat_tcp, PINCH, "press it home, flat against the flange", rot_f),
+            _w(T_LET_GO - T_PUSH - T_TURN - 0.6, seat_tcp, PINCH, "hold it there", rot_f),
+            _w(0.8, seat_tcp, OPEN_C, "let go", rot_f),
+            _w(1.0, away, OPEN_C, "back off from the flange, into the opening", rot_f),
+            _w(1.5, park, OPEN_C, "clear of the nut", rot_f),
+            _w(3.0, park, OPEN_C, "stay clear", rot_f)]
     return out
 
 
 PINCH_SD = -(SD_HANDLE[2] / 2 - 0.003)
-SD_GRIP_L = 0.075  # the right gripper takes the handle here (from the tip)
-SD_AXIS_BELOW = 0.004  # the screwdriver's axis this far below the TCP in the grip
-SD_LINE_Y = HY - HH + SD_TIP_T / 2 + 0.0010  # the blade enters 1 mm inside the hole's -y side ...
+SD_GRIP_L = 0.075  # the right gripper takes the handle here (from the tip) ...
+SD_AXIS_BELOW = 0.006  # ... with the screwdriver's axis this far beyond its centre, along its pointing direction
+SD_TILT = math.radians(30.0)  # the right gripper points down and 30 deg forward, so its wrist stays out of the cabinet
+ROT_SD = _ry(-SD_TILT) @ DOWN_SD
+SD_LINE_Y = HY - 0.0020  # the blade enters the hole 2 mm to the -y side of its middle ...
 SD_WALL_Y = HY - HH + SD_TIP_T / 2 - 0.0025  # ... then is pressed against that side (aimed 2.5 mm into it)
 SD_DEPTH = 0.0068  # the tip this far behind the flange's back face
+SD_AXIS_Z = 0.0125  # the screwdriver's axis above the bench where it lies (on a flute of its handle)
+
+
+def _sd_tcp(tip) -> np.ndarray:
+    """The right gripper's centre when the screwdriver's tip is at ``tip`` (world), the blade pointing +x."""
+    return np.asarray(tip, float) - [SD_GRIP_L, 0.0, 0.0] - SD_AXIS_BELOW * ROT_SD[:, 2]
 
 
 def _right() -> list:
-    rot = DOWN_SD
-    grab = np.array([SD_START[0] + SD_GRIP_L, SD_START[1], TOP + SD_HANDLE[2] / 2 + SD_AXIS_BELOW])
+    rot = ROT_SD
+    grab = _sd_tcp([SD_START[0], SD_START[1], TOP + SD_AXIS_Z])
     lift = grab + [0.0, 0.0, 0.10]
-    front = np.array([XB + FL_T + 0.010 + SD_GRIP_L, SD_LINE_Y, TOP + HZ + SD_AXIS_BELOW])
-    entered = front - [0.010 + 0.001, 0.0, 0.0]  # tip 1 mm into the hole
-    at_wall = np.array([entered[0], SD_WALL_Y, entered[2]])
-    inside = at_wall - [0.001 + FL_T + SD_DEPTH, 0.0, 0.0]
-    away = front + [-0.01, -0.05, -0.02]
+    front = _sd_tcp([X0 - 0.010, SD_LINE_Y, TOP + HZ])
+    entered = front + [0.010 + 0.003, 0.0, 0.0]  # tip 3 mm into the hole
+    at_wall = np.array([entered[0], entered[1] + SD_WALL_Y - SD_LINE_Y, entered[2]])
+    inside = at_wall + [FL_T + SD_DEPTH - 0.001, 0.0, 0.0]
+    away = _sd_tcp([X0 - 0.045, HY, TOP + HZ + 0.025])  # back off, the blade 4.5 cm in front of the hole
     out = _lead_in("right", grab + [0.0, 0.0, 0.06], rot, OPEN_C, "above the screwdriver's handle")
     out += [_w(1.2, grab, OPEN_C, "fingers either side of the handle", rot),
             _w(0.4, grab, OPEN_C, "settle", rot),
             _w(0.8, grab, PINCH_SD, "take the screwdriver", rot),
             _w(0.6, grab, PINCH_SD, "settle", rot),
             _w(1.5, lift, PINCH_SD, "lift it", rot),
-            _w(2.0, front + [0.0, 0.0, 0.012], PINCH_SD, "in front of the marked hole", rot),
+            _w(2.0, front + [-0.03, 0.0, 0.012], PINCH_SD, "in front of the marked hole", rot),
             _w(1.5, front, PINCH_SD, "blade level with the hole, near its -y side", rot)]
     t = sum(w.duration for w in out)
     if WRONG_ONE:
@@ -574,13 +693,13 @@ def _right() -> list:
                       _w(1.5, away, PINCH_SD, "move away", rot),
                       _w(6.0, away, PINCH_SD, "stay clear", rot)]
     out += [_w(T_SD_IN - t, front, PINCH_SD, "wait for the nut to be hooked", rot),
-            _w(0.6, entered, PINCH_SD, "blade tip into the hole", rot),
+            _w(1.2, entered, PINCH_SD, "blade tip into the hole", rot),
             _w(0.5, at_wall, PINCH_SD, "against the hole's -y side", rot),
             _w(1.4, inside, PINCH_SD, "blade in along that side, past the far lip", rot),
-            _w(T_SD_OUT - T_SD_IN - 2.5, inside, PINCH_SD, "keep the far lip in line while the nut is turned home",
+            _w(T_SD_OUT - T_SD_IN - 3.1, inside, PINCH_SD, "keep the far lip in line while the nut is turned home",
                rot),
             _w(1.2, front, PINCH_SD, "draw the blade out: the far lip springs out over the front face", rot),
-            _w(1.5, away, PINCH_SD, "move away", rot),
+            _w(1.5, away, PINCH_SD, "back off in front of the hole", rot),
             _w(6.0, away, PINCH_SD, "stay clear", rot)]
     return out
 
