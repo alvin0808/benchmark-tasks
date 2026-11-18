@@ -69,7 +69,8 @@ What is modelled and what is not:
   line 6.2 cm below them. The skin insert over the cheekbone (30 x 22 mm, its lower edge 1.0 cm above the ear canals'
   level, 2.4 cm above the beard's top edge) slides up toward the temple from 0 to 8 mm on a 0.12 N/mm spring; it is
   taut when pulled 3 mm or more. The rest of the face is rigid; the skin does not bunch or stretch in the simulation,
-  the scorer counts a soft-cheek point as shaved only while the insert is held pulled (see the scoring).
+  the scorer counts a soft-cheek point as shaved only if the insert is held pulled the whole time it is first
+  wiped (see the scoring).
 - The shaver is a three-head rotary electric shaver: 16.1 cm long, 5.8 cm wide, 4.5 cm thick, 170 g (a 145 g body
   and a 25 g head unit). Its three heads are 20 mm across, their centres 23 mm apart, each with a 1.2 mm domed face. The
   head unit pivots up to 20 degrees either way on a soft centring spring and presses in up to 6 mm on a 1 N/mm spring,
@@ -81,13 +82,16 @@ What is modelled and what is not:
 The scorer is `task_score`: 1.0 when `success()` has held for 1 s, otherwise the score at the end of the run. Every
 50 ms step it reads the head's, the skin insert's, the shaver's and its head unit's poses and the grippers' joints.
 
-- A point of the beard area is shaved when one of the three heads passes over it: it lies inside the head's 20 mm
-  circle and within 1.5 mm of the head's face, the head unit is within 20 degrees of flat to the skin there, and the
-  head unit's spring reads 0.3 to 3 N (force = 1 N/mm x how far it is pressed in, less its own weight). Moves between
-  steps are swept in 3 mm steps, so a fast pass still counts. On the soft cheek a point counts only while the skin
-  insert is pulled 3 mm or more toward the temple. Hair and skin are not simulated: this is the cutting rule, after
-  the two sources (unstretched skin bunches and its hairs lie flat; a light, flat press lets the heads lift and cut
-  them).
+- A head wipes a point of the beard area while the point lies inside the head's 20 mm circle and within 1.5 mm of the
+  head's face, with the head unit within 20 degrees of flat to the skin there (moves between steps are swept in 3 mm
+  steps, so a fast pass still wipes). A point's first wiping decides it, as the real trial's gel comes off only once:
+  the run of consecutive steps in which it is first wiped makes it shaved only if, at every step of that run, the head
+  unit's spring read 0.3 to 3 N (force = 1 N/mm x how far it is pressed in, less its own weight) and, for a point of
+  the soft cheek, the skin insert was pulled 3 mm or more toward the temple. Otherwise the point is spoiled and stays
+  unshaved for the rest of the run. So landing on unshaved beard or lifting off it (the press passes through less than
+  0.3 N), pressing harder than 3 N, or passing over the soft cheek before its skin is held, spoils the points under the
+  heads. Hair and skin are not simulated: this is the cutting rule, after the two sources (unstretched skin bunches and
+  its hairs lie flat; a light, flat press lets the heads lift and cut them).
 - 0 for the rest of the run if: the spring reads over 5 N (pressed hard enough to pinch the skin); a head comes within
   1 mm of the lips (and 2 mm round them), the left nostril (and the nose wing round it), the left eye (the eye opening
   and its lids) or the left ear; a gripper's finger comes within 1 mm of the left eye; the head is pushed 8 mm from
@@ -100,26 +104,34 @@ The scorer is `task_score`: 1.0 when `success()` has held for 1 s, otherwise the
   its tray; 0.5 at least 70 %; 0.25 at least 30 %; 0 otherwise, also when nothing is done. `-E object_jitter=0` keeps
   every object where the task file puts it.
 
-Real trial (scored with the shaver's own force log, the trial video and a photo; the parts, drawings, STL files and
-calibration are in [`fabrication/`](fabrication/README.md)). The real shaver is rebuilt as a force-sensing shaver: its
-head unit sits on a 1 N/mm spring over a 5 N force sensor, and a logger inside it writes the pressing force every 50 ms,
-less the head unit's own weight along its axis, as the simulation computes it. The tracer is a washable UV-fluorescent
-training gel (Glo Germ Gel), not a powder: a thin layer is rubbed on the beard area only, a 365 nm UV torch on a stand
-lights it during the trial, and it goes dark where a head wipes it. A phone or webcam on a stand films the left side of
-the face, with a millimetre scale beside the insert's dot; a tap on the head unit at the start puts one spike in the log
-at a known video frame, so the two clocks line up. Nothing has to be seen under the shaver: for each 3 mm square, the
-video gives the time between the last frame in which it still glows and the first in which it is dark (the shaver hides
-it in between; the squares one pass wipes share that time). The square counts as shaved when, over that time, the log
-reaches 0.3 N and never goes over 3 N, and, for a soft-cheek square, the dot stands 3 mm or more up on the scale
-whenever the log reads 0.3 N or more. A UV photo after the trial with a transparent 3 mm grid card of the beard area
-(printed from the drawing) gives the count of wiped squares and checks the video. Matching squares to the log by time
-is stricter than the simulated rule, which reads each step's force for the squares under the heads at that step. Each
-of these sets 0 for the rest of the run: the log reading 5 N (the sensor's full scale) or more; lipstick from the lips, or eyeliner from the nostril rims,
-eyelids or ear, found on a head, or eyeliner from the eyelids on a gripper's finger cot; a pin taped to the back of the
-neck at the beard middle's height (11.6 cm above the neck's hinge) moving 7 mm along the push over a millimetre card
-(the beard middle's 8 mm); the shaver falling in the video. The end state (on its tray, let go, still for 1 s) is read
-from the video. The gripper fingertips wear nitrile finger cots, so neither gel nor lipstick reaches the robot. The
-gel's faint glow under the torch is the one change the robot's cameras see from the simulated scene's look.
+Real trial (scored with the shaver's own force log, the trial video and a photo; the parts, drawings, STL files,
+camera positions and calibration are in [`fabrication/`](fabrication/README.md)). The real shaver is rebuilt as a
+force-sensing shaver: its head unit sits on a 1 N/mm spring over a 5 N force sensor, and a logger inside it writes the
+pressing force every 50 ms, less the head unit's own weight along its axis, as the simulation computes it. The tracer
+is a washable UV-fluorescent training gel (Glo Germ Gel), not a powder: a thin layer is rubbed on the beard area only,
+two 365 nm UV torches light it during the trial, and it goes dark where a head wipes it. Three webcams (Logitech C920,
+1920 x 1080 at 30 fps, focus and exposure locked) on small stands film the face from where neither the shaver nor the
+hand on the insert hides what they must see (cm, in the frame above): A low in front of the jaw at (13, 28, 3), aimed
+at the beard's middle (25, 5, 14); B low behind the jaw line at (8, -10, 3), aimed at (25, 4, 12); C level with the
+insert at (12, 22, 20), aimed at its lower front corner (22.7, 5.5, 20). A and B see each 3 mm square of the beard
+about 10 to 15 pixels across; C sees the insert's lower edge (a painted line), which the fingertips pressing its middle
+leave clear, against a millimetre scale on the rim beside it. Before each session, with the shaver's heads on the
+middle of the beard and the fingertips on the insert, check that every beard square outside the heads is in view of A
+or B and that C shows the edge and the scale. A tap on the head unit at the start puts one spike in the log at a known
+frame, so the log and the three videos share one clock. Each square's possible wiping interval runs from the last
+frame in which A or B shows it still glowing to the first in which either shows it dark (the shaver hides it in
+between). The square counts as shaved only if every log reading over that whole interval is 0.3 to 3 N and, for a
+soft-cheek square, C shows the insert's edge 3 mm or more up in every frame of it; a square that goes dark otherwise is
+spoiled, since the gel comes off only once. This is the simulation's rule, applied over the longer time the cameras
+cannot see the square, so it never counts a square the simulation would not (apart from the 20-degree flatness, which
+the real head unit's pivot stop limits). A UV photo after the trial with a transparent 3 mm grid card of the beard
+area (printed from the drawing) checks the count of dark squares. Each of these sets 0 for the rest of the run: the
+log reading 5 N (the sensor's full scale) or more; lipstick from the lips, or eyeliner from the nostril rims, eyelids
+or ear, found on a head, or eyeliner from the eyelids on a gripper's finger cot; a pin taped to the back of the neck at
+the beard middle's height (11.6 cm above the neck's hinge) moving 7 mm along the push over a millimetre card (the beard
+middle's 8 mm); the shaver falling in the video. The end state (on its tray, let go, still for 1 s) is read from the
+video. The gripper fingertips wear nitrile finger cots, so neither gel nor lipstick reaches the robot. The gel's faint
+glow under the torches is the one change the robot's cameras see from the simulated scene's look.
 
 Dream-1 (needs a key in `~/.dreamlabs/credentials`):
 
@@ -131,21 +143,24 @@ inspect-robots run --embodiment yam_arena --policy dream \
   --scorer task_score --max-steps 2400 --store-frames --log-dir ~/yam-eval/shave-dream
 ```
 
-The scripted demo, which reaches full score (success at step 1,790 of 2,400): the left gripper takes the shaver
-straight down across its body and turns it to face the left side of the face; one-handed, it shaves the firm skin in
-one continuous pass along the chin's left side, the jaw line and the jaw, and a short pass down beside the mouth; it
-moves clear while the right gripper's closed fingertips press the skin insert over the cheekbone and drag it up toward
-the temple (the insert ends up 4.7 to 5.1 mm up); with the skin held there the left gripper shaves the cheek in one
-continuous zig-zag of five rows 6 degrees apart, from the top of the cheek down; the right gripper lets the skin go
-and moves away, and the left lays the shaver back in its tray, lets go and moves away. Each pass follows the face: the
-head unit flat on the skin (the shaver's body tilted up at most 12 degrees so that its tail stays clear of the table;
-the head unit's pivot takes the rest), the heads aimed 12 to 13 mm past the skin (the head unit's spring, the arm and
-the neck give, so the force on the skin comes out at 0.3 to 3.4 N, mostly 0.5 to 2 N). In that run 98.1 % of the
-beard area is shaved (the soft cheek 100 %, the firm skin 95 %); the heads come no nearer than 7.0 mm to the ear, 7.2
-mm to the lips, 8.7 mm to the eye and 21 mm to the nostril; the head is pushed 5.7 mm at most. It is open-loop from
-the fixed layout and the head's known shape and reads nothing from the simulation while it runs; its corrections for
-the arms' give (the head unit lands 9 to 21 mm lower and a few millimetres further forward than commanded, more with
-the gripper turned for the cheek) were measured once in debug runs and are constants in the file:
+The scripted demo, which reaches full score (success at step 1,798 of 2,400): while the left gripper takes the shaver
+straight down across its body and turns it to face the left side of the face, the right gripper's closed fingertips
+press the skin insert over the cheekbone and drag it up toward the temple (it ends up 5.9 to 7.7 mm up while the cheek
+is shaved). With the skin held, the left gripper lands the shaver just above the cheek line, off the beard, and shaves
+the cheek in one continuous zig-zag of five rows 6 degrees apart from the top of the cheek down to the jaw angle,
+going back along its last row before it lifts off; the right gripper lets the skin go and moves away; the left lands
+again below the jaw, off the beard, and shaves the chin's left side, the jaw line and the jaw in one continuous pass,
+which ends by going back over the jaw and lifting off below it. Then it lays the shaver back in its tray, lets go and
+moves away. Each pass follows the face: the head unit flat on the skin (the shaver's body tilted up at most 12 degrees
+so that its tail stays clear of the table; the head unit's pivot takes the rest), the heads aimed 12 to 13 mm past the
+skin plus a per-point correction (`PASS_EXTRA`, -5 to +8 mm) measured from the force in debug runs, because the arm
+gives more at some places of a pass than at others. While points are being wiped the force stays at 0.45 to 2.63 N
+(median 1.5 N), so no point is spoiled: 96.1 % of the beard area is shaved (the soft cheek 99.7 %, the firm skin
+90.0 %; the 23 points left are under the jaw angle, beside the mouth's corner and at the sideburn's top, which no pass
+reaches); the heads come no nearer than 7.6 mm to the ear, 14.1 mm to the lips, 8.0 mm to the eye and 24.8 mm to the
+nostril; the head is pushed 5.7 mm at most. It is open-loop from the fixed layout and the head's known shape and reads
+nothing from the simulation while it runs; its corrections for the arms' give (where the head unit lands, measured
+once at the two ends of each pass, and the per-point press corrections) are constants in the file:
 
 ```bash
 inspect-robots run --embodiment yam_arena --policy yam_scripted \
@@ -162,25 +177,29 @@ for log in ~/yam-eval/shave-dream/*.json; do inspect-robots video "$log"; done
 ```
 
 `SHAVE_DEBUG=1` prints, every 10 steps (`SHAVE_DEBUG_EVERY=5` for every 5), the fraction shaved (soft cheek and firm
-skin apart), the spring's force and the most so far, how far the head unit is pressed in and tilted, the skin
-insert's pull, how far the head has been pushed, where the head unit is on the face, whether the shaver is held, its
-lowest point, whether it is on its tray, the grippers' places and openings, the closest each zone has come to a head,
-and how many points lie under a head and on its face. With it, `SHAVE_DUMP=<file.npy>` saves which points are shaved
-every 50 steps.
+skin apart), how many points are spoiled and how many are being wiped, the spring's force and the most so far, how far
+the head unit is pressed in and tilted, the skin insert's pull, how far the head has been pushed, where the head unit is
+on the face, whether the shaver is held, its lowest point, whether it is on its tray, the grippers' places and openings,
+the closest each zone has come to a head, and how many points lie under a head and on its face. With it,
+`SHAVE_DUMP=<file.npy>` saves every 50 steps which points are shaved (1) or spoiled (-1).
 
 `SHAVE_ONE=1` runs the demo the wrong way, with one arm: the right arm never pulls the skin, and the left does every
-pass as before and puts the shaver back. With the cheek skin never held taut, none of the 372 soft-cheek points
-counts; the jaw and chin (221 points) come out 95 % shaved, 35.4 % of the beard area: score 0.25 (not 0.5, which
-needs 70 %). The soft cheek is 63 % of the area, so a one-handed shave cannot pass 37 %.
+pass as before and puts the shaver back. With the cheek skin never held taut, every soft-cheek point the shaver passes
+over is spoiled (371 of the 372; none counts), and only the firm skin counts: 196 points, 33.1 % of the beard area,
+score 0.25 (not 0.5, which needs 70 %). The soft cheek is 63 % of the area, so a one-handed shave cannot pass 37 %.
 
-`SHAVE_HARD=1` runs the demo pressing far too hard on the jaw and chin (the heads aimed 40 mm deeper): the head
-unit's spring reads 5.2 N at step 213, as the heads land on the chin, and the run scores 0 (the head is pushed past
-8 mm a moment later too).
+`SHAVE_HARD=1` runs the demo pressing far too hard on the jaw and chin (the heads aimed 40 mm deeper in that pass): the
+head unit's spring reads 5.1 N at step 1,163, as the heads land below the jaw, and the run scores 0 (the head is
+pushed past 8 mm a moment later too).
+
+A version of this demo without the per-point corrections (and its cheek rows run from the jaw angle up) shows what the
+first-wiping rule takes away: its press dips below 0.3 N and rises above 3 N along the rows, 244 points are spoiled,
+and it scores 0.25.
 
 ## Runtime per trial
 
 On one NVIDIA RTX PRO 6000 Blackwell (shared with another job): about 3 minutes to start Isaac Sim and about 8
-minutes for the scripted demo at 320 x 176 (1,790 steps, 90 s of simulated time); a Dream-1 trial of 2,400 steps
+minutes for the scripted demo at 320 x 176 (1,798 steps, 90 s of simulated time); a Dream-1 trial of 2,400 steps
 takes about 15 minutes (with two other simulations sharing the GPU). Importing the task file takes about 5 s (it
 builds the head's surface and colliders with NumPy). Isaac Sim's first start on a new machine adds a few minutes while
 it compiles its shaders.
@@ -195,25 +214,27 @@ Parts (drawings, STL files, catalogue part numbers, assembly and calibration in
 [`fabrication/`](fabrication/README.md)): a life-size adult male care-training head and neck in rigid vinyl on a
 weighted base, clamped to the bench, seated upright with its face toward the robot's left and the midpoint of its ear
 canals 30 cm in front of the arms' midpoint and 19 cm above the bench; its neck on a spring hinge at the base, about 20
-N m/rad (check before each session: 5 N pushed level into the middle of the beard area, with a force gauge, moves it
-4.0 +- 0.5 mm along the push, the 0.8 mm per newton of the simulation). The beard area on its left side painted
-stubble-grey to the outline above. Over the left cheekbone the 30 x 22 mm silicone skin insert in its window tray, on a
-HIWIN MGN5C block and MGNR5R rail with a Lee Spring LP 018E 03 S316 return spring (0.12 N/mm, 0 to 8 mm), a 2 mm dot
-on it and a millimetre scale beside it. A three-head rotary electric shaver (about 16 x 6 x 4.5 cm, 170 g) rebuilt as
-the force-sensing shaver: its head unit on a 1 N/mm spring over a Honeywell FMAMSDXX005WC2C3 force sensor, a Seeed
-XIAO nRF52840 Sense logger inside in the motor's place (the motor is removed, so the cutters do not turn; the rebuilt
-shaver is about 1.5 cm longer than the simulated one); its white tray. Glo Germ Gel, a 365 nm UV torch and a phone or
-webcam, each on a stand; a transparent 3 mm grid card of the beard area; a red lipstick and a dark eyeliner pencil;
-nitrile finger cots for the gripper fingertips; a pin and a millimetre card for the head's push.
+N m/rad (check before each session: 5 N pushed level into the middle of the beard area, with a force gauge, moves it 4.0
++- 0.5 mm along the push, the 0.8 mm per newton of the simulation). The beard area on its left side painted stubble-grey
+to the outline above. Over the left cheekbone the 30 x 22 mm silicone skin insert in its window tray, on a HIWIN MGN5C
+block and MGNR5R rail with a Lee Spring LP 018E 03 S316 return spring (0.12 N/mm, 0 to 8 mm), a line painted along its
+lower edge and a millimetre scale on the rim beside it. A three-head rotary electric shaver (about 16 x 6 x 4.5 cm, 170
+g) rebuilt as the force-sensing shaver: its head unit on a 1 N/mm spring over a Honeywell FMAMSDXX005WC2C3 force sensor,
+a Seeed XIAO nRF52840 Sense logger inside in the motor's place (the motor is removed, so the cutters do not turn; the
+rebuilt shaver is about 1.5 cm longer than the simulated one); its white tray. Glo Germ Gel, two 365 nm UV torches and
+three Logitech C920 webcams (or phones recording 1080p at 30 fps), each on a small stand where `fabrication/` places it;
+a transparent 3 mm grid card of the beard area; a red lipstick and a dark eyeliner pencil; nitrile finger cots for the
+gripper fingertips; a pin and a millimetre card for the head's push.
 
 Before every trial: put fresh finger cots on the gripper fingertips if the last ones are marked; wipe the face and the
 shaver's heads with a damp cloth; rub a thin, even layer of gel on the beard area only (about 0.5 ml, with a gloved
 finger); redraw the lipstick on the lips and the eyeliner on the nostril rims, eyelids and ear; check that the skin
 insert springs back to 0 and the head stands upright; lay the shaver on its back in its tray, heads toward the head;
-start the log, the video and the UV torch, and tap the head unit once.
+start the log, the three videos and the UV torches, and tap the head unit once.
 
-After the trial: score from the log, the video and the UV photo as in "Real trial" above, and look for lipstick or
-eyeliner on the heads and the finger cots; then wash the gel off the face and the heads with soap and water.
+After the trial: score from the log, the three videos and the UV photo as in "Real trial" above, and look for
+lipstick or eyeliner on the heads and the finger cots; then wash the gel off the face and the heads with soap and
+water.
 
 [reuter]: https://med.libretexts.org/Bookshelves/Nursing/Nursing_Assistant_(Reuter)/05%3A_Provide_for_Personal_Care_Needs_of_Clients/5.30%3A_Skills_Checklist-_Shaving_With_an_Electric_Razor
 [philips]: https://www.manualslib.com/manual/3329817/Philips-S3000.html?page=12

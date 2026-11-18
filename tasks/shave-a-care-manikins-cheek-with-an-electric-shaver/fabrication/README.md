@@ -39,14 +39,16 @@ middle; the neck's z is along the shaver's axis from its body's top end (panel C
 | 1 | battery | 3.7 V LiPo cell, 250 to 400 mAh, JST lead | 8 |
 | 1 | shaver | a three-head rotary shaver of about 16 x 6 x 4.5 cm and 170 g (for example from the Philips Series 3000 range whose manual the task cites) | 50 |
 | 1 | tracer | Glo Germ Gel (washable UV-fluorescent training lotion) | 25 |
-| 1 | UV torch | 365 nm LED torch, 3 to 5 W, on a small stand | 15 |
+| 2 | UV torch | 365 nm LED torch, 3 to 5 W, each on a small stand | 30 |
+| 3 | camera | Logitech C920 HD Pro webcam (1920 x 1080 at 30 fps; focus and exposure locked in its settings), or any phone recording 1080p at 30 fps, each on a small stand or clamp | 3 x 60 |
 | 1 | force gauge | 5 N spring scale or digital push-pull gauge with 0.05 N divisions or finer | 20 to 80 |
 
 Ordinary items: M2 x 6 screws (3 for the rail, 2 for the block), M3 x 8 screws (2) and one M3 x 10 for the head unit,
 two-part epoxy, 4.7 kOhm resistors (2, I2C pull-ups), thin four-core wire, a small piece of 1.6 mm FR-4 board for the
 sensor (any PCB service, with the land pattern from the sensor's datasheet; cut to 12 x 12 mm), a printed millimetre
 scale, a transparent 3 mm grid card printed from panel A of the drawing, nitrile finger cots (or the cut-off fingers of
-nitrile gloves), a red lipstick and a dark eyeliner pencil, a phone or webcam on a stand.
+nitrile gloves), a red lipstick and a dark eyeliner pencil, a laptop that records the three cameras and the shaver's
+log.
 
 ## Building the cheek insert
 
@@ -55,7 +57,9 @@ nitrile gloves), a red lipstick and a dark eyeliner pencil, a phone or webcam on
    with epoxy so its rim continues the face; sand the seam flush and paint the rim skin colour.
 2. Cast a flat 2 mm sheet of Ecoflex 00-30 (pour it into any flat tray to 2 mm), cut a 30 x 22 mm piece and bond it to
    the carrier's curved face with Sil-Poxy; it takes the carrier's curve (`cheek_insert_skin.stl` shows the result).
-   Put a 2 mm dark dot at its middle and glue the millimetre scale on the rim beside it, its 0 at the dot.
+   Paint a 1 mm dark line along its lower edge, and glue a printed millimetre scale on the tray's rim just in front of
+   the pocket, beside the insert's lower edge, its 0 level with that edge at rest. The gripper's fingertips press the
+   insert's middle and upper part, so its lower edge and the scale stay in view while the skin is held.
 3. Screw the rail to the guide frame (3 x M2), slide the block on, put the return spring in the frame's cup.
 4. From inside the head, pass the carrier's post through the tray's slot, screw its tab to the block (2 x M2), and screw
    the frame to the tray's standoffs (2 x M3), so the spring sits between the cup and the block's top end and the
@@ -92,7 +96,7 @@ is 20 N m/rad, the simulated neck's stiffness. Any stock springs near that rate 
 ## Calibration (before each session)
 
 - Insert spring: push the insert up by its lower edge with the force gauge: 0.36 N at 3 mm and 0.96 N at 8 mm, each
-  within 15 %, read on the scale beside the dot; let go: it returns to 0.
+  within 15 %, read on the scale beside its lower edge; let go: it returns to 0.
 - Force sensor: clamp the shaver upright, heads up; tare; put 20, 50, 100, 200 and 400 g on the head unit's middle,
   read each, and fit a straight line; every reading must be within 0.1 N of the mass times 9.81 m/s2.
 - Neck spring: 1 N on the head unit (102 g, by the sensor's reading) presses it in 1.0 +- 0.15 mm (feeler gauge
@@ -101,6 +105,27 @@ is 20 N m/rad, the simulated neck's stiffness. Any stock springs near that rate 
   (11.6 cm above the hinge) moves it 4.0 +- 0.5 mm along the push (0.8 mm per newton), read on a ruler on a stand.
 - Gel: on a vinyl test tile with the same gel layer, one pass of the shaver at 0.5 N leaves a dark track as wide as a
   head (20 mm) under the UV torch.
+
+## Cameras for the real-trial scoring
+
+Three cameras film the trial, placed so that the shaver and the hand on the insert do not hide what each must see.
+Positions are in cm in the task's frame (x forward from the midpoint between the arm bases, y to the robot's left, z
+above the table); the beard area spans x 22.9 to 27.9, y 1.8 to 8.3, z 9.8 to 18.1, and the insert sits at x 22.7,
+y 4.0, z 21.1.
+
+| Camera | Where | Aimed at | Sees |
+|---|---|---|---|
+| A, low in front of the jaw | (13, 28, 3), beside the tray, 3 cm up | the beard's middle (25, 5, 14), 28 cm away | the chin, the jaw and the front of the cheek from in front and below |
+| B, low behind the jaw line | (8, -10, 3), 3 cm up | (25, 4, 12), 24 cm away | the jaw angle, the sideburn and the back of the cheek from behind and below |
+| C, level with the insert | (12, 22, 20) | the insert's lower front corner (22.7, 5.5, 20), 20 cm away | the insert's lower edge against the rim's scale, under the fingertips and above the shaver |
+
+At these distances a C920 image spans about 30 to 40 cm, so a 3 mm square of the beard is about 10 to 15 pixels
+across in A and B (seen at 40 to 60 degrees), and a millimetre on the scale about 5 pixels in C. The two UV torches
+stand beside A and B. Before each session, put the shaver's heads on the middle of the beard and the right gripper's
+fingertips on the insert (by hand or by moving the arms there slowly), and check each view: every beard square outside
+the heads must be visible in A or B, and C must show the insert's lower edge and the scale; move a camera until they
+are. Record all three with the shaver's log on one laptop; the tap on the head unit at the start marks the same moment
+in the log and the videos.
 
 ## Keeping the shared robot clean
 

@@ -34,10 +34,14 @@ ear canals, is at (0.300, 0.000) and 0.190 above the table.
 
 Score: 0 for the rest of the run once the shaver's spring reads over 5 N, a head comes within 1 mm of the lips, the
 left nostril, the left eye or the left ear, a gripper's finger comes within 1 mm of the left eye, the head is pushed 8
-mm, or the shaver falls 3 cm with no gripper holding it. A point is shaved when a head passes over it (inside its
-20 mm circle, within 1.5 mm of its face), the head unit within 20 degrees of flat to the skin, pressing 0.3 to 3 N; on
-the soft cheek only while the insert is pulled 3 mm or more. At the end: 1.0 (success, held 1 s) at least 95 % shaved
-and the shaver resting on its tray, let go and still; 0.75 at least 95 % shaved; 0.5 at least 70 %; 0.25 at least 30 %.
+mm, or the shaver falls 3 cm with no gripper holding it. A head wipes a point while the point lies inside the head's
+20 mm circle, within 1.5 mm of its face, with the head unit within 20 degrees of flat to the skin there; the first
+stretch of steps in which a point is wiped decides it (like the washable gel of the real trial, which a head wipes off
+once): it is shaved when the head unit pressed 0.3 to 3 N at every step of that stretch and, on the soft cheek, the
+insert was pulled 3 mm or more at every step of it; otherwise it is spoiled for the rest of the run. Landing on or
+lifting off unshaved beard at a lighter press therefore spoils it. At the end: 1.0 (success, held 1 s) at least 95 %
+shaved and the shaver resting on its tray, let go and still; 0.75 at least 95 % shaved; 0.5 at least 70 %; 0.25 at
+least 30 %.
 """
 
 from __future__ import annotations
@@ -690,7 +694,8 @@ def _body_dist(q) -> np.ndarray:
 @on_reset
 def _reset() -> None:
     _EP.clear()
-    _EP.update(tick=0, counted=-1, shaved=np.zeros(N_CELLS, bool), failed="", hist=[], held_z=None, force=0.0,
+    _EP.update(tick=0, counted=-1, shaved=np.zeros(N_CELLS, bool), spoiled=np.zeros(N_CELLS, bool),
+               inside=np.zeros(N_CELLS, bool), ok=np.zeros(N_CELLS, bool), failed="", hist=[], held_z=None, force=0.0,
                fmax=0.0, pull=0.0, pushed=0.0, cutting=False, prev_unit=None, near=1.0, on_tray=False, held=False,
                zone_d={k: 1.0 for k in ("lips", "nostril", "eye", "ear")})
     _IDS.pop("arms", None)
@@ -765,24 +770,20 @@ def _track_inner(env) -> None:
     # the unit in the head frame
     u_h, r_h = hr.T @ (up - hp), hr.T @ ur
     cutting = F_MIN <= force <= F_MAX
-    if cutting:
-        poses = [(u_h, r_h)]
-        prev = _EP["prev_unit"]
-        if prev is not None:  # also the poses in between since the last step (a head moving fast still sweeps)
-            n = int(min(6, max(1, math.ceil(float(_len(u_h - prev[0])) / 0.003))))
-            for k in range(1, n):
-                t = k / n
-                rr = (1 - t) * prev[1] + t * r_h
-                u, _s, vt = np.linalg.svd(rr)
-                poses.append(((1 - t) * prev[0] + t * u_h, u @ vt))
-        hit = np.zeros(N_CELLS, bool)
-        for p_, r_ in poses:
-            hit |= under_heads(p_, r_)
-        ok = hit & (~SOFT | (pull >= TAUT))
-        _EP["shaved"] |= ok
-        _EP["prev_unit"] = (u_h, r_h)
-    else:
-        _EP["prev_unit"] = None
+    poses = [(u_h, r_h)]
+    prev = _EP["prev_unit"]
+    if prev is not None:  # also the poses in between since the last step (a head moving fast still sweeps)
+        n = int(min(6, max(1, math.ceil(float(_len(u_h - prev[0])) / 0.003))))
+        for k in range(1, n):
+            t = k / n
+            rr = (1 - t) * prev[1] + t * r_h
+            u, _s, vt = np.linalg.svd(rr)
+            poses.append(((1 - t) * prev[0] + t * u_h, u @ vt))
+    hit = np.zeros(N_CELLS, bool)
+    for p_, r_ in poses:
+        hit |= under_heads(p_, r_)
+    _wipe(hit, cutting & (~SOFT | (pull >= TAUT)))
+    _EP["prev_unit"] = (u_h, r_h)
     # rules broken (0 for the rest of the run)
     if not _EP["failed"]:
         if force > F_HARD:
@@ -824,6 +825,22 @@ def _track_inner(env) -> None:
                cutting=cutting)
 
 
+def _wipe(hit: np.ndarray, good: np.ndarray) -> None:
+    """The gel model: a point's wiping stretch is the run of steps in which a head wipes it (``hit``); its first stretch
+    decides it: shaved if ``good`` (the press in its window and, on the soft cheek, the skin pulled) held at every step
+    of the stretch, spoiled otherwise. Points that are shaved or spoiled stay so."""
+    open_ = ~(_EP["shaved"] | _EP["spoiled"])
+    inside = _EP["inside"]
+    start = open_ & hit & ~inside
+    _EP["ok"][start] = good[start]
+    go_on = open_ & hit & inside
+    _EP["ok"][go_on] &= good[go_on]
+    end = open_ & inside & ~hit
+    _EP["shaved"] |= end & _EP["ok"]
+    _EP["spoiled"] |= end & ~_EP["ok"]
+    _EP["inside"] = open_ & hit
+
+
 def _still() -> bool:
     h = _EP["hist"]
     return len(h) == STILL_STEPS and max(float(np.abs(v - h[-1]).max()) for v in h) * 1000 < STILL_MM
@@ -853,7 +870,8 @@ def _debug() -> None:
         return
     u, r = _EP.get("unit_h", (np.zeros(3), np.eye(3)))
     print(f"DBG step={_EP['tick']} cov={coverage():.3f} (soft {float(_EP['shaved'][SOFT].mean()):.3f}, firm "
-          f"{float(_EP['shaved'][~SOFT].mean()):.3f}) F={_EP['force']:.2f}N fmax={_EP['fmax']:.2f} "
+          f"{float(_EP['shaved'][~SOFT].mean()):.3f}) spoiled={int(_EP['spoiled'].sum())} (soft "
+          f"{int(_EP['spoiled'][SOFT].sum())}) wiping={int(_EP['inside'].sum())} F={_EP['force']:.2f}N fmax={_EP['fmax']:.2f} "
           f"comp={_EP.get('comp', 0) * 1000:.2f}mm tilt={_EP.get('tilt', 0):.1f} pull={_EP['pull'] * 1000:.2f}mm "
           f"pushed={_EP['pushed'] * 1000:.2f}mm unit_h=({u[0]:.4f},{u[1]:.4f},{u[2]:.4f}) "
           f"ax_h=({r[0, 0]:+.2f},{r[1, 0]:+.2f},{r[2, 0]:+.2f}) held={_EP['held']} low={_EP.get('low', 0) * 1000:.1f}mm "
@@ -890,7 +908,7 @@ def _tally() -> None:
             _debug()
             dump = os.environ.get("SHAVE_DUMP")
             if dump and _EP["tick"] % 50 == 0:  # debug only: which points are shaved so far
-                np.save(dump, _EP["shaved"])
+                np.save(dump, _EP["shaved"].astype(np.int8) - _EP["spoiled"].astype(np.int8))  # 1 shaved, -1 spoiled
 
 
 def score(objects) -> float:
@@ -912,13 +930,15 @@ def success(objects) -> bool:
 # ======================================================================================================================
 # Scripted demo (open loop, from the known layout; it reads nothing from the simulation)
 # ======================================================================================================================
-# The left gripper takes the shaver from its tray straight down across its body and turns it to face the left side of
-# the face. It first shaves the firm skin over the jaw and beside the mouth, where no pull is needed, in four passes;
-# then the right gripper's fingertips press the skin patch over the cheekbone and drag it 7 mm up toward the temple
-# and hold it there while the left gripper shaves the soft cheek below in four more passes. The right gripper lets go
-# of the skin, and the left gripper lays the shaver back in its tray, lets go and moves away. Each pass follows the
-# face's surface: the shaver's axis along the skin's inward normal, its heads pressed a few millimetres past the
-# skin (the head unit's spring, the arm and the manikin's neck give, which sets the force).
+# First the right gripper's fingertips press the skin patch over the cheekbone, drag it about 7 mm up toward the
+# temple and hold it there, while the left gripper takes the shaver from its tray straight down across its body and
+# turns it to face the left side of the face. With the skin held, the left gripper shaves the cheek in one continuous
+# zig-zag of rows from the cheek line down to the jaw angle. The right gripper lets the skin go and moves away, and the
+# left shaves the jaw and chin in one more pass (all the soft cheek it crosses is already shaved). A point is decided
+# by its first wiping (the scoring), so each pass lands off the beard (the cheek pass just above the cheek line, the jaw
+# pass below the jaw) and ends by going back over skin it has already shaved before it lifts off. Then the left gripper lays the shaver back in its tray, lets go and moves
+# away. Each pass follows the face's surface: the shaver's axis along the skin's inward normal, its heads pressed a few
+# millimetres past the skin (the head unit's spring, the arm and the manikin's neck give, which sets the force).
 # SHAVE_ONE=1: the same, but the right arm never pulls the skin (it stays at its start pose).
 # SHAVE_HARD=1: the jaw and chin are shaved pressing far too hard (the heads aimed 40 mm deeper).
 WRONG_ONE = os.environ.get("SHAVE_ONE") == "1"
@@ -937,22 +957,29 @@ APPROACH = 0.025  # passes start and end this far off the skin, along its normal
 # joints give under the shaver's weight and the push; more with the gripper turned for the cheek): measured once in
 # debug runs of this plan, as (azimuth, forward mm, up mm) at the two ends of a pass, and taken off its targets (only
 # partly where taking it off would bring the heads nearer the ear or the eye).
-FIRM_PASSES = (("jaw and chin", ((20.0, -44.0), (31.0, -44.0), (50.0, -42.0), (70.0, -45.0), (80.0, -40.0),
-                                  (26.0, -38.0)), 0.0, 0.013, ((24.0, 7.0, -9.5), (80.0, 0.0, -9.0))),
-               ("beside the mouth", ((38.0, -10.0), (37.0, -17.0), (36.0, -24.0)), 0.0, 0.012,
-                ((36.0, 5.0, -6.0), (38.0, 5.0, -6.0))))
-SOFT_PASSES = (("cheek", ((46.0, -8.0), (68.0, -8.0), (78.0, -14.0), (42.0, -14.0), (37.0, -20.0), (78.0, -20.0),
-                          (78.0, -26.0), (35.0, -26.0), (34.0, -32.0), (78.0, -32.0)), 300.0, 0.012,
-                ((34.0, 4.0, -15.0), (78.0, 3.0, -20.5))),)
+CHEEK_PASS = ("cheek", ((42.0, -10.0), (46.0, -8.0), (68.0, -8.0), (78.0, -14.0), (42.0, -14.0), (37.0, -20.0),
+                         (78.0, -20.0), (78.0, -26.0), (35.0, -26.0), (34.0, -32.0), (78.0, -32.0), (56.0, -32.0)),
+              300.0, 0.012, ((34.0, 4.0, -15.0), (78.0, 3.0, -20.5)))
+JAW_PASS = ("jaw and chin", ((26.0, -52.0), (20.0, -44.0), (31.0, -44.0), (50.0, -42.0), (70.0, -45.0), (80.0, -40.0),
+                             (26.0, -38.0), (26.0, -52.0)), 0.0, 0.013, ((24.0, 7.0, -9.5), (80.0, 0.0, -9.0)))
+# The arm gives more at some places of a pass than at others; to keep the press inside its window the whole way, each
+# pass point's aim is moved deeper (+) or shallower (-) by these millimetres, measured from the force in debug runs.
+PASS_EXTRA = {"cheek": (-0.9, 0.1, 3.9, 5.1, 6.1, 7.0, 6.7, 5.7, 7.8, 4.7, 3.2, 0.7, 0.8, 0.2, -0.7, -2.5, -3.9, -3.8, -1.5,
+              -5.1, -2.6, -1.3, 1.3, 2.1, 4.0, 5.1, 5.8, 6.7, 6.5, 7.9, 5.6, 6.5, 2.8, 1.8, 0.9, 2.4, 1.0, -0.2,
+              -1.9, -2.5, -4.1, -2.7, -3.6, -1.2, -2.5, -1.5, -0.8, 1.1, 1.9, 3.0, 4.5, 5.8, 6.6, 6.9, 7.7, 8.2, 6.2,
+              5.0, 3.2, 2.2, 1.9, 0.7, -1.0),
+              "jaw and chin": (4.1, 4.6, 5.7, 5.8, 6.2, 6.1, 6.1, 6.0, 5.9, 5.9, 5.7, 5.1, 4.3, 3.7, 3.9, 3.9, 3.2, 2.9, 3.0, 3.3,
+              3.0, 3.1, 3.4, 3.9, 4.2, 4.6, 5.1, 5.3, 5.3, 5.8, 6.4, 7.2, 7.3, 7.4, 6.3, 5.5)}
 PASS_SPEED = 0.022  # m/s along the skin
-WAIT_PULL = 6.5  # s: the left arm waits off the skin after its last firm pass while the right pulls the cheek taut
-PARK_SHIFT = np.array([0.0, 0.05, -0.01])  # where it waits: moved this far from the end of that pass (m)
+PULLED_BY = 10.0  # s: the left arm starts its first pass once the right has pulled the cheek taut
+PARK_SHIFT = np.array([0.0, 0.05, -0.01])  # where it waits after the cheek: moved this far from the pass's end (m)
 RIGHT_LEAVES = 4.0  # s: after the cheek, the left arm waits while the right lets the skin go and moves away
-# the skin patch: the right gripper's closed fingertips press it 12 mm past its surface (along its normal) and drag it
-# 11 mm up (the arm sags a few millimetres at that height, and the patch stops at 8 mm)
+# the skin patch: the right gripper's closed fingertips press it 14 mm past its surface (along its normal) and drag it
+# 15 mm up (the arm sags a few millimetres at that height, and the patch stops at 8 mm), so that it stays above 3 mm
+# when the shaver's press tips the head away from the fingertips
 PATCH_PRESS_AT = np.array([0.040, 0.0, 0.021])  # head frame (the surface point is found along +y from here)
-PATCH_DRAG = 0.011
-PATCH_PRESS = 0.012
+PATCH_DRAG = 0.015
+PATCH_PRESS = 0.014
 PATCH_TILT, PATCH_ROLL = 50.0, 180.0  # the right gripper's approach: tilted down from the patch's inward normal
 PATCH_VIA = np.array([0.140, -0.030, TOP + 0.210])  # the right TCP comes up beside the head here first
 
@@ -1121,8 +1148,9 @@ def _pass(plan: list, knots, roll: float, press: float, label: str, sag) -> None
     plan.append(_wp(2.5, first - _sag(pts[0][0], sag), GRIP_SHAVER, f"off the skin at the start of the {label} pass",
                     rot0))
     prev = None
+    extra = PASS_EXTRA.get(label, ())
     for i, (th, ph) in enumerate(pts):
-        tcp, rot, _ = _shaver_tcp(th, ph, roll, press)
+        tcp, rot, _ = _shaver_tcp(th, ph, roll, press + (extra[i] if i < len(extra) else 0.0) * MM)
         tcp = tcp - _sag(th, sag)
         dt = 1.2 if prev is None else max(0.25, float(np.linalg.norm(tcp - prev)) / PASS_SPEED)
         plan.append(_wp(dt, tcp, GRIP_SHAVER, f"{label} pass" + (": heads on the skin" if prev is None else ""), rot))
@@ -1135,8 +1163,8 @@ def _pass(plan: list, knots, roll: float, press: float, label: str, sag) -> None
 
 
 def _shaver_plan() -> tuple:
-    """The left arm: take the shaver, shave the firm skin, wait for the pull, shave the cheek, lay it back. Returns
-    the plan and the times the cheek passes start and end."""
+    """The left arm: take the shaver, wait for the pull, shave the cheek, wait for the other arm to go, shave the jaw
+    and chin, lay the shaver back. Returns the plan and the time the cheek is done."""
     grip = SHAVER_O + np.array([GRIP_X, 0.0, GRIP_Z - 0.001])
     out = _lead_in("left", grip + [0.0, 0.0, 0.06], GRIP_ROT, OPEN_SHAVER, "above the shaver")
     out += [_wp(1.2, grip, OPEN_SHAVER, "fingers either side of the shaver", GRIP_ROT),
@@ -1144,18 +1172,15 @@ def _shaver_plan() -> tuple:
             _wp(1.0, grip, GRIP_SHAVER, "take the shaver", GRIP_ROT),
             _wp(0.6, grip, GRIP_SHAVER, "settle", GRIP_ROT),
             _wp(1.2, grip + [0.0, 0.0, 0.07], GRIP_SHAVER, "lift it out of the tray", GRIP_ROT)]
-    for i, (label, knots, roll, press, sag) in enumerate(FIRM_PASSES):
-        _pass(out, knots, roll, press + (HARD_EXTRA if WRONG_HARD and i == 0 else 0.0), label, sag)
-    t_firm = _t(out)
-    w = out[-1]
-    out.append(_wp(1.5, np.asarray(w.pos) + PARK_SHIFT, GRIP_SHAVER, "move clear of the other arm", w.yaw))
-    _hold(out, t_firm + WAIT_PULL, "wait while the cheek is pulled taut")
-    for label, knots, roll, press, sag in SOFT_PASSES:
-        _pass(out, knots, roll, press, label, sag)
+    _hold(out, PULLED_BY - 2.5, "wait while the other hand pulls the cheek taut")
+    label, knots, roll, press, sag = CHEEK_PASS
+    _pass(out, knots, roll, press, label, sag)
     w = out[-1]
     out.append(_wp(1.5, np.asarray(w.pos) + PARK_SHIFT, GRIP_SHAVER, "move clear of the other arm", w.yaw))
     t_done = _t(out)
     _hold(out, t_done + RIGHT_LEAVES, "wait for the other arm to move away")
+    label, knots, roll, press, sag = JAW_PASS
+    _pass(out, knots, roll, press + (HARD_EXTRA if WRONG_HARD else 0.0), label, sag)
     up = SHAVER_O + np.array([GRIP_X, 0.0, GRIP_Z + 0.07])
     put = SHAVER_O + np.array([GRIP_X, 0.0, GRIP_Z + 0.0005])
     out += [_wp(3.0, up, GRIP_SHAVER, "carry it back over the tray", GRIP_ROT),
@@ -1164,7 +1189,7 @@ def _shaver_plan() -> tuple:
             _wp(0.8, put, OPEN_SHAVER, "let go", GRIP_ROT),
             _wp(1.0, put + [0.0, 0.0, 0.07], OPEN_SHAVER, "rise", GRIP_ROT),
             _wp(1.5, np.array([0.16, 0.25, TOP + 0.16]), OPEN_SHAVER, "move away", GRIP_ROT)]
-    return out, t_firm, t_done
+    return out, t_done
 
 
 def _patch_frame(n_w: np.ndarray) -> np.ndarray:
@@ -1183,9 +1208,9 @@ def _patch_frame(n_w: np.ndarray) -> np.ndarray:
     return np.column_stack([c, np.cross(a2, c), a2])
 
 
-def _patch_plan(t_firm: float, t_end: float) -> list:
-    """The right arm: wait, press the patch's upper part with the closed fingertips, drag it up (done 2 s after the
-    left arm has left the skin from its last firm pass), hold it until the cheek is done, let go."""
+def _patch_plan(t_end: float) -> list:
+    """The right arm: press the patch with the closed fingertips, drag it up (done before the left arm's first pass),
+    hold it until the cheek is shaved, let go and move away."""
     p = ray_surface(head_sdf, PATCH_PRESS_AT, np.array([[0.0, 1.0, 0.0]]), 0.12, samples=60)[0]
     n = R_HEAD @ _normals(head_sdf, p[None])[0]
     rot = _patch_frame(n)
@@ -1195,7 +1220,7 @@ def _patch_plan(t_firm: float, t_end: float) -> list:
     pressed = touch + n_in * PATCH_PRESS  # pushed into the skin along its normal
     up = np.array([0.0, 0.0, PATCH_DRAG])
     pos, r0 = _ready("right")
-    out = [Waypoint(max(0.5, t_firm - 1.0), tuple(float(v) for v in pos), 0.0, "wait with the fingers closed", r0)]
+    out = [Waypoint(0.5, tuple(float(v) for v in pos), 0.0, "start with the fingers closed", r0)]
     off = touch - n_in * 0.03 - [0.0, 0.0, 0.01]
     out += _lead_in("right", PATCH_VIA, rot, 0.0, "up beside the head", seconds=3.0)
     out += [_wp(1.5, off, 0.0, "toward the skin over the cheekbone", rot),
@@ -1210,10 +1235,10 @@ def _patch_plan(t_firm: float, t_end: float) -> list:
 
 
 def demo():
-    left, t_firm, t_done = _shaver_plan()
+    left, t_done = _shaver_plan()
     if WRONG_ONE:
         pos, rot = _ready("right")
         return {"left": left, "right": [Waypoint(_t(left), tuple(float(v) for v in pos), 0.0, "stay put", rot)]}
-    right = _patch_plan(t_firm, t_done)
+    right = _patch_plan(t_done)
     _hold(right, _t(left), "stay clear")
     return {"left": left, "right": right}
