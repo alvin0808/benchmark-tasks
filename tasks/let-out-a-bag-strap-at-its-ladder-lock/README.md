@@ -57,8 +57,8 @@ backpack's fabric, foam and contents are rigid.
 
 The scorer is `task_score`: 1.0 when `success()` has held for 1 s, otherwise the score at the end of the run. How far
 the strap has been let out is how far the strap's slide has moved (the tail is 15 cm minus that past the buckle's tab
-edge). The backpack dragged 3 cm or more from where it lay sets the score to 0 for the rest of the run. Otherwise the
-score is the best stage reached: 0.25 the strap let out by 2 cm or more; 0.5 let out to the target, 7 to 9 cm (its
+edge). The backpack pulled off the table (its middle 3 cm or more below where it lay) sets the score to 0 for the rest
+of the run; sliding it on the table costs nothing. Otherwise the score is the best stage reached: 0.25 the strap let out by 2 cm or more; 0.5 let out to the target, 7 to 9 cm (its
 loose end 6 to 8 cm past the buckle); 0.75 at the target with the buckle laid back flat (within 15 degrees of the
 webbing), so that it grips. Full score: at the target, the buckle flat, both grippers 5 cm or more from the buckle and
 from every link of the webbing in sight, everything still for 1 s. `-E object_jitter=0` keeps every object exactly
@@ -100,8 +100,9 @@ positions and where each gripper is.
 
 `STRAP_ONE=1` runs the demo the wrong way, with one arm: the left arm stays put and the right gripper pinches the
 webbing and pulls it as in the demo, with the buckle lying flat. The buckle grips, the strap does not give, and the
-pull drags the backpack across the table: once it has moved 3 cm the score is 0 for the rest of the run. Dragged on
-past about 5 cm this way, the strap's simulation breaks down (its poses become NaN); the score stays 0.
+pull drags the backpack across the table without letting the strap out, so no stage is reached and the score is 0.
+Dragged on past about 5 cm this way, the strap's simulation can break down (its poses become NaN); a broken state
+never earns a stage, so the score stays at the best stage reached before it.
 
 ## Runtime per trial
 
@@ -121,7 +122,7 @@ straps, laid face down with its bottom toward the robot's right as in the screen
 strips of tape on the table at its corners. Before each trial, pull the near strap's loose end until 15 cm of it
 sticks out past the buckle's tab edge and lay the webbing straight along the panel with the tail on top of it. Score
 with a tape measure (the loose end from the buckle's tab edge to its tip), a photo (the buckle lying flat on the
-webbing; the backpack on its tape marks) and the trial's video.
+webbing; the backpack still on the table) and the trial's video.
 
 [cbd]: https://countrybrookdesign.com/triglides-tension-lock-1-1-2-inch.html
 [triv]: https://www.trivantage.com/blog/products/fastener-physics-101-cam-buckles-ladderloc-webbing

@@ -30,8 +30,8 @@ carrier is sprung to go in as far as the strap's has come out. The buckle's grip
 every control step from the buckle's angle: 300 N (and a spring holding the slide) within 30 degrees of the webbing,
 1.5 N past 50 degrees, falling in between. A spring returns the buckle flat.
 
-Score: 0 for the rest of the run once the backpack has been dragged 3 cm or more from where it lay. Otherwise the
-best stage reached: 0.25 the strap let out by 2 cm or more (webbing drawn through the buckle); 0.5 let out to the
+Score: 0 for the rest of the run once the backpack has fallen off the table (its middle 3 cm or more below where it
+lay); sliding it on the table costs nothing. Otherwise the best stage reached: 0.25 the strap let out by 2 cm or more (webbing drawn through the buckle); 0.5 let out to the
 target, its loose end 6 to 8 cm past the buckle; 0.75 at the target with the buckle laid back flat (within 15
 degrees of the webbing), so that it grips. Full score (1.0): at the target, the buckle flat, both grippers 5 cm or
 more from the buckle and from the webbing, everything still for 1 s.
@@ -59,7 +59,7 @@ allow_matrix_grips()
 SCENE = "station"
 TOP = TABLE_TOP[SCENE]
 SUCCESS_HOLD_S = 1.0
-# The file keeps the best stage reached itself and the dragging rule latches 0, so the score is read at the end.
+# The file keeps the best stage reached itself and the off-the-table rule latches 0, so the score is read at the end.
 SCORE_OVER = "end"
 
 # -- colours --------------------------------------------------------------------------------------------------------
@@ -282,7 +282,7 @@ STRAP = Strap.build("backpack", parts=_strap_parts(), loops=[Loop(A_LINKS[-1], "
 OBJECTS = [STRAP]
 
 # -- tracking and scoring ---------------------------------------------------------------------------------------------
-DRAGGED = 0.030  # the backpack moved this far from where it lay
+FELL = 0.030  # the backpack's middle this far below where it lay: pulled off the table
 CLEAR = 0.050  # both grippers this far from the buckle and the webbing: let go
 STILL_STEPS, STILL_MM, STILL_DEG = 20, 1.5, 2.0
 _DEBUG = os.environ.get("STRAP_DEBUG") == "1"
@@ -368,8 +368,8 @@ def _track_inner(env) -> None:
     if _EP["pack0"] is None:
         _EP["pack0"] = pack.copy()
     moved = float(np.linalg.norm(pack - _EP["pack0"]))
-    if moved >= DRAGGED and not _EP["failed"]:
-        _EP["failed"] = f"the backpack was dragged {moved * 100:.1f} cm at step {_EP['tick']}"
+    if float(_EP["pack0"][2] - pack[2]) >= FELL and not _EP["failed"]:
+        _EP["failed"] = f"the backpack fell off the table at step {_EP['tick']}"
     arms = _grippers(base)
     pts = [bp[idx["body"]["buckle"]]] + [bp[idx["body"][n]] for n in A_LINKS + T_LINKS
                                           if bp[idx["body"][n]][1] < PAD_Y0]
@@ -380,6 +380,8 @@ def _track_inner(env) -> None:
                max_let=max(_EP["max_let"], let), max_tilt=max(_EP["max_tilt"], tilt))
     _EP["hist"].append(np.array([let * 1000, tilt / STILL_DEG * STILL_MM, *(pack * 1000)]))
     del _EP["hist"][:-STILL_STEPS]
+    if not (np.isfinite(let) and np.isfinite(tilt)):  # a broken strap state never earns a stage
+        return
     at = abs(let - TARGET) <= TOL
     flat = tilt <= FLAT
     stage = 0.75 if at and flat else 0.5 if at else 0.25 if let >= PARTIAL_LET else 0.0
@@ -417,7 +419,7 @@ def _debug() -> None:
 
 
 def score(objects) -> float:
-    """The best stage reached (0 for the rest of the run once the backpack has been dragged 3 cm): 0.25 let out 2 cm
+    """The best stage reached (0 for the rest of the run once the backpack has fallen off the table): 0.25 let out 2 cm
     or more; 0.5 let out to the target (loose end 6 to 8 cm past the buckle); 0.75 that with the buckle laid back
     flat. Full score (1.0) is success()."""
     if _DEBUG and _EP["counted"] != _EP["tick"]:
