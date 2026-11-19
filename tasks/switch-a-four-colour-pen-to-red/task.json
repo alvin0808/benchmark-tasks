@@ -1,0 +1,20 @@
+{
+  "title": "Switch a four-colour pen from black to red: hold the light round pen and slide the red slider down until it latches",
+  "category": "Societal relatability",
+  "keywords": [
+    "four-colour ballpoint pen",
+    "slider latch",
+    "small tab push",
+    "hold and push",
+    "office and school supplies"
+  ],
+  "instruction": "Switch the pen to red: the red tip out and the other tips in. Leave the pen lying on the desk pad.",
+  "context": "Four-colour retractable ballpoint pens (BIC 4 Colours, Pilot, Zebra and others) are on desks in offices and schools everywhere; switching to red to mark a correction is an everyday gesture. Pilot's instructions for its four-colour pens: \"Slide the lever of the colour you wish to use and the writing tip comes out, and is set in place\"; \"To retract the writing tip, slide other lever.\" The physical constraint: the red slider's tab is 4.5 mm wide, stands 3 mm proud of a 12 mm barrel and sits 13 mm from the black one; it needs 2 N to start and 4 N at the end of its 10 mm stroke, and springs back unless pushed all the way to its catch. The 11.5 g pen lies loose on the pad: pushed along its length on its own, it slides away (tried in simulation: it slid 32 mm and the slider did not move), so one hand holds the barrel while a fingertip slides the tab, as a person holds the pen and slides with the thumb. Scored by the pen's own state: which tip is out.",
+  "setup": "Positions in cm from the midpoint between the arm bases on the table top: x forward, y to the robot's left. A grey desk pad (24 x 34 cm, 3 mm, 0.30 kg, long side along y, loose) centred at (20, -1). On it, a four-colour retractable ballpoint pen the size of a BIC 4 Colours (145 mm long, 12 mm across, 11.5 g; blue upper barrel, white lower barrel and cap, steel clip and point), loose, lying along y with its axis at x 19, the cap end at y -8.5 and the point at y +6.0. Its four sliders (black, red, blue, green; tabs 4.5 mm wide, 8 mm long, 3 mm proud) sit 90 degrees apart round the top of the barrel, 22-30 mm from the cap end; it lies on the blue and green tabs, with red uppermost on the far side, black uppermost on the near side and the clip toward the robot. The black tip is out, the others in. Both arms start at the ready pose, grippers open. The layout is the same in every trial, as in the screenshot.",
+  "scoring": "At the end: 0.3 if the black, blue and green tips are in (each slider within 1 mm of its top); 0.7 more if the red tip is out and set by its catch (red slider 9.5 mm or more down, tip 1.5 mm or more out), counted only with the pen let go (every finger 2 cm or more from it), lying on the pad (its middle over the pad, its axis at most 3 mm above its rest height) and still (under 1 mm in 1 s). 1.0 (success, held 1 s) = both. Another colour left out (black, or blue or green pushed down) loses the 0.3; red not set loses the 0.7; doing nothing scores 0. Real trial: a close photo of the point at the end (which tips are out) and the trial video (the pen let go and lying on the pad).",
+  "run_limit": "2,400 steps (2 minutes at 20 Hz)",
+  "reset_notes": "Push the black slider down until it catches (black tip out, the others in), and lay the pen on the pad along the tape marks with its cap end toward the robot's right, red slider uppermost on the far side. Simulation: each trial starts the simulator afresh.",
+  "fidelity": "Rigid bodies, 20 Hz control. The pen is cylinders and boxes at the size of a BIC 4 Colours; the four sliders are separate parts on slides along the barrel, each on a spring (200 N/m: 2 N at the top, 4 N at the bottom; estimate). The catch is a rule on the sliders' travel: held at 9.5 mm down, let go when another slider passes 6 mm. The clip's release and the inner refills are not modelled; the tips are drawn only.",
+  "scores": "Dream-1 run: 0.0 (the right gripper reached toward the pen several times but never moved a slider; the left arm stayed near its start; black stayed out); scripted demo: 1.0",
+  "media": "M-8RLD37"
+}
