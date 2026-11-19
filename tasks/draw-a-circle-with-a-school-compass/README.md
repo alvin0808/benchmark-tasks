@@ -44,7 +44,11 @@ compass (a head with its handle and needle leg, and a pencil leg on a friction h
 pricked hole in its top layer) are built with `bodykit.py`, which adds such bodies and joints: importing it hooks
 `yam_arena.scene` when the simulator starts, without changing yam_arena, and gives the task file each body's pose and
 the hinge's angle. This copy of `bodykit.py` also turns on PhysX contact reporting for a chosen part (here the pencil
-leg), so the task file can read the force between the pencil and the paper.
+leg), so the task file can read the force between the pencil and the paper, and can give a part PhysX's compliant
+(implicit spring-damper) contact through its own physics material: the pencil's point meets the pad on a 3 N/mm
+spring with 10 N s/m of damping, standing in for the give of the paper stack under a graphite point. On a rigid
+contact the point bounced on and off the paper from one physics step to the next; on the compliant one it presses
+steadily, and the force read every control step is the force with which it marks the paper.
 
 ## The scene
 
@@ -71,9 +75,13 @@ control step the task file reads where the steel point and the pencil's point ar
 mark as origin; the contact force between the pencil leg and the pad (PhysX pair-wise contact forces); the compass's
 pose; and the points of each finger's collision hulls.
 
-- The pencil draws while its point presses on the paper or is within 0.1 mm of it. The drawn circle is counted in
-  1-degree steps along the path the pencil's point takes round the mark (each degree once), wherever the point is
-  drawing at a radius within 1.5 mm of 40 mm.
+- The pencil draws only while its point presses on the paper with 0.3 N or more (the contact force between the
+  pencil and the pad, read every control step). That is a light pencil stroke: Grade 4 children writing with a pencil
+  press it on the page with 0.65 to 1.23 N on average ([Schwellnus et al. 2013][force], instrumented stylus on a
+  force-sensing tablet), and a pencil at 1.5 N already leaves a full dark mark ([paper test][paper]); at 0.3 N an HB
+  point still leaves a light, visible line. The drawn circle is counted in 1-degree steps along the path the pencil's
+  point takes round the mark (each degree once; a dot where it stood does not count), wherever it presses with 0.3 N or
+  more at a radius within 1.5 mm of 40 mm. The pencil line shown in the cameras follows the same rule.
 - 0 for the rest of the run once a rule is broken: the steel point skidded (more than 1 mm from the centre mark while
   its tip is in the paper or less than 0.3 mm above it); the pencil pressed on the paper with more than 5 N (its point
   breaks); the pencil drew a line more than 3 mm off the 40 mm circle (a spiral or a stray mark).
@@ -104,13 +112,14 @@ inspect-robots run --embodiment yam_arena --policy dream \
 
 The scripted demo, which reaches full score (open loop from the known layout; the left arm stays at the ready pose).
 The right gripper comes down over the handle, fingers closing across the legs' plane, and holds the handle lightly
-(commanded 1 mm narrower than the handle), so the compass can rock between the fingers and both points stay on the
-paper; it presses 1 mm down. It carries the handle round the point on the 20 mm circle the handle must follow, the
+(commanded 3 mm narrower than the handle), so the compass can still rock between the fingers and both points stay on
+the paper; it presses 3 mm down, so the pencil marks with 0.3 to 1.8 N (0.8 N typical). It carries the handle round the point on the 20 mm circle the handle must follow, the
 hand turning with the legs: first back 50 deg, then forward 190 deg, aiming the handle 12 deg ahead of where the legs
 should be (the arm is soft sideways and stays short of a target it pushes against) and waiting 1.5 s at each end. It
 opens to 14 mm round the handle, turns the open hand back 180 deg in 1.5 s (the compass stands on its point meanwhile,
-the open fingers on either side of it most of the way), closes on the handle again, and carries it on another 190
-deg, past where the line began. Then it lifts the compass straight up out of the mark, carries it to the desk beside
+the open fingers on either side of it most of the way), closes on the handle again, turns the hand 5 deg about the axis
+across the legs (after the regrasp the arm's give otherwise eases the pencil off the paper) and carries it on another
+215 deg, past where the line began. Then it lifts the compass straight up out of the mark, carries it to the desk beside
 the pad (x 20, y -25.5), stands it on its points there, tips it over on them 60 deg, lets go, and backs away.
 
 ```bash
@@ -132,15 +141,16 @@ its radius and the range of radii drawn, how far the steel point is from the mar
 point's height above the paper, the hinge's angle, the degrees of circle drawn, how far the compass is from lying on
 its side, how close the nearest finger is, how far the pad has moved, where each gripper is and any rule broken.
 
-`COMPASS_MODE=press` runs the demo the wrong way: the same path, pressing 10 mm down instead of 1 mm. Pressed 10 mm down, the compass bears hard on both its points: at step 296, with 8 deg of the circle drawn, the pencil presses on the paper with 5.1 N, its point breaks and the run scores 0 for the rest of the run. Score 0.
-`COMPASS_MODE=twist` turns the hand on the spot over the handle instead of carrying it round the point. The handle turns in the light grip and the compass twists and tips instead of going round: the pencil lifts off the paper (12.8 mm up by the end) after 18 deg of line. Score 0.04.
+`COMPASS_MODE=press` runs the demo the wrong way: the same path, pressing 10 mm down instead of 3 mm. Pressed 10 mm down, the compass bears hard on both its points (the pencil up to 4.4 N, the hinge giving 0.3 deg) and the handle is squeezed down in the fingers; when the hand eases off to let go of the handle part-way round (step 606, 118 deg drawn), the compass springs out of its mark and the point skids 10.7 mm across the paper: 0 for the rest of the run. Score 0.
+`COMPASS_MODE=twist` turns the hand on the spot over the handle instead of carrying it round the point. The handle turns in the grip and the compass twists and tips instead of going round: after 20 deg of line the pencil lifts off the paper (11 mm up by the end). Score 0.04.
 
 ## Runtime per trial
 
 On one NVIDIA RTX PRO 6000 Blackwell shared with other simulation jobs, the scripted demo while rendering 1280 x 720
-video took 451 s (1,318 steps, 65.9 s of simulated time, ending on success), running beside a Dream-1 trial of 2,400
-steps at 320 x 176 that took 915 s (0.38 s per step). Debug runs of the demo without video took 8 to 12 minutes on the
-busy GPU. Isaac Sim's first start on a new machine adds a few minutes while it compiles its shaders.
+video took 525 s (1,364 steps, 68.2 s of simulated time, ending on success), running beside a debug run of the task;
+a Dream-1 trial of 2,400 steps at 320 x 176 took 914 s (0.38 s per step). Debug runs of the demo without video took 8
+to 15 minutes on the busy GPU. Isaac Sim's first start on a new machine adds a few minutes while it compiles its
+shaders.
 
 ## Seeds
 
@@ -156,4 +166,6 @@ centre once, stand the compass with its point in the prick and its pencil 4 cm f
 
 [howto]: https://bhanzu.com/math/geometry/compass-drawing
 [ccss]: https://www.thecorestandards.org/Math/Content/HSG/CO/
+[force]: https://pmc.ncbi.nlm.nih.gov/articles/PMC3722657
+[paper]: https://bleistift.blog/2016/08/comparing-different-types-of-paper/
 [helix]: https://rapidonline.com/helix-g05048-compass-graduate-pencil-34-2040

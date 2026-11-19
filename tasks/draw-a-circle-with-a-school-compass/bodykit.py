@@ -31,7 +31,8 @@ triangle mesh with smooth normals, which collides as itself on a fixed body, lik
 convex hull); and on a :class:`Link` a ``stiffness`` (N m/rad), a spring that pulls the joint back toward its start
 angle (a spring hinge), with ``spring_damping``.
 For the compass task, a :class:`Link` with ``report_contacts=True`` gets PhysX contact reporting, so the task file can
-read the contact force between that part and another body (the pencil's lead on the paper).
+read the contact force between that part and another body (the pencil's lead on the paper), and ``compliant=(k, c)``
+gives the part's contacts PhysX's compliant (implicit spring-damper) contact model through its own physics material.
 For the ankle task, a :class:`MeshShape` on a :class:`Linkage` part (a moving body) collides as its convex hull, and a
 sprung :class:`Link`'s joint gets a drive (a USD angular DriveAPI with a force limit), without which its spring does
 nothing.
@@ -348,6 +349,7 @@ class Link:
     stiffness: float = 0.0  # N m/rad: a spring pulling the joint back toward its start angle (a spring hinge)
     spring_damping: float = 0.0  # N m s/rad, with the spring
     report_contacts: bool = False  # PhysX contact reporting on this part, so a task can read its contact forces
+    compliant: tuple | None = None  # (stiffness N/m, damping N s/m): this part's contacts are compliant (spring-damper)
 
 
 @dataclass(frozen=True)
@@ -674,7 +676,15 @@ def _spawn_linkage(prim_path: str, cfg, translation=None, orientation=None, **kw
             looks[color] = path
         return looks[color]
 
-    def rigid(path: str, mass: float, shapes, report: bool = False) -> None:
+    def rigid(path: str, mass: float, shapes, report: bool = False, compliant=None) -> None:
+        mat = phys
+        if compliant is not None:  # its own material: same friction, contacts on an implicit spring-damper
+            mat = f"{prim_path}/Looks/compliant_{path.rsplit('/', 1)[-1]}"
+            cm = sim_utils.RigidBodyMaterialCfg(static_friction=spec.friction[0], dynamic_friction=spec.friction[1],
+                                                friction_combine_mode=spec.friction_combine,
+                                                compliant_contact_stiffness=float(compliant[0]),
+                                                compliant_contact_damping=float(compliant[1]))
+            cm.func(mat, cm)
         xform = UsdGeom.Xform.Define(stage, path)
         xform.AddTranslateOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(Gf.Vec3d(0.0, 0.0, 0.0))
         xform.AddOrientOp(precision=UsdGeom.XformOp.PrecisionDouble).Set(Gf.Quatd(1, 0, 0, 0))
@@ -694,7 +704,7 @@ def _spawn_linkage(prim_path: str, cfg, translation=None, orientation=None, **kw
                 collision = PhysxSchema.PhysxCollisionAPI.Apply(geom.GetPrim())
                 collision.CreateContactOffsetAttr(float(spec.contact_offset))
                 collision.CreateRestOffsetAttr(0.0)
-                bind_physics_material(spath, phys, stage=stage)
+                bind_physics_material(spath, mat, stage=stage)
                 if isinstance(shape, MeshShape):  # a moving part collides as the mesh's convex hull
                     UsdPhysics.MeshCollisionAPI.Apply(geom.GetPrim()).CreateApproximationAttr("convexHull")
 
@@ -703,7 +713,7 @@ def _spawn_linkage(prim_path: str, cfg, translation=None, orientation=None, **kw
     origin = np.asarray(spec.pos, float)
     for link in spec.links:
         path = f"{prim_path}/{link.name}"
-        rigid(path, link.mass, link.shapes, link.report_contacts)
+        rigid(path, link.mass, link.shapes, link.report_contacts, link.compliant)
         joint = UsdPhysics.RevoluteJoint.Define(stage, f"{path}/{link.name}_turn")
         joint.CreateAxisAttr(link.axis)
         parent = base_path if link.parent is None else f"{prim_path}/{link.parent}"

@@ -27,8 +27,9 @@ Score (0 for the rest of the run once a rule is broken):
   it); the pencil pressed on the paper with more than 5 N (its point breaks); a pencil line more than 3 mm off the
   40 mm circle (a spiral or a stray mark).
 - 0.8 x (degrees of the circle drawn / 360): counted in 1-degree steps along the path of the pencil's point while it
-  presses on the paper or is within 0.1 mm of it, at a radius within 1.5 mm of 40 mm (each degree once; a dot where it
-  stood does not count).
+  presses on the paper with the marking force, 0.3 N or more (read from the contact force every control step), at a
+  radius within 1.5 mm of 40 mm (each degree once; a dot where it stood does not count). The pencil's point meets the
+  pad through a compliant contact (3 N/mm, 10 N s/m: the give of the paper stack under it), so it presses steadily.
 - 1.0 (success, held 1 s): at least 355 deg drawn, the compass lying on its side (hinge axis within 30 deg of
   vertical, head within 3 cm of the desk), every finger point 2 cm or more from it, and it still (head under 1 mm in
   1 s).
@@ -73,6 +74,10 @@ LEG = 0.092  # hinge axis to the tips
 HALF = math.asin(RADIUS / 2 / LEG)  # each leg's angle from vertical
 HINGE_H = LEG * math.cos(HALF)  # the hinge axis above the paper
 PSI0 = math.radians(float(os.environ.get("COMPASS_PSI0", "0")))  # the direction from the point to the pencil, at start
+# The pencil's point on the pad: a compliant contact (the give of the paper stack under the graphite point), so the
+# point presses on the paper steadily rather than bouncing on a rigid contact.
+LEAD_K = float(os.environ.get("COMPASS_LEAD_K", "3000"))  # N/m
+LEAD_C = float(os.environ.get("COMPASS_LEAD_C", "10"))  # N s/m
 HINGE_NM = float(os.environ.get("COMPASS_HINGE", "0.10"))  # the hinge's friction torque (N m)
 HANDLE_R, HANDLE_L = 0.004, 0.022  # the knurled handle
 HEAD_H = 0.012  # the head block (the hinge in its middle)
@@ -118,7 +123,8 @@ def _compass() -> Linkage:
               capsule(rel(tip - up_p * 0.005), rel(tip - up_p * 0.0012), 0.0006, GRAPHITE),
               SphereShape(rel(tip + np.array([0.0, 0.0, 0.0006])), 0.0006, GRAPHITE)]
     links = [Link("pencil_leg", tuple(pencil), mass=0.012, anchor=_v(o), axis=HINGE_AXIS, friction=HINGE_NM,
-                  damping=0.0005, limits=(-25.0, 25.0), report_contacts=True)]
+                  damping=0.0005, limits=(-25.0, 25.0), report_contacts=True,
+                  compliant=(LEAD_K, LEAD_C))]
     return Linkage.build("compass", pos=_v(o + np.array([0.0, 0.0, 0.0003])), mass=0.020, color=STEEL, floating=True,
                          friction=(0.5, 0.4), shapes=base, links=links, contact_offset=0.001, solver_iterations=48)
 
@@ -162,7 +168,7 @@ TOL = 1.5 * MM  # a line within 1.5 mm of the 40 mm radius counts
 STRAY = 3.0 * MM  # a line further off than this spoils the drawing
 SKID = 1.0 * MM  # the point more than this from the mark ...
 ON_PAPER = 0.3 * MM  # ... while its tip is in the paper or less than this above it: it skidded
-TOUCH = 0.1 * MM  # the pencil's point this close to the paper (or pressing on it) draws
+MARK_N = float(os.environ.get("COMPASS_MARK_N", "0.3"))  # N: the pencil marks the paper when it presses this hard
 F_SNAP = 5.0  # N: pressing harder than this breaks the pencil's point
 SECTORS = 360  # 1-degree steps of the circle
 FULL_DEG = 355  # the whole circle: at least this many degrees of it drawn
@@ -321,7 +327,7 @@ def _track_inner(env) -> None:
     pts = np.concatenate([hp + BASE_SAMPLES @ hr.T, lp + LEG_SAMPLES @ lr.T])
     tree = cKDTree(pts)
     near = min(float(tree.query(fp, k=1)[0].min()) for fp in fingers.values())
-    draws = f > 0.0 or (on_pad(ld_p) and ld_p[2] <= TOUCH)
+    draws = f >= MARK_N  # the pencil leaves a line where it presses on the paper with the marking force
     if not _EP["failed"]:
         if f > F_SNAP:
             _EP["failed"] = f"the pencil pressed with {f:.1f} N (over {F_SNAP:.0f} N): its point breaks"
@@ -397,22 +403,23 @@ def success(objects) -> bool:
 
 # -- scripted demo --------------------------------------------------------------------------------------------------
 # Open loop, from the known layout; the left arm stays at the ready pose. The right gripper comes down over the
-# handle, fingers closing across the legs' plane, holds it lightly (commanded 1 mm narrower than the handle, so the
-# compass can rock between the fingers) and presses 1 mm down. It carries the handle round the point on its 20 mm
+# handle, fingers closing across the legs' plane, holds it lightly (commanded 3 mm narrower than the handle, so the
+# compass can still rock between the fingers) and presses 3 mm down. It carries the handle round the point on its 20 mm
 # circle, the hand turning with the legs: back 50 deg, then forward 190 deg (aimed 12 deg ahead, waiting 1.5 s at each
 # end). It opens to 14 mm round the handle, turns the open hand back 180 deg while the compass stands on its point,
-# closes again and carries it on 190 deg, past where the line began. It lifts the compass straight up, carries it to
+# closes again, turns the hand 5 deg about the axis across the legs (keeps the pencil pressing) and carries it on
+# 215 deg, past where the line began. It lifts the compass straight up, carries it to
 # the desk beside the pad, stands it on its points, tips it over on them 60 deg, lets go and backs away.
-# COMPASS_MODE=press presses 10 mm down instead of 1 mm; COMPASS_MODE=twist turns the hand on the spot over the handle.
+# COMPASS_MODE=press presses 10 mm down instead of 3 mm; COMPASS_MODE=twist turns the hand on the spot over the handle.
 OPEN_C = -0.047
 ARM = os.environ.get("COMPASS_ARM", "right")
 MODE = os.environ.get("COMPASS_MODE", "demo")  # demo | press, twist (wrong ways) | stand (let go at once)
-PINCH = float(os.environ.get("COMPASS_PINCH", "-0.0035"))  # closed on the 8 mm handle
+PINCH = float(os.environ.get("COMPASS_PINCH", "-0.0025"))  # closed on the 8 mm handle
 CAGE = float(os.environ.get("COMPASS_CAGE", "-0.007"))  # open round the handle
 RADIAL = float(os.environ.get("COMPASS_RADIAL", "0.0")) * MM  # the handle target this far out toward the pencil
 TURN_S = float(os.environ.get("COMPASS_TURN_S", "1.5"))  # the open hand turns back in this time
 GRIP_DZ = HANDLE_TOP - 0.006  # the TCP this far above the paper on the handle
-PRESS = float(os.environ.get("COMPASS_PRESS", "0.001"))  # how far below the handle's seated height the TCP is told
+PRESS = float(os.environ.get("COMPASS_PRESS", "0.003"))  # how far below the handle's seated height the TCP is told
 YAW_OFF = float(os.environ.get("COMPASS_YAWOFF", "0"))  # the grip's yaw minus the legs' direction (deg)
 
 
@@ -472,14 +479,18 @@ def _stay(arm: str, t: float = 120.0) -> list:
 
 SWEEP1 = [float(v) for v in os.environ.get("COMPASS_SWEEP1", "-50,140").split(",")]  # legs' direction (deg)
 REGRASP = float(os.environ.get("COMPASS_REGRASP", "180"))  # the open hand turns back this far round the handle
-SWEEP2 = float(os.environ.get("COMPASS_SWEEP2", "190"))  # then the legs turn on this far
+SWEEP2 = float(os.environ.get("COMPASS_SWEEP2", "215"))  # then the legs turn on this far
 LEAD = float(os.environ.get("COMPASS_LEAD", "12"))  # deg the handle is aimed ahead of where the legs should be
+# After the regrasp the hand is turned 180 deg and the arm's small give tips the compass the other way about the axis
+# across its legs, easing the pencil off the paper; the hand is turned this far about that axis (sign as in _sweep) to
+# keep the pencil marking (found by trial: at 0 the force fell below 0.3 N on about 12 % of the steps).
+TILT2 = float(os.environ.get("COMPASS_TILT2", "-5.0"))  # deg
 DWELL = 1.5  # s: at the end of each sweep the hand is held there while the arm catches up
 SWEEP_S = float(os.environ.get("COMPASS_SWEEP_S", "14"))  # seconds per 190 deg
 
 
 def _sweep(psi_a: float, psi_b: float, yaw_off: float, dz: float, seconds: float, label: str,
-           lead: float = 0.0) -> list:
+           lead: float = 0.0, tilt: float = 0.0) -> list:
     """The handle carried round the point from legs' direction ``psi_a`` to ``psi_b`` (deg), the hand turning with
     the legs (``yaw_off`` rad from their direction); the handle is aimed ``lead`` deg ahead along the way, since the
     arm, soft sideways, stays short of a target it pushes against."""
@@ -490,7 +501,10 @@ def _sweep(psi_a: float, psi_b: float, yaw_off: float, dz: float, seconds: float
         p = handle_at(psi + math.radians(lead), dz)
         if MODE == "twist":  # wrong: turn the wrist about the handle where it stands
             p = _EP.setdefault("twist_p", p)
-        out.append(_w(seconds / n, p, PINCH, label, grip_at(psi + yaw_off)))
+        r = grip_at(psi + yaw_off)
+        if tilt:  # the hand turned ``tilt`` deg about the axis across the legs
+            r = _rot_axis((-math.sin(psi), math.cos(psi), 0.0), math.radians(tilt)) @ r
+        out.append(_w(seconds / n, p, PINCH, label, r))
     return out
 
 
@@ -532,8 +546,9 @@ def _arm_path() -> list:
     out += [_w(0.5, pb, CAGE, "settle", ra), _w(1.0, pb, PINCH, "take the handle again", ra),
             _w(0.6, handle_at(math.radians(b1), dz), PINCH, "press lightly down", ra)]
     end = b1 + SWEEP2
-    out += _sweep(b1, end, off2, dz, SWEEP_S * SWEEP2 / 190.0, "draw the rest of the circle", LEAD)
-    out += _sweep(end, end, off2, dz, DWELL, "let the hand catch up", LEAD)
+    out += _sweep(b1, b1, off2, dz, 0.6, "lean the hand toward the pencil", 0.0, TILT2)
+    out += _sweep(b1, end, off2, dz, SWEEP_S * SWEEP2 / 190.0, "draw the rest of the circle", LEAD, TILT2)
+    out += _sweep(end, end, off2, dz, DWELL, "let the hand catch up", LEAD, TILT2)
     r_end = grip_at(math.radians(end) + off2)
     pe = handle_at(math.radians(end), 0.0)
     lift = pe + np.array([0.0, 0.0, 0.03])
