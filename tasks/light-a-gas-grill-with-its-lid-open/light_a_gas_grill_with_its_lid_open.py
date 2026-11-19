@@ -22,6 +22,9 @@ World frame (m): x forward from the arm bases, y to the robot's left, z up; the 
   the front) from OFF (0 deg) through HIGH (90 deg) to LOW (170 deg). A light spring (1 N, 2.4 N fully in) holds it
   out; its shaft's pin, behind the front wall, sits beside a stop lug, so it turns from OFF only while pushed in more
   than 4.5 mm (7 mm travel). Its own igniter clicks as the knob reaches 80 deg (twist start).
+- fuel supply (fixed, part of the grill's body): the regulator plugged into the firebox's right side (x 0.500, 5 cm up)
+  and a 16.4 oz (1 lb) disposable propane cylinder screwed into it, lying on its side along -y to y -0.543. Real
+  trials: an empty cylinder (or a dummy with the same CGA 600 fitting), so the valve and igniter work but nothing burns.
 
 Gas: flows while the knob is 20 deg or more from OFF. The igniter clicks when the knob turns past 80 deg; a click with
 the lid 75 deg or more open lights the burner (a flame is drawn); the flame stays lit while gas flows.
@@ -82,6 +85,12 @@ LID_STEEL = (0.86, 0.87, 0.88)
 STEEL, DARK, BLACK, GRATE, RED, WHITE = ((0.66, 0.67, 0.69), (0.30, 0.31, 0.33), (0.08, 0.08, 0.09),
                                         (0.20, 0.20, 0.21), (0.75, 0.12, 0.10), (0.95, 0.95, 0.95))
 FLAME_B, FLAME_O = (0.25, 0.45, 1.0), (1.0, 0.55, 0.10)
+CYL_GREEN, BRASS = (0.10, 0.42, 0.20), (0.72, 0.58, 0.25)
+# The fuel supply: the regulator plugged into the firebox's right side and a 16.4 oz (1 lb) disposable propane cylinder
+# screwed into it (CGG-059 manual 5.3: "Push the cylinder into the threaded regulator connector and turn clockwise
+# until tight"), lying on its side on the table. Coleman 16.4 oz cylinder: 3.88 in (9.9 cm) across, about 20 cm long.
+REG_X, REG_Z = 0.500, 0.0505  # the regulator's axis (x, height above the table)
+REG_L, CYL_R, NECK_L, CYL_L = 0.055, 0.0495, 0.030, 0.170
 
 
 def _v(p) -> tuple:
@@ -135,6 +144,19 @@ def _grill() -> Body:
     sh.append(BoxShape((kx - 0.0009, ky, kz + 0.040), (0.001, 0.003, 0.006), WHITE, collide=False))
     sh.append(BoxShape((kx - 0.0009, ky + 0.040, kz), (0.001, 0.008, 0.004), RED, collide=False))
     sh.append(BoxShape((kx - 0.0009, ky + 0.004, kz - 0.039), (0.001, 0.005, 0.005), (0.2, 0.4, 0.9), collide=False))
+    # the regulator (black, with its brass CGA 600 connector and its own small knob) and the propane cylinder screwed
+    # into it, along -y from the right side wall; part of this fixed body (nothing moves them in the task)
+    rx, rz = REG_X - cx, TOP + REG_Z - cz
+    y0 = -HW
+    sh.append(CylShape((rx, y0 - REG_L / 2, rz), 0.016, REG_L, BLACK, axis="Y"))
+    sh.append(CylShape((rx, y0 - REG_L * 0.4, rz + 0.022), 0.010, 0.014, BLACK))  # the regulator's knob
+    sh.append(CylShape((rx, y0 - REG_L - 0.006, rz), 0.013, 0.012, BRASS, axis="Y"))
+    yn = y0 - REG_L - 0.012
+    sh.append(CylShape((rx, yn - NECK_L / 2, rz), 0.012, NECK_L, BRASS, axis="Y"))  # the cylinder's valve
+    sh.append(CylShape((rx, yn - NECK_L - 0.008, rz), 0.030, 0.016, CYL_GREEN, axis="Y"))  # its shoulder
+    yb = yn - NECK_L - 0.016
+    sh.append(CylShape((rx, yb - CYL_L / 2, rz), CYL_R, CYL_L, CYL_GREEN, axis="Y"))
+    sh.append(CylShape((rx, yb - CYL_L * 0.45, rz), CYL_R + 0.0005, 0.06, (0.85, 0.85, 0.80), collide=False, axis="Y"))
     return Body.build("grill", pos=(cx, 0.0, cz), mass=4.5, color=STEEL, fixed=True, friction=(0.6, 0.5), shapes=sh)
 
 
