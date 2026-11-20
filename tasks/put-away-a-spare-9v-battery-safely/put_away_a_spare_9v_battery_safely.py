@@ -11,6 +11,9 @@ World frame (m): x forward from the arm bases, y to the robot's left, z up; the 
 - drawer unit (fixed): white carcass x 0.28 to 0.52, y 0.08 to 0.30, 11 cm tall; its drawer pulled out 13 cm, front
   panel x 0.135 to 0.15; inside the drawer x 0.15 to 0.372, y 0.104 to 0.276, floor 1.9 cm above the table, sides
   8.5 cm above the table. Loose in it: two keys (brass and nickel silver), a quarter, a nickel, a penny, a paper clip.
+- also loose on the counter: three steel crown bottle caps (32.1 mm across, 6 mm tall, top up) at (0.235, -0.075),
+  (0.085, -0.11) and (0.30, 0.025); a 5 W USB cube phone charger (28 mm cube, two flat US blades) lying on a side at
+  (0.33, -0.15); a capped ballpoint pen (149 mm long) at (0.44, -0.09), lying nearly along y.
 """
 
 from __future__ import annotations
@@ -50,8 +53,8 @@ allow_matrix_grips()
 #
 # Score (read every control step; only the state at the end counts, after the latches). 0 for the rest of the run once:
 # the battery is inside the drawer (its middle inside the drawer's walls, its lowest point below their tops) for 0.25 s
-# without the cap pressed home, held or not; or a key, coin or the clip comes within 1 mm of both bare terminals at
-# once; or the battery falls off the table. Cap pressed home: its plate within 0.5 mm of the terminal tops along the
+# without the cap pressed home, held or not; or a key, coin, the clip or a steel crown cap comes within 1 mm of both
+# bare terminals at once; or the battery falls off the table. Cap pressed home: its plate within 0.5 mm of the terminal tops along the
 # battery, within 1 mm of centred across it, turned at most 8 degrees from it. 1.0 (success, held 1 s): cap pressed
 # home, the battery in the drawer resting on its floor or on what lies there, not held (both gripper centres 5 cm or
 # more from it), still (under 1 mm over 1 s), and all six metal items still in the drawer. 0.5: cap pressed home and
@@ -287,7 +290,67 @@ CLIP = Body.build("paper_clip", pos=(0.262, 0.205, FLOOR_Z + 0.0005), mass=0.000
                   friction=(0.4, 0.35), shapes=_clip_shapes())
 METAL = [KEY_A, KEY_B, QUARTER, NICKEL, PENNY, CLIP]
 
-OBJECTS = [UNIT, BATTERY, CATCH_HI, CATCH_LO, CAP, *METAL]
+# -- what else lies on the counter (true size): three crown bottle caps, a phone charger, a ballpoint pen -------------
+CROWN_D, CROWN_H, CROWN_KG = 32.1, 6.0, 0.0023  # a 26 mm crown cork: 32.1 mm across its flutes, 6 mm tall, 2.3 g
+
+
+def _crown(name, xy, color, print_color) -> Body:
+    """A steel crown bottle cap lying top up (its open side down), with the print on its top."""
+    return Body.build(name, pos=(float(xy[0]), float(xy[1]), TOP + 0.001), mass=CROWN_KG, color=color,
+                      friction=(0.45, 0.4),
+                      shapes=[CylShape((0.0, 0.0, CROWN_H / 2 * MM), CROWN_D / 2 * MM, CROWN_H * MM, color),
+                              CylShape((0.0, 0.0, (CROWN_H + 0.05) * MM), 5.5 * MM, 0.1 * MM, print_color,
+                                       collide=False)])
+
+
+CROWN_RED = _crown("crown_cap_red", (0.235, -0.075), (0.72, 0.10, 0.10), (0.92, 0.80, 0.35))
+CROWN_GOLD = _crown("crown_cap_gold", (0.085, -0.11), (0.80, 0.64, 0.24), (0.45, 0.08, 0.10))
+CROWN_GREEN = _crown("crown_cap_green", (0.30, 0.025), (0.12, 0.42, 0.20), (0.92, 0.90, 0.80))
+CROWNS = [CROWN_RED, CROWN_GOLD, CROWN_GREEN]
+
+CHG_S = 28.0  # a 5 W USB cube charger: body 28 mm a side; two flat US (NEMA 1-15) blades 6.3 x 1.5 x 15.9 mm, 12.7 mm apart
+CHARGER_WHITE, PORT_DARK, BLADE_C = (0.96, 0.96, 0.95), (0.12, 0.12, 0.13), (0.78, 0.79, 0.80)
+
+
+def _charger_shapes() -> list:
+    """The charger lying on a side, its blades pointing along +x, side by side along y; its USB port on the -x face."""
+    h = CHG_S / 2
+    out = [_box(-h, h, -h, h, 0.0, CHG_S, CHARGER_WHITE)]
+    for y in (-PITCH / 2, PITCH / 2):
+        out.append(_box(h, h + 15.9, y - 0.75, y + 0.75, h - 3.15, h + 3.15, BLADE_C))
+    out.append(_box(-h - 0.2, -h, -6.0, 6.0, h - 2.25, h + 2.25, PORT_DARK, collide=False))
+    return out
+
+
+CHARGER = Body.build("phone_charger", pos=(0.33, -0.15, TOP + 0.001), mass=0.025, color=CHARGER_WHITE,
+                     yaw=math.radians(20), friction=(0.5, 0.4), shapes=_charger_shapes())
+
+PEN_L, PEN_FLAT = 149.0, 8.0  # a BIC Cristal size ballpoint pen: 149 mm long capped, hexagonal barrel 8 mm across flats
+PEN_BARREL, PEN_BLUE = (0.82, 0.86, 0.90), (0.10, 0.22, 0.62)
+
+
+def _pen_shapes() -> list:
+    """The capped pen lying on a flat of its hexagonal barrel, along x: the end plug at -x, the cap and clip at +x."""
+    h, r = PEN_L / 2, PEN_FLAT / 2
+    side = PEN_FLAT * math.tan(math.pi / 6)
+    out = []
+    for k in range(3):
+        a = math.pi / 3 * k
+        out.append(BoxShape(((-h + 3 + h - 34) / 2 * MM, 0.0, r * MM), ((2 * h - 37) * MM, side * MM, PEN_FLAT * MM),
+                            PEN_BARREL, quat_xyzw=(math.sin(a / 2), 0.0, 0.0, math.cos(a / 2))))
+    out += [CylShape(((-h + 1.5) * MM, 0.0, r * MM), 3.3 * MM, 3.0 * MM, PEN_BLUE, axis="X"),
+            CylShape(((h - 18.5) * MM, 0.0, r * MM), r * MM, 37.0 * MM, PEN_BLUE, axis="X"),
+            BoxShape(((h - 20.0) * MM, 0.0, (PEN_FLAT + 0.6) * MM), (30.0 * MM, 3.0 * MM, 1.2 * MM), PEN_BLUE,
+                     collide=False)]
+    return out
+
+
+PEN = Body.build("ballpoint_pen", pos=(0.44, -0.09, TOP + 0.001), mass=0.006, color=PEN_BARREL,
+                 yaw=math.radians(80), friction=(0.45, 0.4), shapes=_pen_shapes())
+COUNTER_ITEMS = [*CROWNS, CHARGER, PEN]
+SHORTING = [*METAL, *CROWNS]  # steel crown caps short the terminals as well as the drawer's metal
+
+OBJECTS = [UNIT, BATTERY, CATCH_HI, CATCH_LO, CAP, *METAL, *COUNTER_ITEMS]
 
 # -- scoring ------------------------------------------------------------------------------------------------------------
 SEAT_AXIAL_MM, SEAT_SIDE_MM, SEAT_DEG = 0.5, 1.0, 8.0  # cap pressed home
@@ -393,9 +456,9 @@ def _track_inner(env) -> None:
     resting_in = bool(in_drawer and (low - FLOOR_Z) * 1000 <= REST_MM)
     items_in = True
     bridge = 1.0
-    for spec in METAL:
+    for spec in SHORTING:
         ip, ir = _pose(base, spec.name, origin)
-        if not (_inside_drawer_xy(ip) and ip[2] - TOP < DR_RIM):
+        if spec in METAL and not (_inside_drawer_xy(ip) and ip[2] - TOP < DR_RIM):
             items_in = False
         if not capped:
             gaps = []
