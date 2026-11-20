@@ -4,13 +4,13 @@ A 9U network cabinet (DIGITUS DN-19 09U-6/6: 600 mm wide, 600 mm deep, 509 mm ta
 two pairs of galvanized 19-inch profile rails with square holes for cage nuts) stands on the bench with its glass front
 door taken off, its open front facing the robot, as a technician faces a rack. Its right front rail (as seen from the
 front) is the one worked on: a 2 mm steel mounting flange with real 9.53 mm square holes, three per rack unit, U lines
-and numbers on its front face; one hole, U3's middle hole, is marked with a yellow paint-pen square. The cabinet's side
+and numbers on its front face; one hole, U3's middle hole, is marked with a red paint-pen square. The cabinet's side
 panel stands 67.5 mm outside that rail's hole column, its top, bottom and back panels close it, the opposite front rail
 stands 465 mm away (hole centres) and the rear rails 400 mm behind, so the back (inside) face of the flange, where the
 nut goes, can only be reached through the cabinet's front opening, round the flange's inner edge. A 1U cantilever shelf
-(StarTech CABSHELFV1U) is screwed into U1, and an M6 cage nut lies face down on it. A small flat-blade screwdriver lies
-on the bench to the right of the cabinet. The instruction asks for the cage nut to be fitted into the marked hole on the
-cabinet's front rail; it does not say how.
+(StarTech CABSHELFV1U) is screwed into U1, and an M6 cage nut (yellow-zinc plated) lies face down on it. A small
+flat-blade screwdriver lies on the bench to the right of the cabinet. The instruction asks for the cage nut to be fitted
+into the marked hole on the cabinet's front rail; it does not say how.
 
 A cage nut is a square nut held in a spring-steel cage with two springy lips on opposite sides. It goes in from the
 back of the rail (the inside of the rack): its lips pass through the square hole and spring out over the front face, so
@@ -105,14 +105,19 @@ its two plain sides, turns it lips-first toward the rail and, behind the marked 
 through the hole and slides it over the hole's +y edge; the right gripper takes the screwdriver from the bench and,
 from the front, slides its blade into the hole along its -y side, 6.8 mm past the flange; the left turns the nut flat
 about its hooked lip and presses it home while the blade keeps the far lip in line; the right draws the blade out, the
-far lip springs out over the front face, and both grippers move away):
+far lip springs out over the front face, and the left lets go. The demo then shows the result up close: the right
+gripper puts the screwdriver back on the bench and brings its wrist camera 7 cm from the marked hole, looking at it from
+the front right and above, where the yellow-zinc nut sits in the red-marked hole with both lips sprung out over the
+front face. The left, which has waited with open fingers 1.3 cm behind the nut, then draws away, and the run ends with
+the camera still on the nut, once the nut has been seated, released and still for 1 s and that has held for another
+1 s; the overhead camera sees the marked hole past the right wrist):
 
 ```bash
 inspect-robots run --embodiment yam_arena --policy yam_scripted \
   -E task=fit_a_cage_nut_into_a_rack_post.py -E object_jitter=0 -E control_hz=20 \
   -E cam_width=320 -E cam_height=176 \
   --instruction "Fit the cage nut into the marked hole on the cabinet's front rail." \
-  --scorer task_score --max-steps 800 --store-frames --log-dir ~/yam-eval/cagenut-demo
+  --scorer task_score --max-steps 1100 --store-frames --log-dir ~/yam-eval/cagenut-demo
 ```
 
 Videos, one MP4 per camera next to each run's frames:
@@ -132,10 +137,10 @@ the left gripper lets go the nut drops out of the hole. The run scores 0.
 
 ## Runtime per trial
 
-On one RTX PRO 6000 (Blackwell), on a shared machine: about 4 minutes for the scripted demo while rendering 1280 x 720
-video (593 steps, 29.7 s of simulated time; 222 s on the clock), and about 26 minutes for a Dream-1 trial of 2,400 steps
-(1,539 s on the clock while other jobs shared the GPU, with Dream answering in 0.71 s on average). Isaac Sim's first
-start on a new machine adds a few minutes while it compiles its shaders.
+On one RTX PRO 6000 (Blackwell), on a shared machine: about 3.5 minutes for the scripted demo while rendering 1280 x 720
+video (856 steps, 42.8 s of simulated time; 206 s on the clock), and 6 to 26 minutes for a Dream-1 trial of 2,400 steps
+(368 s on the clock in the latest run; 1,539 s in an earlier one while other jobs shared the GPU, with Dream answering
+in 0.71 s on average). Isaac Sim's first start on a new machine adds a few minutes while it compiles its shaders.
 
 ## Seeds
 

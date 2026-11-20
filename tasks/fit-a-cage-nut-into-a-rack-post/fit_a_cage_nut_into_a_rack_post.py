@@ -2,7 +2,7 @@
 in light grey RAL 7035, two pairs of galvanized 19-inch profile rails with square holes for cage nuts), standing on the
 bench with its glass front door taken off and its open front facing the robot, as a technician faces a rack. Its right
 front rail (as seen from the front) is the one worked on: its mounting flange faces the robot, with real 9.53 mm square
-holes; one hole is marked with a yellow paint-pen square. The cabinet's side panel stands just outside that rail and its
+holes; one hole is marked with a red paint-pen square. The cabinet's side panel stands just outside that rail and its
 top, bottom and back panels close it, so the back (inside) face of the flange can only be reached through the cabinet's
 front opening, round the flange's inner edge; the opposite front rail stands 465 mm away (hole centres) and the two rear
 rails 400 mm behind. A 1U cantilever shelf (StarTech CABSHELFV1U) is screwed into U1, and an M6 cage nut lies face down
@@ -26,11 +26,12 @@ World frame (m): x forward from the arm bases, y to the robot's left, z up; the 
   middle 165.6 mm above the table. Opposite front rail: holes centred on y 0.465. Rear rails: back faces at x 0.605.
 - shelf: fixed, in U1: 1U front plate on the front rails, floor 435 mm wide (y 0.015 to 0.450) and 250 mm deep (x 0.205
   to 0.455), its top 56.0 mm above the table, sides 43.2 mm tall.
-- cage nut, loose, 5.5 g, face down on the shelf, lips toward +-y, its face centre at (0.280, 0.144): an M6 square nut
-  (10 x 10 x 4.8 mm, 5 mm bore) in a spring-steel cage (10.1 x 11.2 x 6.0 mm) with two lips on opposite sides. Each lip
-  is a 5 mm wide strip folded over (inner leg 4.75 mm long, outer leg flaring out to 13.72 mm across both lips, its end
-  2.3 mm in front of the cage's face) on a sprung hinge at its root (0.02 N m/rad, from 50 deg in to 10 deg out):
-  pressed in it passes the 9.53 mm hole, let go it springs out over the flange's front face.
+- cage nut (yellow-zinc plated), loose, 5.5 g, face down on the shelf, lips toward +-y, its face centre at (0.280,
+  0.144): an M6 square nut (10 x 10 x 4.8 mm, 5 mm bore) in a spring-steel cage (10.1 x 11.2 x 6.0 mm) with two lips
+  on opposite sides. Each lip is a 5 mm wide strip folded over (inner leg 4.75 mm long, outer leg flaring out to
+  13.72 mm across both lips, its end 2.3 mm in front of the cage's face) on a sprung hinge at its root (0.02 N m/rad,
+  from 50 deg in to 10 deg out): pressed in it passes the 9.53 mm hole, let go it springs out over the flange's front
+  face.
 - screwdriver, loose, 40 g, lying along x with its tip at (0.190, -0.135), pointing away from the robot: tip 0.6 x
   3.5 mm, 60 mm shank, fluted handle 25 mm across.
 
@@ -98,8 +99,8 @@ SHEET_T = 0.0015  # side, top, bottom and back panels (sheet steel)
 RETURN_W, LIP_H = 0.020, 0.035  # the side panels' front returns; the top and bottom panels' front lips
 SHELF_W, SHELF_D, SHELF_H, SHELF_T = 0.435, 0.250, 0.0432, 0.0015  # the 1U shelf: inside width, depth, height, steel
 SHELF_TOP = Z_U0 + SHELF_T  # its floor's top face above the table
-STEEL, DARKSTEEL, PANEL, SHELF_C, PAINT, YELLOW, BLACK = (0.66, 0.68, 0.70), (0.30, 0.31, 0.32), (0.80, 0.81, 0.79), (
-    0.10, 0.10, 0.11), (0.06, 0.06, 0.07), (0.98, 0.80, 0.08), (0.04, 0.04, 0.05)  # galvanized rails, RAL 7035 panels
+STEEL, DARKSTEEL, PANEL, SHELF_C, PAINT, RED, BLACK = (0.66, 0.68, 0.70), (0.30, 0.31, 0.32), (0.80, 0.81, 0.79), (
+    0.10, 0.10, 0.11), (0.06, 0.06, 0.07), (0.85, 0.08, 0.06), (0.04, 0.04, 0.05)  # galvanized rails, RAL 7035 panels
 RAIL_O = (X0, HY, TOP)
 
 
@@ -208,12 +209,12 @@ def _rail_paint() -> list:
         out.append(_box(xf - 0.00015, xf + 0.00015, y0, y1, z - 0.0003, z + 0.0003, PAINT, o, False))
     for n in range(N_U):
         out += _digit(str(n + 1), xf, yc, Z_U0 + (n + 0.5) * U, o)
-    for xp in (X0 - 0.0003, XB + 0.0003):  # the marked hole: a yellow paint-pen square round it on both faces
+    for xp in (X0 - 0.0003, XB + 0.0003):  # the marked hole: a red paint-pen square round it on both faces
         r0, r1 = HH + 0.0006, HH + 0.0022
         for (ya, yb, za, zb) in ((HY - r1, HY + r1, HZ + r0, HZ + r1), (HY - r1, HY + r1, HZ - r1, HZ - r0),
                                  (HY - r1, HY - r0, HZ - r0, HZ + r0), (HY + r0, HY + r1, HZ - r0, HZ + r0)):
-            out.append(_box(xp - 0.0001, xp + 0.0001, ya, yb, za, zb, YELLOW, o, False))
-    out.append(_box(xf - 0.0001, xf + 0.0001, y_out + 0.0015, HY - HH - 0.0025, HZ - 0.0015, HZ + 0.0015, YELLOW, o,
+            out.append(_box(xp - 0.0001, xp + 0.0001, ya, yb, za, zb, RED, o, False))
+    out.append(_box(xf - 0.0001, xf + 0.0001, y_out + 0.0015, HY - HH - 0.0025, HZ - 0.0015, HZ + 0.0015, RED, o,
                     False))
     return out
 
@@ -238,7 +239,7 @@ LIP_KG, NUT_KG = 0.0003, 0.0049  # 5.5 g in all
 LIP_K, LIP_C = 0.02, 0.0003  # a lip's spring about its root: N m/rad, N m s/rad
 LIP_OPEN, LIP_CLOSE = 10.0, 50.0  # degrees the lip may open / close from relaxed
 NUT_CO, NUT_IT = 0.0005, 48  # contact offset (m) and solver iterations of the nut and its lips
-ZINC, NUTC, BOREC = (0.78, 0.79, 0.80), (0.55, 0.56, 0.58), (0.12, 0.12, 0.13)
+ZINC, NUTC, BOREC = (0.96, 0.74, 0.10), (0.80, 0.58, 0.08), (0.12, 0.12, 0.13)  # yellow-zinc plated nut and cage
 NUT_REST = 0.0052  # face down on the shelf, resting on its lips' folds: its face this high above the shelf's floor
 NUT_START = (0.280, 0.144, TOP + SHELF_TOP + NUT_REST + 0.0016)  # spawned 1.6 mm above where it settles
 NUT_MID0 = SHELF_TOP + NUT_REST + CAGE_D / 2  # its middle's height above the table, at rest on the shelf
@@ -501,8 +502,10 @@ def success(objects) -> bool:
 # the hole along the hole's -y side, 6.8 mm past the flange, where it keeps the far lip in. The left turns the nut flat
 # about its hooked lip and presses it home: the far lip, kept in line by the blade and then pressed in by the hole's
 # edge, passes the hole. The right draws the blade out and the far lip springs out over the front face; the left lets
-# go and both move away. CAGE_ONE=1 runs it the wrong way: the blade stays out and the left hand turns the nut home
-# alone.
+# go. For the video, the right then puts the screwdriver back on the bench and brings its wrist camera 7 cm from the
+# marked hole (the closing view of the seated nut); the left, which waited 1.3 cm behind the nut, draws away and the run
+# ends once the nut is scored. CAGE_ONE=1 runs it the wrong way: the blade stays out and the left hand turns the nut
+# home alone.
 
 WRONG_ONE = os.environ.get("CAGE_ONE") == "1"
 OPEN_C = -0.030
@@ -643,12 +646,17 @@ def _left() -> list:
         out.append(_w(T_TURN / n, p, PINCH_LIGHT, "turn it flat about the hooked lip, pushing it in", r))
     Af, Wf = _nut_frame(0.0)
     seat_tcp, rot_f = _grip(SEAT, Af, Wf)
+    near = seat_tcp + [LEFT_WAIT_BACK, 0.0, 0.0]
     away = seat_tcp + [0.015, 0.035, 0.0]
     park = seat_tcp + [0.030, 0.035, 0.030]
     out += [_w(0.6, seat_tcp, PINCH, "press it home, flat against the flange", rot_f),
             _w(T_LET_GO - T_PUSH - T_TURN - 0.6, seat_tcp, PINCH, "hold it there", rot_f),
-            _w(0.8, seat_tcp, OPEN_C, "let go", rot_f),
-            _w(1.0, away, OPEN_C, "back off from the flange, into the opening", rot_f),
+            _w(0.8, seat_tcp, OPEN_C, "let go", rot_f)]
+    if not WRONG_ONE:  # wait, fingers open, 1.3 cm behind the nut, while the right wrist camera comes to look at it
+        out += [_w(1.0, near, OPEN_C, "draw back 1.3 cm behind the nut, fingers open", rot_f),
+                _w(T_LEFT_AWAY - T_LET_GO - 1.8, near, OPEN_C, "wait there while the right camera looks at the nut",
+                   rot_f)]
+    out += [_w(1.0, away, OPEN_C, "back off from the flange, into the opening", rot_f),
             _w(1.5, park, OPEN_C, "clear of the nut", rot_f),
             _w(3.0, park, OPEN_C, "stay clear", rot_f)]
     return out
@@ -663,6 +671,33 @@ SD_LINE_Y = HY - 0.0020  # the blade enters the hole 2 mm to the -y side of its 
 SD_WALL_Y = HY - HH + SD_TIP_T / 2 - 0.0025  # ... then is pressed against that side (aimed 2.5 mm into it)
 SD_DEPTH = 0.0068  # the tip this far behind the flange's back face
 SD_AXIS_Z = 0.0125  # the screwdriver's axis above the bench where it lies (on a flute of its handle)
+# The closing view (for the video only): the right wrist camera (Dream's calibrated D405 mount) looks straight at the
+# marked hole from VIEW_D away, from VIEW_PSI to the right and VIEW_ALPHA above, the image turned VIEW_PHI (it comes in
+# along that line from VIEW_D_FAR); the left waits, fingers open, 1.3 cm behind the nut, for VIEW_HOLD s, then draws
+# away; once both grippers are clear the run is scored and ends (about 2 s later), the camera still on the nut.
+VIEW_D, VIEW_D_FAR = 0.070, 0.16
+VIEW_PSI, VIEW_ALPHA, VIEW_PHI = math.radians(40.0), math.radians(50.0), math.radians(30.0)
+VIEW_HOLD = 2.0
+LEFT_WAIT_BACK = 0.013
+T_VIEW = T_SD_OUT + 13.5  # the right wrist camera is at the closing view
+T_LEFT_AWAY = T_VIEW + VIEW_HOLD  # the left draws away from the nut
+
+
+def _view_pose(d: float = VIEW_D):
+    """(TCP, rotation) of the right gripper whose wrist camera looks straight at the marked hole from ``d`` away."""
+    from yam_arena import station
+    from yam_arena.constants import TCP_OFFSET
+    from yam_arena.urdf import quat_xyzw_to_matrix
+
+    cam = station.wrist_camera("right")  # pose in the gripper frame, OpenGL convention (looks along -z, +y up)
+    f = np.array([math.cos(VIEW_ALPHA) * math.cos(VIEW_PSI), math.cos(VIEW_ALPHA) * math.sin(VIEW_PSI),
+                  -math.sin(VIEW_ALPHA)])
+    up = np.array([0.0, 0.0, 1.0]) - f[2] * f
+    up /= np.linalg.norm(up)
+    up = math.cos(VIEW_PHI) * up + math.sin(VIEW_PHI) * np.cross(f, up)
+    rot = np.column_stack([np.cross(f, up), up, -f]) @ quat_xyzw_to_matrix(np.asarray(cam.rot_xyzw, float)).T
+    c = np.array([X0, HY, TOP + HZ]) - d * f
+    return c - rot @ np.asarray(cam.pos, float) + rot @ np.asarray(TCP_OFFSET, float), rot
 
 
 def _sd_tcp(tip) -> np.ndarray:
@@ -700,8 +735,20 @@ def _right() -> list:
                rot),
             _w(1.2, front, PINCH_SD, "draw the blade out: the far lip springs out over the front face", rot),
             _w(1.5, away, PINCH_SD, "back off in front of the hole", rot),
-            _w(6.0, away, PINCH_SD, "stay clear", rot)]
-    return out
+            _w(2.5, lift, PINCH_SD, "back over where the screwdriver lay", rot),
+            _w(1.5, grab + [0.0, 0.0, 0.004], PINCH_SD, "lower it onto the bench", rot),
+            _w(0.8, grab + [0.0, 0.0, 0.004], OPEN_C, "put it down", rot),
+            _w(0.3, grab + [0.0, 0.0, 0.004], OPEN_C, "settle", rot),
+            _w(1.0, grab + [0.0, 0.0, 0.06], OPEN_C, "rise", rot)]
+    # the closing view of the seated nut: the wrist camera VIEW_D from the marked hole, held until the run ends (once
+    # the left has drawn away and the nut is scored); the overhead camera still sees the hole past the right wrist
+    view, rv = _view_pose()
+    far, _ = _view_pose(VIEW_D_FAR)
+    out += [_w(2.0, far + [-0.03, -0.04, 0.03], 0.0, "turn the wrist camera toward the marked hole", rv),
+            _w(1.2, far, 0.0, "in front of the cabinet, camera toward the hole", rv),
+            _w(1.5, view, 0.0, "camera close to the hole: look at the seated nut", rv)]
+    assert abs(sum(w.duration for w in out) - T_VIEW) < 1e-6, (sum(w.duration for w in out), T_VIEW)
+    return out + [_w(12.0, view, 0.0, "hold the view of the seated nut", rv)]
 
 
 def demo():
