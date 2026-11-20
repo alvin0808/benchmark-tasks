@@ -41,11 +41,14 @@ plunger has been):
 - A squirt is the plunger travel between pauses; a pause is 1 s in which the plunger moves less than 0.5 mm.
 - A fault: any squirt of more than 1.5 mL, more than 0.2 mL toward the throat, or more than 0.3 mL spilled. A hazard:
   more than 1.5 mL toward the throat (choking).
-- Score: 0.15 per whole mL given into the cheek pocket (0.15 to 0.6); 0.8 when at least 4.7 mL went into the pocket;
-  1.0 (success, held 1 s) when, in addition, the syringe lies released (its axis within 20 deg of level, its middle
-  less than 5 cm above the table, no gripper within 4 cm of its middle) and has been still for 1 s. A fault caps the
-  score at 0.5 for the rest of the run (0.5 once the whole dose, 4.7 mL or more, has been pushed out); the hazard
-  sets 0 for the rest of the run.
+- On its rests: the syringe released (no gripper within 4 cm of its middle), tip forward (its axis within 10 deg of
+  the tray's long axis), its tip within 8 mm of its starting place across the table, and its barrel's axis 30.8 to
+  36.8 mm above the table at both the tip and the flange (it lies at 33.8 mm in the two notches; lying on the tray
+  or the table, or with one end off a rest, it is at most 15 mm up at one end), still for 1 s (under 1.5 mm).
+- Score: partial credit is the dose given into the cheek pocket only: 0.8 x (mL in the pocket / 4.7), at most 0.8;
+  water spilled or given toward the throat earns nothing. 1.0 (success, held 1 s) when at least 4.7 mL went into
+  the pocket with no fault and the syringe is back on its rests. A fault caps the score at 0.5 for the rest of the
+  run; the hazard sets 0 for the rest of the run.
 """
 
 from __future__ import annotations
@@ -287,6 +290,7 @@ THROAT_ML, SPILL_ML = 0.2, 0.3
 CHOKE_ML = 1.5  # more than this toward the throat: a choking hazard, 0 for the rest of the run
 FULL_ML = 4.7
 CLEAR = 0.040
+REST_ANG, REST_XY, REST_DZ = 10.0, 0.008, 0.003  # on its rests: deg, m (tip across the table), m (axis height)
 STILL_STEPS, STILL_MM = 20, 1.5
 _DEBUG = os.environ.get("OSYR_DEBUG") == "1"
 _DEBUG_EVERY = int(os.environ.get("OSYR_DEBUG_EVERY", "5"))
@@ -316,7 +320,7 @@ def _reset() -> None:
     _EP.pop("squirt_q0", None)
     _EP.update(tick=0, step=0, near_l=1.0, q_prev=None, hist=[], ml={"pocket": 0.0, "throat": 0.0, "out": 0.0}, squirt=0.0,
                squirts=[], big=0.0, where="out", tip_h=np.zeros(3), press=(0.0, 0.0), recent=[], tcp={}, gaps={},
-               q=0.0, near=1.0, flat=False, low=False)
+               q=0.0, near=1.0, flat=False, low=False, rests=False)
 
 
 _reset()
@@ -391,6 +395,10 @@ def _track_inner(env) -> None:
     _EP["near"] = min(float(np.linalg.norm(_EP["tcp"][s] - mid)) for s in ("left", "right"))
     _EP["flat"] = abs(float(axis[2])) < math.sin(math.radians(20.0))
     _EP["low"] = float(mid[2]) < TOP + 0.050
+    back = sp + axis * BARREL_BACK  # the barrel's axis at the flange
+    _EP["rests"] = bool(float(axis[0]) > math.cos(math.radians(REST_ANG))
+                        and float(np.linalg.norm(sp[:2] - SYR_TIP0[:2])) < REST_XY
+                        and abs(float(sp[2] - SYR_TIP0[2])) < REST_DZ and abs(float(back[2] - SYR_TIP0[2])) < REST_DZ)
     _EP["near_l"] = float(np.linalg.norm(_EP["tcp"]["left"] - (sp + axis * GRIP_AT)))
     _EP["thumb"] = sp + axis * (THUMB_BACK0 + qj)
     _EP.update(where=where, tip_h=tip_h, press=press, q=qj, sp=sp)
@@ -410,7 +418,7 @@ def _tally() -> dict:
     full = ml["pocket"] >= FULL_ML
     given = sum(ml.values()) >= FULL_ML
     choke = ml["throat"] > CHOKE_ML
-    down = bool(_EP["flat"] and _EP["low"] and _EP["near"] >= CLEAR and still)
+    down = bool(_EP["rests"] and _EP["near"] >= CLEAR and still)
     return dict(still=still, fault=fault, full=full, given=given, choke=choke, down=down,
                 done=bool(full and not fault and down))
 
@@ -424,29 +432,27 @@ def _debug(t) -> None:
           f"{np.round(_EP['tip_h'], 1).tolist()} press=({_EP['press'][0]:.2f},{_EP['press'][1]:.2f})mm "
           f"ml=pocket {ml['pocket']:.2f} throat {ml['throat']:.2f} out {ml['out']:.2f} squirt={_EP['squirt']:.2f} "
           f"squirts={_EP['squirts']} big={_EP['big']:.2f} fault={int(t['fault'])} flat={int(_EP['flat'])} "
-          f"low={int(_EP['low'])} near={_EP['near'] * 1000:.0f}mm nearL={_EP['near_l'] * 1000:.0f}mm still={int(t['still'])} "
+          f"low={int(_EP['low'])} rests={int(_EP['rests'])} near={_EP['near'] * 1000:.0f}mm nearL={_EP['near_l'] * 1000:.0f}mm still={int(t['still'])} "
           f"thumb_vs_rtcp={np.round((_EP.get('thumb', np.zeros(3)) - _EP['tcp'].get('right', np.zeros(3))) * 1000, 1).tolist()} | "
           + " ".join(f"{k} tcp=({v[0]:.3f},{v[1]:.3f},{v[2] - TOP:.3f}) gap={_EP['gaps'][k] * 1000:.0f}"
                      for k, v in _EP["tcp"].items()), flush=True)
 
 
 def score(objects) -> float:
-    """0.15 per whole mL into the cheek pocket; 0.8 for the full dose there; 1.0 is success(). A fault caps at 0.5
-    (and the whole dose given with a fault scores 0.5); more than 1.5 mL toward the throat scores 0."""
+    """0.8 x (mL in the cheek pocket / 4.7), at most 0.8; 1.0 is success() (the full dose in the pocket, no fault, the
+    syringe back on its rests). A fault caps at 0.5; more than 1.5 mL toward the throat scores 0."""
     t = _tally()
     if _DEBUG:
         _debug(t)
     pocket = _EP["ml"]["pocket"]
-    s = 0.15 * min(4, int(pocket + 1e-6))
-    if t["full"]:
-        s = 0.8
+    s = 0.8 * min(pocket, FULL_ML) / FULL_ML
     if t["full"] and t["down"]:
         s = 1.0
     if t["fault"]:
-        s = 0.5 if t["given"] else min(s, 0.5)
+        s = min(s, 0.5)
     if t["choke"]:
         s = 0.0
-    return s
+    return round(s, 3)
 
 
 def success(objects) -> bool:
@@ -458,12 +464,18 @@ def success(objects) -> bool:
 # ======================================================================================================================
 OPEN_C = -0.047
 PINCH = float(os.environ.get("OSYR_PINCH", "0.0"))  # finger value on the 14 mm barrel (commanded shut: a firm squeeze)
-MODE = os.environ.get("OSYR_MODE", "demo")  # demo | one (no plunger hand) | throat (tip toward the throat)
+MODE = os.environ.get("OSYR_MODE", "demo")  # demo | one | throat | spill | noreturn
 if os.environ.get("OSYR_ONE") == "1":
-    MODE = "one"
+    MODE = "one"  # no plunger hand
 if os.environ.get("OSYR_THROAT") == "1":
-    MODE = "throat"
+    MODE = "throat"  # the tip aimed down the middle, toward the throat
+if os.environ.get("OSYR_SPILL") == "1":
+    MODE = "spill"  # the whole dose squirted outside the mouth (the tip against the outside of the cheek)
+if os.environ.get("OSYR_NORETURN") == "1":
+    MODE = "noreturn"  # the dose given right, then the syringe laid on the table beside the tray, not on its rests
 TIP_TARGET = np.array([float(v) for v in os.environ.get("OSYR_TIP", "9,23,-52").split(",")])  # head mm
+SPILL_TIP = np.array([float(v) for v in os.environ.get("OSYR_SPILL_TIP", "-8,36,-59").split(",")])  # head mm
+NORETURN_Y = float(os.environ.get("OSYR_NORETURN_Y", "0.050"))  # m: the table beside the tray
 YAW = math.radians(float(os.environ.get("OSYR_YAW", "36")))  # the syringe's slant toward the cheek
 PITCH = math.radians(float(os.environ.get("OSYR_PITCH", "8")))  # tip lower than the plunger
 HOLD_SIGN = float(os.environ.get("OSYR_HSIGN", "-1"))
@@ -578,6 +590,8 @@ def mouth_pose():
     """(tip, syringe rotation) with the tip in the cheek pocket, or, for the wrong way, aimed down the middle."""
     if MODE == "throat":
         return hw([16.0, 6.0, MOUTH_Z]), syringe_rot(math.radians(22.0), PITCH)
+    if MODE == "spill":
+        return hw(SPILL_TIP), syringe_rot(YAW, PITCH)
     return hw(TIP_TARGET), syringe_rot(YAW, PITCH)
 
 
@@ -621,6 +635,13 @@ def _left_finish(path: list) -> None:
     path.append(_lw(2.0, tip_m - d * 0.035, rs, PINCH, "draw the tip out of the mouth"))
     up = np.array([0.0, 0.0, 1.0])
     r0 = np.eye(3)
+    if MODE == "noreturn":  # laid flat on the table beside the tray instead of on its rests
+        t = np.array([SYR_TIP0[0], NORETURN_Y, TOP + BARREL_R + 0.007])
+        path += [_lw(2.5, t + up * 0.06, r0, PINCH, "over the table beside the tray"),
+                 _lw(1.5, t, r0, PINCH, "lay it down on the table"),
+                 _lw(1.0, t, r0, OPEN_C, "let go"),
+                 _lw(1.5, t + up * 0.08, r0, OPEN_C, "rise clear")]
+        return
     path += [_lw(2.5, SYR_TIP0 + up * 0.06, r0, PINCH, "back over the tray"),
              _lw(1.5, SYR_TIP0 + up * 0.003, r0, PINCH, "lay it on its rests"),
              _lw(1.0, SYR_TIP0 + up * 0.003, r0, OPEN_C, "let go"),
@@ -727,6 +748,7 @@ def _demo():
                     "hold it while the dose is given"))
     _left_finish(left)
     tend = max(_dur(left), _dur(right)) + 4.0
-    left.append(_lw(tend - _dur(left), SYR_TIP0 + np.array([0.0, 0.0, 0.08]), np.eye(3), OPEN_C, "stay"))
+    park = np.array([SYR_TIP0[0], NORETURN_Y, TOP + BARREL_R + 0.007]) if MODE == "noreturn" else SYR_TIP0
+    left.append(_lw(tend - _dur(left), park + np.array([0.0, 0.0, 0.08]), np.eye(3), OPEN_C, "stay"))
     _hold_until(right, tend, "stay")
     return {"left": left, "right": right}
