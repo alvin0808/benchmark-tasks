@@ -16,5 +16,5 @@
   "reset_notes": "Clear the slices out, wipe the cradle and the finger pads, swing the frame open past upright onto its stop, and lay a fresh peeled boiled egg (from the fridge) on the saucer lengthwise along x. One egg per trial. Simulation: each trial starts the simulator afresh.",
   "fidelity": "Rigid bodies at 20 Hz. Wire spans intersect an oriented egg ellipsoid. The hinge resists closing at up to 1.2 N m (about 9 N at the tab, estimated). After a full round cut the 11 rigid slices' welds become light cling (0.3 N, 0.8 mN m). Before the cut, separated weld anchors detect tears. The model omits small dents and off-axis cuts. The cradle is fixed in simulation, representing a sufficiently non-slip mat.",
   "scores": "Dream-1 run: 0.0, 2,400 steps (approached the saucer but left the egg on it). Scripted demo: 1.0, 785 steps.",
-  "media": "M-UUFANF"
+  "media": "M-9UX3YN"
 }
