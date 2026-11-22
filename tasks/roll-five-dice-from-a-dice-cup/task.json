@@ -16,5 +16,5 @@
   "reset_notes": "Put the five dice back in the cup, 1 face up, one in the middle and four around it, and stand the cup on its circle (tape) at x 27.0, y -16.5. Simulation: each trial starts the simulator afresh.",
   "fidelity": "Rigid bodies, 20 Hz control, release and rebounds sampled at 240 Hz. The dice are 16 mm cubes with 2 mm rounded edges and painted pips. The cup has 24 flat wall panels, and the fixed lid does not flex. Restitution (estimates): dice and lid 0.30, cup felt 0.05, combined by averaging. Static/sliding friction: dice and lid 0.40/0.35, cup 0.60/0.50.",
   "scores": "Dream-1 run: 0.0 at the 2,400-step limit; scripted demo: 1.0 at step 332.",
-  "media": "M-QRZ6SP"
+  "media": "M-USHZMS"
 }
