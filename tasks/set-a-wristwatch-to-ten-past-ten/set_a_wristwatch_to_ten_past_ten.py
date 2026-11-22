@@ -1,12 +1,9 @@
 """On the station table: an ordinary quartz three-hand wristwatch with a date window (38 mm steel case, like a Timex
-Easy Reader Date 38 mm) is buckled onto a single-watch display stand (an oval C-ring on a post) that is taped to the
-table. Its hands read 9:46. Task (instruction): set the watch to 10:10 without changing its date, and leave its crown
-pushed fully in.
+Easy Reader Date 38 mm) lies unbuckled on a short stack of hardcover books, with its crown over the edge. Its hands
+read 9:46. Task (instruction): set the watch to 10:10 without changing its date, and leave its crown pushed fully in.
 
-How it is done (Timex, "How to set the time on any watch"): the crown is "pulled out as far as it will go" (some
-watches have "two or three 'stops'"; on a date watch the first stop sets the date, the last the time); turn it to set
-the hands; "push the crown back to its starting position"; "Make sure the crown is pushed all the way back in when
-you're done." Watch shops set the watches on display to 10:10.
+On a two-click date watch, the middle crown position adjusts the date and the outer position adjusts the hands.
+Push the crown fully in when setting is complete.
 
 The hand skill: the crown is 5.5 mm across and stands 4 mm out from the case, so fingertips can only take it by its
 end, 0.6 mm or so off the case; it is drawn out past two clicks 0.9 mm apart (the first is the date position: turning
@@ -14,11 +11,9 @@ the crown there changes the date); it is turned two full turns, in strokes becau
 stop within 30 deg of the crown (one minute of the minute hand); then it is pushed back in past both clicks.
 
 World frame (m): x forward from the arm bases, y to the robot's left, z up; the table top is at z 0.7475.
-- stand: fixed (taped down). A base plate 9 x 7 x 0.6 cm centred at (0.28, 0.00); a post 1.2 cm across; an oval
-  C-ring 6.4 cm wide (along x) and 5.0 cm tall outside, 2.6 cm deep (along y), 3 mm thick, open at the bottom over the
-  post, its top 13.5 cm above the table.
-- watch: buckled onto the ring (held there), dial up, centred over (0.28, 0.00), 12 o'clock toward +x and 3 o'clock
-  (the crown) toward -y. Case 38 mm across and 9.5 mm thick, its back 13.5 cm above the table; white dial with hour
+- books: three 260 x 150 x 45 mm hardcovers, stacked flush, with their common near edge at y=-0.0185 and centre x=0.28.
+- watch: loose, dial up, centred over (0.28, 0.00), 12 o'clock toward +x and 3 o'clock (the crown) toward -y.
+  Case 38 mm across and 9.5 mm thick, its back 13.5 cm above the table; white dial with hour
   marks, a date window at 3 o'clock, black hour and minute hands, a red seconds hand (the battery is out, so the hands
   move only when the crown turns them); 20 mm leather strap. The crown: 5.5 mm across, 4 mm long, its axis 4.7 mm
   above the case back (14.0 cm above the table), its inner face 0.5 mm off the case when home.
@@ -28,12 +23,12 @@ World frame (m): x forward from the arm bases, y to the robot's left, z up; the 
   1st click half a turn of the crown changes the date; home, the crown turns freely and moves nothing. The crown
   turns against 1.5 mN m of friction.
 
-Score (the best stage reached; "the hands read" = the time they show on the 12-hour dial):
+Score at the end of the run ("the hands read" refers to the time on the 12-hour dial):
 - 0.25: the crown has been out at its 2nd click (the time position) at some time.
 - 0.5: the hands read within 5 minutes of 10:10.
 - 0.75: the hands read within 1 minute of 10:10 and the date has not been changed.
-- 1.0 (success, held 1 s): as 0.75, with the crown pushed fully home (nearer home than the 1st click) and every
-  finger point 1 cm or more from the watch head.
+- 1.0: as 0.75, with the crown fully home, the watch resting dial up on the top book, and all fingers at least 1 cm
+  clear. Maintain these conditions for one second, with case movement of at most 1 mm.
 Once the date has been changed (half a turn of the crown in the 1st click), the score is at most 0.5.
 """
 
@@ -49,7 +44,7 @@ import numpy as np
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
-from bodykit import Body, BoxShape, CylShape, Link, Linkage, allow_matrix_grips, plate  # noqa: E402
+from bodykit import Body, BoxShape, CylShape, Link, Linkage, allow_matrix_grips  # noqa: E402
 from bodykit import as_numpy, on_reset, on_step, rotation  # noqa: E402
 from yam_arena.demo import Waypoint  # noqa: E402
 from yam_arena.task_file import TABLE_TOP  # noqa: E402
@@ -58,7 +53,8 @@ allow_matrix_grips()
 
 SCENE = "station"
 TOP = TABLE_TOP[SCENE]
-SUCCESS_HOLD_S = 1.0
+SUCCESS_HOLD_S = 0.0  # The scorer tracks the full release interval before reporting success.
+RELEASE_HOLD_S = 1.0
 SCORE_OVER = "end"
 _E = os.environ.get
 
@@ -66,11 +62,9 @@ _E = os.environ.get
 W = np.array([0.28, 0.0])  # the watch's centre (x, y); 12 o'clock toward +x, 3 o'clock (the crown) toward -y
 CASE_R, CASE_H = 0.019, 0.0095  # 38 mm case, 9.5 mm thick, dial up
 DIAL_R = 0.0160
-# the display stand: an oval C-ring (outside 64 x 50 mm, 26 mm deep along y) on a post and a base plate
-RING_A, RING_B, RING_T, RING_D = 0.032, 0.025, 0.003, 0.026
-Z0 = 0.135  # the caseback on the ring's top (above the table)
-RING_C = Z0 - RING_B  # the oval's centre above the table
-BASE_T = 0.006
+BOOK_LENGTH, BOOK_WIDTH, BOOK_HEIGHT = 0.260, 0.150, 0.045
+BOOK_EDGE_Y = -0.0185
+Z0 = 3 * BOOK_HEIGHT  # caseback on the top book (above the table)
 CZ = 0.0047  # the crown's axis above the caseback
 CROWN_R, CROWN_L = 0.00275, 0.0040  # 5.5 mm crown, 4 mm long
 CROWN_Y0 = -(CASE_R + 0.0005)  # the crown's inner face (pushed home), from the watch's centre
@@ -84,9 +78,8 @@ T0 = 9 * 60 + 46.0  # the hands at the start: 9:46
 TARGET = 10 * 60 + 10.0  # 10:10
 TOL_FULL, TOL_PART = 1.0, 5.0  # minutes
 
-STEEL, DARK, WHITE, BLACK, RED, BROWN, STAND = ((0.75, 0.76, 0.78), (0.15, 0.15, 0.16), (0.96, 0.96, 0.94),
-                                                (0.05, 0.05, 0.06), (0.85, 0.1, 0.1), (0.42, 0.25, 0.13),
-                                                (0.22, 0.24, 0.30))
+STEEL, DARK, WHITE, BLACK, RED, BROWN = ((0.75, 0.76, 0.78), (0.15, 0.15, 0.16), (0.96, 0.96, 0.94),
+                                       (0.05, 0.05, 0.06), (0.85, 0.1, 0.1), (0.42, 0.25, 0.13))
 
 
 def _v(p) -> tuple:
@@ -114,23 +107,18 @@ def _watch() -> Linkage:
         c = d * r
         base.append(BoxShape((float(c[0]), float(c[1]), z_dial + 0.0003), (ln, 0.0012 if h % 3 == 0 else 0.0008,
                                                                            0.0002), BLACK, yaw=-a, collide=False))
-    # the date window at 3 o'clock, showing 19
+    # Outline of the date window at 3 o'clock.
     base.append(BoxShape((0.0, -0.0105, z_dial + 0.0003), (0.0035, 0.0040, 0.0002), WHITE, collide=False))
     base.append(BoxShape((0.0, -0.0105, z_dial + 0.00025), (0.0043, 0.0048, 0.0002), BLACK, collide=False))
-    # lugs, and the 20 mm leather strap buckled round the display ring (drawn only: the watch is held on the ring)
+    # Lugs and the unbuckled 20 mm leather strap, spread out along the length of the case.
     for sx in (1, -1):
         for sy in (1, -1):
             base.append(BoxShape((sx * 0.0205, sy * 0.0115, 0.0055), (0.0060, 0.0025, 0.0050), STEEL))
-        base.append(BoxShape((sx * 0.0215, 0.0, 0.0060), (0.0060, 0.020, 0.0035), BROWN, collide=False))
-        prev = np.array([sx * 0.0240, 0.0060])
-        for th in np.radians(np.linspace(62.0, -48.0, 12)):
-            q = np.array([sx * (RING_A + 0.0018) * math.cos(th), RING_C + (RING_B + 0.0018) * math.sin(th) - Z0])
-            base.append(plate((prev[0], 0.0, prev[1]), (q[0], 0.0, q[1]), 0.020, 0.0035, (0, 0, 1), BROWN,
-                              collide=False))
-            prev = q
-    base.append(BoxShape((-(RING_A + 0.0035) * math.cos(math.radians(-30)), 0.0,
-                          RING_C + (RING_B + 0.0035) * math.sin(math.radians(-30)) - Z0),
-                         (0.003, 0.024, 0.006), STEEL, collide=False))  # buckle frame
+        length = 0.105 if sx == 1 else 0.067
+        base.append(BoxShape((sx * 0.022, 0.0, 0.005), (0.006, 0.020, 0.003), BROWN, collide=False))
+        base.append(BoxShape((sx * (0.024 + length / 2), 0.0, 0.0015),
+                             (length, 0.020, 0.003), BROWN, collide=False))
+    base.append(BoxShape((-0.092, 0.0, 0.0025), (0.010, 0.024, 0.003), STEEL, collide=False))
     a0 = CROWN_Y0 - 0.0005
     stem = [CylShape((0.0, a0 + 0.002, CZ), 0.0004, 0.004, STEEL, collide=False, axis="Y")]
     cy = CROWN_Y0 - CROWN_L / 2
@@ -142,7 +130,7 @@ def _watch() -> Linkage:
     minute = _hand(0.0145, 0.0012, 0.002, zh + 0.0004, BLACK, T0, 60.0)
     second = _hand(0.0150, 0.0005, 0.003, zh + 0.0008, RED, 0.0, 60.0)
     base += second + [CylShape((0.0, 0.0, zh + 0.0010), 0.0010, 0.0006, BLACK, collide=False)]
-    o = np.array([W[0], W[1], TOP + Z0])
+    o = np.array([W[0], W[1], TOP + Z0 + 0.0003])
     anchor = _v(o + [0.0, CROWN_Y0, CZ])
     links = [Link("stem", tuple(stem), mass=0.002, anchor=anchor, axis="Y", slide=True,
                   limits=(-2 * CLICK - 0.0001, 0.0001), stiffness=K_DET, spring_damping=D_STEM),
@@ -151,30 +139,35 @@ def _watch() -> Linkage:
              Link("hour", tuple(hour), mass=0.0005, anchor=_v(o), axis="Z", stiffness=0.05, spring_damping=0.0005),
              Link("minute", tuple(minute), mass=0.0005, anchor=_v(o), axis="Z", stiffness=0.05,
                   spring_damping=0.0005)]
-    return Linkage.build("watch", pos=_v(o), mass=0.040, color=STEEL, floating=False,
-                         friction=(0.8, 0.7), shapes=base, links=links, contact_offset=0.001, solver_iterations=48)
+    return Linkage.build("watch", pos=_v(o), mass=0.040, color=STEEL, floating=True,
+                         friction=(0.6, 0.5), shapes=base, links=links, contact_offset=0.0005, solver_iterations=48)
 
 
-def _stand() -> Body:
-    sh = [BoxShape((0.0, 0.0, BASE_T / 2), (0.090, 0.070, BASE_T), STAND)]
-    ths = np.radians(np.linspace(-58.0, 238.0, 25))
-    pts = [np.array([RING_A * math.cos(t), RING_C + RING_B * math.sin(t)]) for t in ths]
-    for p, q in zip(pts[:-1], pts[1:]):
-        n = (p + q) / 2 - [0.0, RING_C]
-        sh.append(plate((p[0], 0.0, p[1]), (q[0], 0.0, q[1]), RING_D, RING_T, (n[0], 0.0, n[1]), STAND))
-    zb = float(pts[0][1]) - 0.002  # a bar across the ring's open ends, on the post
-    sh.append(BoxShape((0.0, 0.0, zb), (2 * float(pts[0][0]) + 0.004, 0.012, 0.004), STAND))
-    sh.append(CylShape((0.0, 0.0, (BASE_T + zb) / 2), 0.006, zb - BASE_T, STAND))
-    return Body.build("stand", pos=(float(W[0]), float(W[1]), TOP), mass=0.3, color=STAND, fixed=True,
-                      friction=(0.5, 0.4), shapes=sh)
+def _books() -> list[Body]:
+    covers = ((0.23, 0.34, 0.41), (0.46, 0.25, 0.18), (0.22, 0.30, 0.25))
+    pages = (0.84, 0.79, 0.65)
+    books = []
+    for i, color in enumerate(covers):
+        shapes = [
+            BoxShape((0, 0, z), (BOOK_LENGTH, BOOK_WIDTH, 0.003), color)
+            for z in (0.0015, BOOK_HEIGHT - 0.0015)
+        ]
+        shapes.extend([
+            BoxShape((0, 0, BOOK_HEIGHT / 2), (BOOK_LENGTH - 0.004, BOOK_WIDTH - 0.006, BOOK_HEIGHT - 0.006), pages),
+            BoxShape((0, BOOK_WIDTH / 2 - 0.002, BOOK_HEIGHT / 2), (BOOK_LENGTH, 0.004, BOOK_HEIGHT - 0.006), color),
+        ])
+        books.append(Body.build(f"book_{i}", pos=(float(W[0]), BOOK_EDGE_Y + BOOK_WIDTH / 2,
+                                                 TOP + i * BOOK_HEIGHT), mass=1.0, color=color, fixed=True,
+                                friction=(0.7, 0.6), shapes=shapes, contact_offset=0.0005))
+    return books
 
 
-STAND_BODY = _stand()
 WATCH = _watch()
-OBJECTS = [STAND_BODY, WATCH]
+OBJECTS = [*_books(), WATCH]
 
 # -- tracking and scoring --------------------------------------------------------------------------------------------
 CLEAR = 0.010
+STILL_TOL = 0.001
 _DEBUG = _E("WATCH_DEBUG") == "1"
 _DEBUG_EVERY = int(_E("WATCH_DEBUG_EVERY", "5"))
 _EP: dict = {}
@@ -189,7 +182,8 @@ SAMPLES = np.array([[r * math.cos(a), r * math.sin(a), z] for a in _ANG for r, z
 @on_reset
 def _reset() -> None:
     _EP.update(tick=0, step=0, minutes=T0, crown_prev=None, click=0, max_click=0, date_turn=0.0,
-               date_moved=False, near=1.0, stem=0.0, crown=0.0, tcp={}, gaps={})
+               date_moved=False, near=1.0, stem=0.0, crown=0.0, watch_pos=None, flat=False,
+               released_from=None, released_s=0.0, tcp={}, gaps={})
 
 
 _reset()
@@ -289,7 +283,15 @@ def _track_inner(env) -> None:
     pts = pp + SAMPLES @ pr.T
     tree = cKDTree(pts)
     near = min(float(tree.query(fp, k=1)[0].min()) for fp in fingers.values())
-    _EP.update(stem=stem, crown=crown, click=click, max_click=max(_EP["max_click"], click), near=near)
+    flat = pr[2, 2] >= math.cos(math.radians(10))
+    _EP.update(stem=stem, crown=crown, click=click, max_click=max(_EP["max_click"], click), near=near,
+               watch_pos=pp, flat=flat)
+    if _reading_error() > TOL_FULL or click != 0 or _EP["date_moved"] or near < CLEAR or not _on_top_book(pp, flat):
+        _EP.update(released_from=None, released_s=0.0)
+    elif _EP["released_from"] is None or np.linalg.norm(pp - _EP["released_from"]) > STILL_TOL:
+        _EP.update(released_from=pp.copy(), released_s=0.0)
+    else:
+        _EP["released_s"] += float(base.step_dt)
 
 
 def _reading_error() -> float:
@@ -298,61 +300,65 @@ def _reading_error() -> float:
     return min(d, 720.0 - d)
 
 
-def _tally(o) -> dict:
-    err = _reading_error()
-    done = bool(err <= TOL_FULL and _EP["click"] == 0 and not _EP["date_moved"] and _EP["near"] >= CLEAR)
-    return dict(err=err, done=done)
+def _on_top_book(pos, flat) -> bool:
+    return bool(flat and abs(pos[2] - (TOP + Z0)) < 0.002 and
+                abs(pos[0] - W[0]) < BOOK_LENGTH / 2 and BOOK_EDGE_Y <= pos[1] <= BOOK_EDGE_Y + BOOK_WIDTH)
 
 
-def _debug(t) -> None:
+def _debug(err, done) -> None:
     _EP["step"] += 1
     if (_EP["step"] - 1) % _DEBUG_EVERY:
         return
     m = _EP["minutes"] % 720.0
-    print(f"DBG step={_EP['step']} time={int(m // 60)}:{m % 60:05.2f} err={t['err']:.2f}min "
+    pp = _EP["watch_pos"]
+    watch_delta = (pp - [W[0], W[1], TOP + Z0]) * 1000 if pp is not None else np.zeros(3)
+    print(f"DBG step={_EP['step']} time={int(m // 60)}:{m % 60:05.2f} err={err:.2f}min "
           f"stem={_EP['stem'] * 1000:+.2f}mm click={_EP['click']} max={_EP['max_click']} "
           f"crown={math.degrees(_EP['crown']):+.1f}deg date_turn={math.degrees(_EP['date_turn']):.0f} "
-          f"date_moved={int(_EP['date_moved'])} near={_EP['near'] * 1000:.0f}mm done={int(t['done'])} | "
+          f"date_moved={int(_EP['date_moved'])} near={_EP['near'] * 1000:.0f}mm done={int(done)} "
+          f"watch_delta={np.round(watch_delta, 2)} flat={int(_EP['flat'])} | "
           + " ".join(f"{k} tcp=({v[0]:.3f},{v[1]:.3f},{(v[2] - TOP) * 1000:.1f}mm) gap={_EP['gaps'][k] * 1000:.0f}"
                      for k, v in _EP["tcp"].items()), flush=True)
 
 
 def score(objects) -> float:
-    t = _tally(objects)
+    err = _reading_error()
+    done = success(objects)
     if _DEBUG:
-        _debug(t)
+        _debug(err, done)
     best = 0.25 if _EP["max_click"] >= 2 else 0.0
-    if t["err"] <= TOL_PART:
+    if err <= TOL_PART:
         best = 0.5
     if _EP["date_moved"]:
         return best
-    if t["err"] <= TOL_FULL:
+    if err <= TOL_FULL:
         best = 0.75
-        if t["done"]:
+        if done:
             best = 1.0
     return best
 
 
 def success(objects) -> bool:
-    t = _tally(objects)
-    return bool(t["done"])
+    return _EP["released_s"] >= RELEASE_HOLD_S - 1e-9
 
 
 # -- scripted demo ---------------------------------------------------------------------------------------------------
-# Open loop, from the known layout, right arm only (the watch is buckled onto its taped-down display stand). The right
+# Open loop from the known layout. The left gripper braces the loose case against the book. The right
 # gripper, level and pointing along the crown's axis (+y) with its fingers closing across the crown, slides its
 # fingertips either side of the crown (their ends 0.6 mm off the case) and pinches it; it draws the crown out past both
-# clicks (aimed 8 mm past: the arm gives under load), eases off and, keeping hold, turns its wrist 110 deg forward; then
+# clicks, eases off and, keeping hold, turns its wrist 110 deg forward; then
 # it turns the crown in strokes, as a wrist turns only +-120 deg: let go, turn the open hand back, pinch again, turn
 # forward (220, 220 and 190 deg). In all two turns of the crown: 24 minutes of the minute hand, from 9:46 to 10:10. It
 # lets go, backs off 8 mm, closes its fingers and pushes the crown home with the fingertips' ends, and backs away to the
-# ready pose. The left arm stays at its ready pose.
+# ready pose. The left gripper then releases the case and backs away.
 # WATCH_NOPULL=1 (the wrong way): the same strokes and push without pulling the crown out first. In its home position
 # the crown turns freely and turns nothing, so the hands stay at 9:46.
 OPEN_C = -0.047
 NOPULL = _E("WATCH_NOPULL") == "1"
+NOBRACE = _E("WATCH_NOBRACE") == "1"
 P = {k: float(_E("WATCH_" + k.upper(), v)) for k, v in dict(
-    gap_case="0.0006", open="-0.007", pull="0.008", push_over="0.008").items()}
+    gap_case="0.0006", open="-0.007", pull="0.0035", set_bias="0.0007", push_over="0.004",
+    brace_y="0.012", brace_depth="0.010").items()}
 STROKES = [float(v) for v in _E("WATCH_STROKES", "110,220,220,190").split(",")]  # crown turns per stroke (deg)
 WRIST_MAX = 110.0  # deg: each stroke ends with the hand turned this far (the wrist turns +-120 deg)
 CZW = TOP + Z0 + CZ  # the crown's axis (world z)
@@ -449,7 +455,7 @@ def _right() -> list:
     face_home = W[1] + CROWN_Y0 - CROWN_L  # the crown's outer face, pushed home (world y)
     tip_home = np.array([W[0], W[1] + CROWN_Y0 - P["gap_case"], CZW])  # the fingertips' ends just off the case
     p_home = tip_home - a * TIP_AHEAD
-    pulled = 0.0 if NOPULL else 2 * CLICK
+    pulled = 0.0 if NOPULL else 2 * CLICK + P["set_bias"]
     p_set = p_home - a * pulled  # the TCP holding the crown at its second click
     p_back = p_home - a * 0.030
     out = _lead_in("right", p_back, _level(0.0), P["open"], "in line with the crown, fingers open")
@@ -483,10 +489,31 @@ def _right() -> list:
     return out
 
 
+def _left(hold: float) -> tuple[list, list]:
+    """Brace the back half of the case with the ends of the closed fingertips."""
+    rot = _R((-1, 0, 0), (0, 0, -1))
+    tip = [W[0], W[1] + P["brace_y"], TOP + Z0 + CASE_H - P["brace_depth"]]
+    press = _tcp_for_tip(tip, rot)
+    pre = press + [0, 0, 0.025]
+    if NOBRACE:
+        lp, lq = _ready("left")
+        prepare = [_w(6.0, lp, OPEN_C, "leave the watch loose", lq)]
+        return prepare, [_w(hold, lp, OPEN_C, "stay at ready", lq)]
+    prepare = _lead_in("left", pre, rot, 0.0, "above the case")
+    prepare += [_w(2.0, press, 0.0, "press the back half of the case against the book", rot),
+                _w(1.0, press, 0.0, "settle the brace", rot)]
+    release = [_w(hold, press, 0.0, "hold the case still", rot),
+               _w(1.0, pre, 0.0, "lift clear of the watch", rot)]
+    release += _lead_out("left", pre, rot, OPEN_C, "back to the ready pose")
+    return prepare, release
+
+
 def demo():
-    right = _right()
+    manipulation = _right()
+    prepare, release = _left(_dur(manipulation))
     rp, rq = _ready("right")
-    right += [_w(4.0, rp, OPEN_C, "stay clear", rq)]
     lp, lq = _ready("left")
-    left = [_w(_dur(right), lp, OPEN_C, "stay at the ready pose", lq)]
+    right = [_w(_dur(prepare), rp, OPEN_C, "wait for the watch to be braced", rq)] + manipulation
+    right += [_w(_dur(release) - _dur(manipulation) + 4.0, rp, OPEN_C, "stay clear", rq)]
+    left = prepare + release + [_w(4.0, lp, OPEN_C, "stay clear", lq)]
     return {"left": left, "right": right}
