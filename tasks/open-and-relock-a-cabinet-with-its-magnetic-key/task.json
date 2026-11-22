@@ -1,0 +1,20 @@
+{
+  "title": "Open and relock a cabinet with its magnetic key",
+  "category": "Societal relatability",
+  "keywords": [
+    "concealed cabinet latch",
+    "magnetic key",
+    "child-resistant cabinet",
+    "spring hook",
+    "handle tug"
+  ],
+  "instruction": "Use the magnetic key near the upper middle of the door to open the cabinet. Remove the key before closing the door, then tug the handle to check that it locked. Leave the key on the bench and let go.",
+  "context": "A child-resistant cabinet uses a concealed spring hook. An adult releases it with a magnetic key through the closed door, then checks that it catches again. The key must keep the hook retracted while the door first moves. A short pull after removing the key checks that the keeper bears load.",
+  "setup": "A fixed cabinet 38 cm wide, 25 cm deep and 29.2 cm high, with a closed 18 mm wood door on a vertical hinge. A black knob is 32 cm from the hinge and 8.6 cm above the cabinet floor. The hidden spring hook is 18.8 cm from the hinge and its armature sits 25.7 cm above the cabinet floor. The 42 mm by 38 mm magnetic key starts flat on the bench with its blue stem up. Both grippers start open. The hook and its keeper are already installed and engaged.",
+  "scoring": "0 if forced or never opened 28 degrees using the key. 0.5 for a proper opening. 0.75 when it catches again, the key is within 48 mm of its start and both hands are off. 1.0 also requires a tug for at least 0.20 s after taking the key away. The door stays within 2.3 degrees shut during the tug and for one second after release. The simulator checks that the tug loads the keeper with 1.6–35 N. Use video and an angle gauge.",
+  "run_limit": "1,200 steps (60 seconds at 20 Hz)",
+  "reset_notes": "Place the key flat at the initial mark, close the door and verify that the hook is seated against the keeper before starting.",
+  "fidelity": "The door, spring hook, keeper and key use rigid contact. An approximate magnetic force, capped at 0.75 N, varies with key distance and angle and torques the armature. The shaped hook engages and cams past the keeper by contact. The magnet's reaction on the handheld key and adhesive backing are omitted.",
+  "scores": "Dream-1: 0.0 at the 1,200-step limit. Scripted demo: 1.0 in 571 steps. The door opened 30.7°. The final tug loaded the engaged keeper to about 12 N with the key on the bench. Off-target-key control: 0.0.",
+  "media": "M-BMUGQU"
+}
