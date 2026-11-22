@@ -1,0 +1,19 @@
+{
+  "title": "Squeeze both side releases to remove a frying pan's detachable handle",
+  "category": "Societal relatability",
+  "keywords": [
+    "detachable cookware handle",
+    "two-button release",
+    "spring lever",
+    "frying pan"
+  ],
+  "instruction": "Squeeze both side buttons to release the handle while the pan stays on the counter. Let the lower lever open, lift the handle off the rim, and set it down beside the pan.",
+  "context": "Removable cookware handles free space when pans are stored. Both releases have to be squeezed at once while the lower lever is free to drop. The pan stays supported throughout the release and removal.",
+  "setup": "An empty, cool aluminum frying pan, 206 mm across the rolled rim and 53 mm high, is flat on the bench. Its 198 mm long removable handle starts clamped around the near edge, pointing toward the robot. It has two red opposed side buttons and a sprung lower lever. Both hands start open and clear. No heat or liquids are used.",
+  "scoring": "0 if the pan lifts over 7 mm or tilts over 9 degrees before the handle clears it, or if both buttons are never depressed at least 3.5 mm together. 0.25 when the lever opens and the jaw draws back. 0.65 when the open handle clears the rim by 45 mm. 1.0 when the detached handle and the pan rest separately on the counter with both hands withdrawn for 1.5 s. Use video, a ruler and an angle gauge.",
+  "run_limit": "1,200 steps (60 seconds at 20 Hz)",
+  "reset_notes": "Return the cool pan and handle to their start. Fit the grip onto the rolled rim, squeeze the lower lever to lock it, then check both buttons are sprung out.",
+  "fidelity": "The pan and handle are free rigid bodies. Both button slides move from gripper contact. Simultaneous travel releases the modeled latch, allowing the sprung lever and jaw to move. The jaw's undercut and pan rim are colliders. The linkage between buttons, lever and jaw is approximated.",
+  "scores": "Dream-1: 0.0 at 1,200 steps. Scripted demo: 1.0 in 230 steps. Both switches travelled 6 mm and the jaw retracted 14.1 mm without lifting the pan. One-button control: 0.0.",
+  "media": "M-2F2DCD"
+}
