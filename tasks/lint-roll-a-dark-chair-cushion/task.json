@@ -1,0 +1,20 @@
+{
+  "title": "Lint-roll a dark chair cushion",
+  "category": "Societal relatability",
+  "keywords": [
+    "lint roller",
+    "upholstery",
+    "sticky roller",
+    "rolling contact",
+    "cleaning"
+  ],
+  "instruction": "Use the adhesive lint roller to clean all the white fibers off the cushion. Leave the cushion in place and set the roller down beside it.",
+  "context": "A lint roller picks loose fibers off upholstery so they stick to the sleeve. A useful cleaning pass needs the drum turning with steady contact over the fabric, and adjacent passes need to cover the spaces left between them.",
+  "setup": "Dark 30 × 30 × 3.8 cm woven fabric and foam chair cushion, about 420 g, centered 32.5 cm forward and 6.2 cm left of the robot base midpoint on a clean countertop. Fifteen loose white cotton tufts, two 12–16 mm strands each, at every (x, y) combination of x = -7.3, -2.7, +3.4 cm and y = -6.7, -2.8, +0.9, +5.2, +7.5 cm from its center. A 4-inch adhesive lint roller has a 10.2 × 5.4 cm paper drum on a 10 cm plastic handle, lying on a 9.5 × 22 cm silicone mat. The handle midpoint starts 26.5 cm forward and 25 cm right; the drum points left. Both grippers start open and clear.",
+  "scoring": "Use the overhead video and a close final photo to count the fifteen tufts picked up by the moving roller. Each original tuft counts once when it transfers from the cushion to the adhesive. Partial credit is 0.9 × (count / 15). Full credit when all fifteen transfer, the cushion center has shifted at most 3 cm, and the roller is released and rests beside it for one second. Brushing or picking tufts off without the roller earns no credit.",
+  "run_limit": "1,200 steps (60 seconds at 20 Hz)",
+  "reset_notes": "Restore the cushion on its starting marks, expose a fresh adhesive sheet, set the roller on the mat and lay fresh tufts on the fabric. Start with both grippers open. The simulation resets the scene.",
+  "fidelity": "Full-size rigid cushion, handle and free-spinning cylindrical sleeve with physical friction. A rolling sleeve bearing at least 0.35 N transfers covered tufts to its visible surface. The transfer approximates adhesion without simulating individual fibers, foam compression or glue.",
+  "scores": "Dream-1 run: 0.0 at the 1,200-step limit. Scripted demo: 1.0 at step 410. No-contact control: 0.0.",
+  "media": "M-5CWV4H"
+}
