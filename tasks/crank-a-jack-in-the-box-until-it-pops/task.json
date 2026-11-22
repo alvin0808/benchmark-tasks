@@ -1,0 +1,19 @@
+{
+  "title": "Crank a jack-in-the-box until it pops",
+  "category": "Societal relatability",
+  "keywords": [
+    "jack-in-the-box",
+    "offset crank",
+    "mechanical release",
+    "crank winding"
+  ],
+  "instruction": "Turn the crank until the figure pops out. Stop turning, release the crank, and leave the box where it is.",
+  "context": "A familiar wind-up toy releases its figure near the end of the tune. Continuous hand motion around the small offset crank has to end when the spring lid pops. This tests operating the toy from closed and reacting to the spring release.",
+  "setup": "A 13.8 cm tin spring toy, about 0.5 kg, upright on a flat counter at x 30.4 cm forward and y 4.6 cm left of the arm-base midpoint. A hinged stamped lid is latched closed over the soft figure. The metal crank sticks out to the robot's right. Its axle is 9 cm above the counter, with a 1.6 cm free-spinning plastic knob centered 2.6 cm off-axis. The crank knob starts directly below the axle. Both grippers start open, clear of the toy.",
+  "scoring": "0 for less than one net forward turn. 0.25 for at least a full turn without releasing the figure by crank. 0.75 for a crank-triggered pop with more than 90 degrees of additional turn after the lid first moves, a gripper still holding the crank, or a case shift over 2.5 cm. 1.0 if the crank releases the figure, the lid opens at least 70 degrees, the figure rises visibly, the crank moves at most 90 degrees after the lid starts opening and the released case rests within 2.5 cm of its start for one second. Use the trial video and a ruler.",
+  "run_limit": "1,200 steps (60 seconds at 20 Hz)",
+  "reset_notes": "Push the padded figure down and latch the lid. Restore the case and crank to their starting marks. Check that both grippers start clear. The simulation resets its cam phase.",
+  "fidelity": "The crank, free-spinning knob, lid and figure use physical joints. The crank uses light damping. A cam approximation releases after 2.85 turns, then spring drives extend the lid and figure. The gear train and music are omitted.",
+  "scores": "Dream-1 run: 0.0 at the 1,200-step limit. Scripted demo: 1.0 at step 389. Short-crank control: 0.0.",
+  "media": "M-V547LA"
+}
