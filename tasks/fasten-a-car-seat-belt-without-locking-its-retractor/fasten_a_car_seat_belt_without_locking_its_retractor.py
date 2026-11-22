@@ -1,54 +1,10 @@
-"""On the station table: a car front seat (cushion, backrest and head restraint) with its three-point seat belt as
-installed in a car. The belt's webbing comes out of an emergency-locking retractor (ELR) at the foot of the door
-pillar, runs up to the shoulder guide (D-ring) on the pillar and down again, through the sliding latch plate (the
-tongue), to its anchor at the sill beside the cushion; with the belt unfastened the tongue hangs on the webbing beside
-the pillar. The buckle stands on its short stalk at the inboard side of the cushion. The pillar is on the robot's
-left, as for a left-hand-drive driver's seat seen from the front. Task (instruction): fasten the seat belt.
+"""Fasten a three-point seat belt around a fixed adult-sized surrogate in a complete front seat.
 
-How it is done: the tongue is drawn across the seat and pushed straight into the buckle until it clicks. An ELR that is
-sensitive to webbing withdrawal locks when the webbing accelerates out of it; FMVSS 209 (49 CFR 571.209), S4.3(j)(2)
-(iii): such a retractor "shall not lock before the webbing payout extends to the minimum limit of 51 mm ... when the
-retractor is subjected to an acceleration no greater than 0.3 g". A locked belt stops dead; it has to be let back a
-little and drawn again, smoothly.
-
-The hand skill: draw the tongue 48 cm across the seat smoothly (no jerk that locks the retractor) against the
-retractor's pull, carry it blade down, and push the 3 mm blade straight into the buckle's 4.5 mm slot on a stalk that
-gives, past the latch's spring, until it catches; then let go.
-
-World frame (m): x forward from the arm bases, y to the robot's left, z up; the table top is at z TOP (0.7475);
-heights below are above the table.
-- seat: fixed. Cushion 45 cm wide (y -0.43 to +0.02), its top 4.5 cm above the table, from x 0.06 to 0.40 (the front
-  15 cm of a real cushion is left off to clear the arm bases), side bolsters 2 cm higher; backrest 9 cm thick, its
-  front at x 0.40, 62 cm tall; head restraint on two posts.
-- pillar: fixed, outboard of the seat (y +0.09 to +0.15, x 0.33 to 0.47), 68 cm tall, the retractor housing at its foot,
-  the shoulder guide on a bracket at (0.245, 0.03, 0.60); a sill beside the cushion carries the lap anchor at
-  (0.245, 0.03, 0.045).
-- belt (one articulation): the 48 mm webbing is two straight runs kept taut by the retractor, from the shoulder guide
-  to the tongue and from the tongue to the lap anchor. Each run turns freely about its ends (universal joints; the
-  lap run's end on the anchor by a ball joint) and lengthens on slides (the shoulder run on one, the lap run on five in
-  series that share its length), each pulled back by the retractor spring (4 N/m, preloaded: 2.0-3.5 N along each run
-  over the draw). The tongue (40 g) turns freely about its webbing slot. Start: the tongue hangs blade down on the
-  vertical webbing at (0.245, 0.03), its slot about 14 cm above the table, its faces toward +-y.
-- tongue: plastic head 50 x 13 x 28 mm (x, y, z) with the webbing slot at its top; steel blade 22 mm wide, 3 mm
-  thick, 24 mm long with a 12 x 11 mm latch window whose lower edge is 6 mm above the tip.
-- buckle (articulation): head 53 x 32 x 50 mm on a stalk that gives (two hinges at its root, 3 N m/rad each,
-  +-20 deg) at (0.23, -0.448), its mouth 9.5 cm above the table: a slot 26 x 4.5 mm, 30 mm deep, under a funnel 6 mm
-  deep that is 6 mm wider each side (3 mm at the ends). The latch: a sprung pawl (2500 N/m, ramped on top, flat
-  underneath) sticks 2.75 mm into the slot, its underside 15 mm below the mouth; the blade's tip pushes it back
-  (about 6 N) and it springs into the blade's window once the tongue's head is within 3 mm of the mouth; the webbing's
-  pull then holds the window's lower edge against it.
-
-Retractor lock (the inertia reel): every control step (50 ms) the webbing payout (the two runs' lengths less their
-start) and its rate are read; if the rate rises by more than LOCK_G (0.7 g: above FMVSS 209's 0.3 g no-lock limit;
-makers do not publish the lock point) over a step, from rest or while paying out, the retractor locks: no more webbing
-comes out (each slide's outward limit is set where it is) until 5 mm has gone back in, as on a real reel.
-
-Score (end of the run; "latched": the pawl back within 0.8 mm of its rest with the tongue's head within 3.5 mm of the
-mouth, so the window sits on the pawl; "let go": every finger point 2 cm or more from the tongue):
-- 0.25: the blade's tip has been 10 mm or more inside the mouth, in line with the slot, at some time.
-- 0.4: latched at the end, but still held (or moving).
-- 0.6: latched, let go and still (under 2 cm/s) for 1 s, but the retractor locked at some time.
-- 1.0 (success): latched, let go and still for 1 s, and the retractor never locked.
+The robot lifts the tongue in front of the torso and above the thighs, then inserts its blade into the inboard
+buckle. A taut ribbon path wraps against each supporting body surface. Both strands pull on the tongue along
+their end tangents, and the total payout sets the retractor's tension and emergency lock. The tongue and buckle
+pawl are physical rigid bodies. A released latch scores full credit after a stationary hold with a valid chest and
+lap route and no reel lock. Dimensions and the real-world scoring procedure are in README.md.
 """
 
 from __future__ import annotations
@@ -65,11 +21,30 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 from bodykit import Body, BoxShape, CylShape, Link, Linkage, allow_matrix_grips, as_numpy, on_reset, on_step, plate  # noqa: E402
 from bodykit import rotation  # noqa: E402
-from strapkit import Loop, Part, Strap  # noqa: E402
+from routekit import Ellipsoid, taut_route  # noqa: E402
 from yam_arena.demo import Waypoint, grip_rotation  # noqa: E402
 from yam_arena.task_file import TABLE_TOP  # noqa: E402
 
 allow_matrix_grips()
+
+
+def _wide_observer_view() -> None:
+    from yam_arena import ik, station
+    from yam_arena.rig import Camera, Lens
+
+    eye = np.array([-0.600, -0.300, 1.75])
+    forward = np.array([0.27, -0.30, 1.20]) - eye
+    forward /= np.linalg.norm(forward)
+    right = np.cross(forward, [0.0, 0.0, 1.0])
+    right /= np.linalg.norm(right)
+    up = np.cross(right, forward)
+    rotation_xyzw = ik.matrix_to_quat_xyzw(np.column_stack((right, up, -forward)))
+    camera = Camera(tuple(eye), tuple(rotation_xyzw), "opengl", Lens(330, 330, 320, 180, 640, 360))
+    station.top_camera = lambda variant="calibrated": camera
+
+
+if os.environ.get("BELT_WIDE_CAMERA") == "1":
+    _wide_observer_view()
 
 SCENE = "station"
 TOP = TABLE_TOP[SCENE]
@@ -79,32 +54,31 @@ _E = os.environ.get
 G = 9.81
 
 # -- layout (x, y, height above the table) -------------------------------------------------------------------------
-WY = 0.03  # the webbing's line beside the pillar (the pillar is on the robot's left, +y)
+WY = -0.070  # the outboard flank is on the robot's left (+y) when facing the seat
 OUT = 1.0  # the outboard direction (toward the pillar) along y
-WX = 0.245
-DRING = (WX, WY, 0.60)  # shoulder guide
-ANCHOR = (WX, WY, 0.045)  # lap anchor
-SLOT0 = (WX, WY, 0.150)  # the tongue's webbing slot at the start
+WX = 0.320
+DRING = (0.425, WY, 0.62)
+ANCHOR = (WX, WY, 0.045)
+SLOT_Z = 0.150
+SLOT_X = WX + (DRING[0] - WX) * (SLOT_Z - ANCHOR[2]) / (DRING[2] - ANCHOR[2])
+SLOT0 = (SLOT_X, WY, SLOT_Z)
 CUSH_TOP = 0.045
-CUSH_Y = (-0.43, 0.02)
-CUSH_X = (0.06, 0.40)
-BACK_X = (0.40, 0.49)
-BUCKLE = (0.23, -0.448)  # the buckle head's slot centre (x, y)
+CUSH_Y = (-0.530, -0.080)
+CUSH_X = (0.070, 0.560)
+BACK_X = (0.560, 0.650)
+BUCKLE = (0.311, -0.550)
 MOUTH = 0.095  # the buckle mouth's height
 ROOT_Z = 0.020  # the stalk's root (in the seat bight)
 
 # webbing and retractor
-WEB_W, WEB_T = 0.048, 0.0012
-LP_SH = 0.40  # shoulder strip pieces (2 overlap: cover 0.40 to 0.80 m)
-LP_LAP = 0.10  # lap strip pieces (6 overlap: cover 0.105 to 0.58 m)
-N_LAP = 5
-K_RET = float(_E("BELT_K", "4.0"))  # N/m per run
+WEB_W = 0.048
+K_RET = float(_E("BELT_K", "2.2"))  # stiffness against total payout, N/m
 F_PRE = float(_E("BELT_PRE", "2.0"))  # N at the start
-D_SLIDE = float(_E("BELT_DAMP", "0.4"))  # N s/m per slide
+K_LOCK = 1250.0  # locked spool plus webbing stretch, N/m
+D_LOCK = 2.0  # N s/m
 LOCK_G = float(_E("BELT_LOCK_G", "0.7"))  # webbing acceleration that locks the reel (g)
 UNLOCK_BACK = 0.005  # m of webbing let back that frees it
 TONGUE_KG = 0.040
-SAG = float(_E("BELT_SAG", "0.025"))  # m of extra preload on the shoulder run for the webbing parts' own weight
 
 # tongue (frame at its slot; blade down, faces toward +-y, width along x)
 HEAD = (0.050, 0.013, 0.028)
@@ -125,6 +99,7 @@ FUN_W, FUN_D = 0.006, 0.006  # the mouth's funnel: 6 mm wider each side, 6 mm de
 WEB, DARK, GREY, STEEL, RED, SEAT, TRIM = ((0.11, 0.11, 0.12), (0.08, 0.08, 0.09), (0.35, 0.35, 0.37),
                                            (0.72, 0.73, 0.75), (0.80, 0.10, 0.10), (0.50, 0.50, 0.53),
                                            (0.55, 0.53, 0.50))
+SHIRT, TROUSERS, FOAM = (0.26, 0.44, 0.61), (0.54, 0.46, 0.35), (0.79, 0.63, 0.47)
 
 
 def _v(p) -> tuple:
@@ -133,6 +108,21 @@ def _v(p) -> tuple:
 
 def _w(p) -> tuple:
     return (float(p[0]), float(p[1]), float(TOP + p[2]))
+
+
+CY = sum(CUSH_Y) / 2
+CHEST = Ellipsoid("chest", (0.455, CY, 0.419), (0.108, 0.188, 0.234), SHIRT)
+HIPS = Ellipsoid("pelvis", (0.431, CY, 0.123), (0.125, 0.177, 0.078), TROUSERS)
+THIGHS = tuple(Ellipsoid(f"thigh_{side}", (0.262, CY + offset, 0.119), (0.190, 0.079, 0.074), TROUSERS)
+               for side, offset in (("outboard", 0.084), ("inboard", -0.084)))
+UPPER_ARMS = tuple(Ellipsoid(f"arm_{side}", (0.460, CY + offset, 0.497), (0.073, 0.051, 0.112), SHIRT)
+                  for side, offset in (("outboard", 0.145), ("inboard", -0.145)))
+TORSO = (CHEST, HIPS, *THIGHS, *UPPER_ARMS)
+LAP_SURFACES = (HIPS, *THIGHS)
+HEAD_SHAPES = (
+    Ellipsoid("neck", (0.477, CY, 0.639), (0.060, 0.056, 0.081), FOAM),
+    Ellipsoid("head", (0.485, CY, 0.748), (0.094, 0.075, 0.112), FOAM),
+)
 
 
 # -- the seat, pillar and sill (fixed) --------------------------------------------------------------------------------
@@ -156,14 +146,15 @@ def _seat() -> Body:
 
 def _pillar() -> Body:
     o = OUT
-    sh = [BoxShape((0.40, WY + o * 0.09, 0.34), (0.14, 0.06, 0.68), TRIM),  # B-pillar trim
-          BoxShape((0.40, WY + o * 0.09, 0.06), (0.12, 0.065, 0.12), DARK),  # retractor housing at its foot
-          BoxShape((0.33, WY + o * 0.035, 0.02), (0.30, 0.05, 0.04), TRIM),  # sill beside the cushion
+    sx = DRING[0]
+    sh = [BoxShape((sx + 0.07, WY + o * 0.09, 0.34), (0.14, 0.06, 0.68), TRIM),
+          BoxShape((sx + 0.07, WY + o * 0.09, 0.06), (0.12, 0.065, 0.12), DARK),
+          BoxShape((0.38, WY + o * 0.035, 0.02), (0.30, 0.05, 0.04), TRIM),
           BoxShape((WX, WY + o * 0.015, 0.0425), (0.03, 0.022, 0.005), STEEL),  # lap anchor plate and bolt
           CylShape((WX, WY + o * 0.008, 0.0425), 0.006, 0.006, STEEL, axis="Y"),
-          BoxShape(((WX + 0.33) / 2, WY + o * 0.03, 0.615), (0.36 - WX, 0.06, 0.02), TRIM),  # shoulder guide bracket
-          BoxShape((WX, WY + o * 0.003, 0.61), (0.06, 0.008, 0.026), DARK, collide=False),  # the guide loop
-          BoxShape((0.40, WY + o * 0.058, 0.23), (0.07, 0.004, 0.33), DARK, collide=False)]  # webbing run in the trim
+          BoxShape((sx + 0.025, WY + o * 0.03, DRING[2] + 0.015), (0.10, 0.06, 0.02), TRIM),
+          BoxShape((sx, WY + o * 0.003, DRING[2] + 0.01), (0.06, 0.008, 0.026), DARK, collide=False),
+          BoxShape((sx + 0.07, WY + o * 0.058, 0.23), (0.07, 0.004, 0.33), DARK, collide=False)]
     return Body.build("pillar", pos=(0.0, 0.0, TOP), mass=5.0, color=TRIM, fixed=True, friction=(0.6, 0.5), shapes=sh)
 
 
@@ -180,51 +171,18 @@ def _tongue_shapes() -> list:
         sh.append(BoxShape((s * (WIN_W + side) / 2, 0.0, (WIN_Z[0] + WIN_Z[1]) / 2),
                            (side, BLADE_T, WIN_Z[1] - WIN_Z[0]), STEEL))
     sh.append(BoxShape((0.0, 0.0, (TIP_Z + WIN_Z[0]) / 2), (BLADE_W, BLADE_T, WIN_Z[0] - TIP_Z), STEEL))  # tip bar
+    sh.append(BoxShape((0.010, -0.0016, TIP_Z + 0.010), (0.002, 0.0002, 0.001), DARK, collide=False))
+    sh.append(BoxShape((0.010, 0.0016, TIP_Z + 0.010), (0.002, 0.0002, 0.001), DARK, collide=False))
     return sh
 
 
-def _strip(z0, length, dy) -> BoxShape:
-    return BoxShape((0.0, dy, z0 + length / 2), (WEB_W, WEB_T, abs(length)), WEB, collide=False)
+def _routes(tongue_position):
+    slot = np.asarray(tongue_position) - [0.0, 0.0, TOP]
+    return (taut_route(np.asarray(DRING), slot, TORSO, axis=0, sign=-1, clearance=0.009),
+            taut_route(np.asarray(ANCHOR), slot, LAP_SURFACES, axis=2, sign=1))
 
 
-def _belt() -> Strap:
-    d = _w(DRING)
-    s0 = _w(SLOT0)
-    a = _w(ANCHOR)
-    d_sh = DRING[2] - SLOT0[2]
-    d_lap = SLOT0[2] - ANCHOR[2]
-    tiny = (2e-6, 2e-6, 2e-6)
-    parts = [Part("guide", (BoxShape((0.0, 0.0, 0.0), (0.02, 0.006, 0.006), DARK, collide=False),), 0.1, d),
-             Part("sh_x", (), 0.004, d, parent="guide", joint="revolute", axis="X", anchor=d, damping=0.001,
-                  armature=1e-4, inertia=tiny),
-             Part("sh_y", (_strip(0.0, -LP_SH, 0.0),), 0.004, d, parent="sh_x", joint="revolute", axis="Y", anchor=d,
-                  damping=0.001, armature=1e-4, inertia=tiny),
-             Part("sh_s", (_strip(0.0, LP_SH, 0.0004),), 0.004, s0, parent="sh_y", joint="prismatic", axis="Z",
-                  anchor=s0, limits=(-0.40, 0.02), stiffness=K_RET, damping=D_SLIDE, armature=0.01, inertia=tiny),
-             Part("tg_x", (), 0.002, s0, parent="sh_s", joint="revolute", axis="X", anchor=s0, damping=0.0005,
-                  armature=1e-5, inertia=(1e-7, 1e-7, 1e-7)),
-             Part("tg_y", (), 0.002, s0, parent="tg_x", joint="revolute", axis="Y", anchor=s0, damping=0.0005,
-                  armature=1e-5, inertia=(1e-7, 1e-7, 1e-7)),
-             Part("tongue", tuple(_tongue_shapes()), TONGUE_KG, s0, parent="tg_y", joint="revolute", axis="Z",
-                  anchor=s0, damping=0.0005, armature=1e-5, material=(0.5, 0.4)),
-             Part("lp_x", (), 0.002, s0, parent="tongue", joint="revolute", axis="X", anchor=s0, damping=0.001,
-                  armature=1e-4, inertia=tiny),
-             Part("lp_y", (_strip(0.0, -LP_LAP, -0.0004),), 0.002, s0, parent="lp_x", joint="revolute", axis="Y",
-                  anchor=s0, damping=0.001, armature=1e-4, inertia=tiny)]
-    prev = "lp_y"
-    for i in range(N_LAP):
-        name = f"lp_{i + 1}"
-        parts.append(Part(name, (_strip(0.0, LP_LAP, 0.0002 * (i % 2)),), 0.002, a, parent=prev,
-                          joint="prismatic", axis="Z", anchor=a, limits=(-0.16, 0.02), stiffness=K_RET,
-                          damping=D_SLIDE, armature=0.01, inertia=tiny))
-        prev = name
-    assert d_sh > 0 and d_lap >= LP_LAP
-    return Strap.build("belt", parts=parts, loops=[Loop(prev, None, kind="spherical")], self_collision=False,
-                       solver_iterations=48, velocity_iterations=8, contact_offset=0.002)
-
-
-SLIDES = ["sh_s"] + [f"lp_{i + 1}" for i in range(N_LAP)]
-SLIDE_LIMITS = {"sh_s": (-0.40, 0.02), **{f"lp_{i + 1}": (-0.16, 0.02) for i in range(N_LAP)}}
+REST_LENGTH = float(np.linalg.norm(np.subtract(DRING, ANCHOR)))
 
 
 # -- the buckle --------------------------------------------------------------------------------------------------------
@@ -278,15 +236,20 @@ def _buckle() -> Linkage:
 
 SEAT_BODY = _seat()
 PILLAR = _pillar()
-BELT = _belt()
+OCCUPANT = Body.build("occupant", pos=(0.0, 0.0, TOP), mass=54.0, color=SHIRT, fixed=True,
+                      friction=(0.65, 0.55), shapes=[shape.mesh() for shape in (*TORSO, *HEAD_SHAPES)])
+TONGUE = Body.build("tongue", pos=_w(SLOT0), mass=TONGUE_KG, color=DARK,
+                    friction=(0.55, 0.45), shapes=_tongue_shapes(), damping=(0.2, 0.4), solver_iterations=48)
 BUCKLE_LK = _buckle()
-OBJECTS = [SEAT_BODY, PILLAR, BELT, BUCKLE_LK]
+OBJECTS = [SEAT_BODY, PILLAR, OCCUPANT, TONGUE, BUCKLE_LK]
 
 # -- tracking ----------------------------------------------------------------------------------------------------------
 _DEBUG = _E("BELT_DEBUG") == "1"
 _DEBUG_EVERY = int(_E("BELT_DEBUG_EVERY", "5"))
 CLEAR = 0.020
 DT = 0.05
+STILL_LIMIT = 0.001
+STILL_SAMPLES = 21
 _EP: dict = {}
 _IDS: dict = {}
 # points on the tongue (its frame): head corners and blade
@@ -296,9 +259,10 @@ _TS = np.array([[x, y, z] for x in (-0.025, 0.0, 0.025) for y in (-0.0065, 0.006
 
 @on_reset
 def _reset() -> None:
-    _EP.update(tick=0, step=0, payout=0.0, rate=0.0, rate_prev=0.0, acc=0.0, peak_acc=0.0, locked=False, lock_at=0.0, locks=0,
-               entered=False, latched=False, depth=None, inside=1.0, pawl=0.0, near=1.0, still=False, tcp={},
-               gaps={}, limits_set=False, slot=np.array(_w(SLOT0)))
+    _EP.clear()
+    _EP.update(tick=0, step=0, payout=0.0, rate=0.0, rate_prev=0.0, acc=0.0, peak_acc=0.0,
+               locked=False, lock_at=0.0, locks=0, entered=False, latched=False, depth=None, pawl=0.0,
+               near=1.0, still=False, positions=[], tcp={}, gaps={}, slot=np.array(_w(SLOT0)), routes=None, routed=False)
 
 
 _reset()
@@ -342,16 +306,91 @@ def _track(env) -> None:
         raise
 
 
-def _set_limits(asset, lows: dict) -> None:
+def _sample_belt(base, origin) -> None:
     import torch
 
-    ids = [_IDS["j"][n] for n in SLIDES]
-    lim = torch.tensor([[[lows[n], SLIDE_LIMITS[n][1]] for n in SLIDES]], dtype=torch.float32, device=asset.device)
-    asset.write_joint_position_limit_to_sim_index(limits=lim, joint_ids=ids, warn_limit_violation=False)
+    asset = base.scene["tongue"]
+    pose = as_numpy(asset.data.root_link_pose_w)[0]
+    velocity = as_numpy(asset.data.root_link_vel_w)[0]
+    slot = pose[:3] - origin
+    paths = _routes(slot)
+    payout = sum(path.length for path in paths) - REST_LENGTH
+    dt = base.physics_dt
+    raw_rate = (payout - _EP["payout"]) / dt
+    rate = _EP["rate"] + dt / 0.025 * (raw_rate - _EP["rate"])
+    _EP.update(routes=paths, payout=payout, rate=rate)
+
+    tension = F_PRE + K_RET * max(0.0, payout)
+    if _EP["locked"]:
+        stretch = max(0.0, payout - _EP["lock_at"])
+        tension += min(35.0, K_LOCK * stretch + D_LOCK * max(0.0, rate))
+    force = tension * (paths[0].pull_direction + paths[1].pull_direction) - 0.45 * velocity[:3]
+
+    # A sewn stop on the parked webbing supports the free-sliding tongue from below.
+    stop_direction = np.asarray(DRING) - ANCHOR
+    stop_direction /= np.linalg.norm(stop_direction)
+    from_stop = slot - _w(SLOT0)
+    along = from_stop @ stop_direction
+    if along < 0.0 and np.linalg.norm(from_stop - along * stop_direction) < 0.012:
+        force += min(-300.0 * along, 8.0) * stop_direction
+
+    front = rotation(pose[3:7])[:, 0]
+    yaw = math.atan2(front[1], front[0])
+    torque = (0.0, 0.0, -0.006 * math.sin(yaw))
+    wrench = torch.as_tensor(np.stack((force, torque, pose[:3])), dtype=torch.float32, device=asset.device)
+    asset.permanent_wrench_composer.set_forces_and_torques_index(
+        forces=wrench[0].reshape(1, 1, 3), torques=wrench[1].reshape(1, 1, 3),
+        positions=wrench[2].reshape(1, 1, 3), is_global=True)
+
+
+def _render_belt(paths, slot_normal, origin) -> None:
+    from isaaclab.sim import PreviewSurfaceCfg
+    from isaaclab.sim.utils import bind_visual_material
+    from isaaclab.sim.utils.stage import get_current_stage
+    from pxr import Gf, UsdGeom, Vt
+
+    from yam_arena.station import linear_rgb
+
+    stage = get_current_stage()
+    root = "/World/RoboCurveSeatBelt"
+    for name, route in zip(("shoulder", "lap"), paths):
+        path = f"{root}/{name}"
+        mesh = UsdGeom.Mesh.Get(stage, path)
+        if not mesh:
+            mesh = UsdGeom.Mesh.Define(stage, path)
+            steps = len(route.points) - 1
+            mesh.CreateFaceVertexCountsAttr([4] * steps)
+            mesh.CreateFaceVertexIndicesAttr([i + j for i in range(0, steps * 2, 2) for j in (0, 1, 3, 2)])
+            mesh.CreateDoubleSidedAttr(True)
+            mesh.CreateSubdivisionSchemeAttr("none")
+            material_path = f"{root}/Webbing"
+            if not stage.GetPrimAtPath(material_path):
+                preview = PreviewSurfaceCfg(diffuse_color=linear_rgb(WEB), roughness=0.82)
+                preview.func(material_path, preview)
+            bind_visual_material(path, material_path, stage=stage)
+        points = route.ribbon(WEB_W, slot_normal) + origin + [0, 0, TOP]
+        mesh.GetPointsAttr().Set(Vt.Vec3fArray.FromNumpy(points.astype(np.float32)))
+        mesh.GetExtentAttr().Set([Gf.Vec3f(*points.min(axis=0)), Gf.Vec3f(*points.max(axis=0))])
+
+
+def _is_routed(paths, slot_normal) -> bool:
+    shoulder, lap = paths
+    if shoulder.near_length(CHEST, 0.012) < 0.050:
+        return False
+    if any(lap.near_length(thigh, 0.012) < 0.025 for thigh in THIGHS):
+        return False
+    for route in paths:
+        edges = route.ribbon(WEB_W, slot_normal).reshape(-1, 2, 3)
+        midpoints = (edges[1:] + edges[:-1]) / 2
+        vertices = np.concatenate((route.points, edges.reshape(-1, 3), midpoints.reshape(-1, 3)))
+        for surface in (*TORSO, *HEAD_SHAPES):
+            scaled = (vertices - surface.centre) / np.subtract(surface.radii, 0.001)
+            if np.square(scaled).sum(axis=1).min() < 1.0:
+                return False
+    return True
 
 
 def _track_inner(env) -> None:
-    import torch
     from scipy.spatial import cKDTree
 
     from yam_arena import ik, station
@@ -360,6 +399,18 @@ def _track_inner(env) -> None:
     _EP["tick"] += 1
     base = getattr(env, "unwrapped", env)
     origin = as_numpy(base.scene.env_origins[0])
+    if getattr(base.scene, "_robocurve_belt_hook", None) is not _sample_belt:
+        update_scene = base.scene.update
+
+        def update(*args, **kwargs):
+            result = update_scene(*args, **kwargs)
+            _sample_belt(base, origin)
+            return result
+
+        base.scene.update = update
+        base.scene._robocurve_belt_hook = _sample_belt
+    if _EP["routes"] is None:
+        _sample_belt(base, origin)
     if "fingers" not in _IDS:
         _IDS["fingers"] = _finger_points()
     fingers = {}
@@ -375,42 +426,24 @@ def _track_inner(env) -> None:
         poses = as_numpy(robot.data.body_link_pose_w)[0]
         fingers[side] = np.concatenate([_IDS["fingers"][n] @ rotation(poses[i][3:7]).T + poses[i][:3] - origin
                                         for n, i in zip(("tip_left", "tip_right"), _IDS[side + "_tips"])])
-    belt = base.scene["belt"]
+    tongue = base.scene["tongue"]
     buck = base.scene["buckle"]
-    if "j" not in _IDS:
-        jn, bn = list(belt.joint_names), list(belt.body_names)
-        _IDS["j"] = {n: jn.index(f"{n}_joint") for n in SLIDES}
-        _IDS["tongue"] = bn.index("tongue")
+    if "head" not in _IDS:
         _IDS["head"] = list(buck.body_names).index("st_y")
         _IDS["pawl"] = list(buck.joint_names).index("pawl_turn")
-    # the retractor spring's preload: each slide is pulled back toward a rest point beyond its start
-    if not _EP["limits_set"]:
-        ids = [_IDS["j"][n] for n in SLIDES]
-        tgt = [F_PRE / K_RET + (TONGUE_KG * G / K_RET + SAG if n == "sh_s" else 0.0) for n in SLIDES]
-        belt.set_joint_position_target_index(target=torch.tensor([tgt], dtype=torch.float32, device=belt.device),
-                                             joint_ids=ids)
-        _set_limits(belt, {n: SLIDE_LIMITS[n][0] for n in SLIDES})
-        _EP["limits_set"] = True
-    q = as_numpy(belt.data.joint_pos)[0]
-    qd = as_numpy(belt.data.joint_vel)[0]
-    payout = -sum(q[_IDS["j"][n]] for n in SLIDES)
-    rate = -sum(qd[_IDS["j"][n]] for n in SLIDES)
-    acc = (rate - _EP["rate"]) / DT if _EP["tick"] > 1 else 0.0
-    _EP.update(payout=payout, rate=rate, acc=acc, rate_prev=_EP["rate"])
+    payout, rate, previous_rate = _EP["payout"], _EP["rate"], _EP["rate_prev"]
+    acc = (rate - previous_rate) / DT if _EP["tick"] > 1 else 0.0
+    _EP.update(acc=acc, rate_prev=rate)
     if _EP["tick"] > 5:
         _EP["peak_acc"] = max(_EP["peak_acc"], acc)
     # a lock: the webbing accelerating outward faster than LOCK_G (from rest or while paying out; not the rebound of
     # a belt that has just whipped back onto its stop)
-    if (not _EP["locked"] and _EP["tick"] > 5 and rate > 0.0 and _EP["rate_prev"] > -0.05
+    if (not _EP["locked"] and _EP["tick"] > 5 and rate > 0.02 and previous_rate > -0.05
             and acc > LOCK_G * G):
         _EP.update(locked=True, lock_at=payout, locks=_EP["locks"] + 1)
-        _set_limits(belt, {n: float(q[_IDS["j"][n]]) - 0.0005 for n in SLIDES})
     elif _EP["locked"] and payout <= _EP["lock_at"] - UNLOCK_BACK:
         _EP["locked"] = False
-        _set_limits(belt, {n: SLIDE_LIMITS[n][0] for n in SLIDES})
-    bp = as_numpy(belt.data.body_link_pose_w)[0]
-    bv = as_numpy(belt.data.body_link_vel_w)[0] if hasattr(belt.data, "body_link_vel_w") else None
-    tp = bp[_IDS["tongue"]]
+    tp = as_numpy(tongue.data.root_link_pose_w)[0]
     t_pos, t_rot = tp[:3] - origin, rotation(tp[3:7])
     hp = as_numpy(buck.data.body_link_pose_w)[0][_IDS["head"]]
     h_pos, h_rot = hp[:3] - origin, rotation(hp[3:7])
@@ -429,16 +462,22 @@ def _track_inner(env) -> None:
     pts = t_pos + _TS @ t_rot.T
     tree = cKDTree(pts)
     near = min(float(tree.query(fp, k=1)[0].min()) for fp in fingers.values())
-    tv = float(np.linalg.norm(bv[_IDS["tongue"]][:3])) if bv is not None else 0.0
-    _EP["q"] = [float(q[_IDS["j"][n]]) for n in SLIDES]
+    tv = float(np.linalg.norm(as_numpy(tongue.data.root_link_vel_w)[0][:3]))
+    observed = _EP["positions"]
+    observed.append(t_pos.copy())
+    del observed[:-STILL_SAMPLES]
+    drift = float(np.linalg.norm(np.asarray(observed) - t_pos, axis=1).max())
     _EP["tip_h"], _EP["head"] = tip_h, h_pos
-    _EP["guide"] = bp[list(belt.body_names).index("guide")][:3] - origin
-    _EP.update(latched=latched, depth=depth, head_gap=head_gap, pawl=pawl, near=near, still=tv < 0.02,
+    paths = _EP["routes"]
+    _render_belt(paths, t_rot[:, 1], origin)
+    _EP.update(latched=latched, depth=depth, head_gap=head_gap, pawl=pawl, near=near, drift=drift,
+               still=len(observed) == STILL_SAMPLES and drift <= STILL_LIMIT,
+               routed=_is_routed(paths, t_rot[:, 1]) if latched else False,
                slot=t_pos, tv=tv, tilt=math.degrees(math.acos(max(-1.0, min(1.0, float(t_rot[2, 2]))))))
 
 
 def _tally(o) -> dict:
-    done = bool(_EP["latched"] and _EP["near"] >= CLEAR and _EP["still"])
+    done = bool(_EP["latched"] and _EP["routed"] and _EP["near"] >= CLEAR and _EP["still"])
     return dict(done=done)
 
 
@@ -451,9 +490,10 @@ def _debug(t) -> None:
           f"acc={_EP['acc'] / G:+.2f}g peak={_EP['peak_acc'] / G:.2f}g locked={int(_EP['locked'])} locks={_EP['locks']} "
           f"slot=({s[0]:.3f},{s[1]:.3f},{(s[2] - TOP) * 1000:.1f}mm) tilt={_EP.get('tilt', 0):.0f} "
           f"depth={(_EP['depth'] or 0) * 1000:.1f}mm headgap={_EP.get('head_gap', 0) * 1000:.1f}mm "
-          f"pawl={_EP['pawl'] * 1000:.2f}mm entered={int(_EP['entered'])} latched={int(_EP['latched'])} "
+          f"pawl={_EP['pawl'] * 1000:.2f}mm entered={int(_EP['entered'])} latched={int(_EP['latched'])} routed={int(_EP['routed'])} "
           f"tip_h={np.round(np.array(_EP.get('tip_h', np.zeros(3))) * 1000, 1).tolist()} head={np.round(_EP.get('head', np.zeros(3)), 3).tolist()} "
-          f"near={_EP['near'] * 1000:.0f}mm tv={_EP.get('tv', 0):.3f} done={int(t['done'])} | "
+          f"near={_EP['near'] * 1000:.0f}mm drift={_EP.get('drift', 0) * 1000:.2f}mm "
+          f"tv={_EP.get('tv', 0):.3f} done={int(t['done'])} | "
           + " ".join(f"{k} tcp=({v[0]:.3f},{v[1]:.3f},{(v[2] - TOP) * 1000:.1f}mm) gap={_EP['gaps'][k] * 1000:.0f}"
                      for k, v in _EP["tcp"].items()), flush=True)
 
@@ -475,22 +515,16 @@ def success(objects) -> bool:
 
 
 # -- scripted demo -----------------------------------------------------------------------------------------------------
-# Open loop, from the known layout, right arm only (the left arm stays at its ready pose). The right gripper comes
-# down over the hanging tongue, its fingers closing across the head's 13 mm thickness (along y), and pinches it; it
-# draws the tongue across the seat to above the buckle in 5 s on a smooth (minimum-jerk) path, so the webbing never
-# accelerates out of the retractor at more than about 0.2 g, with the blade down. Under the webbing's pull the arm
-# stops short of where it is sent (about 2.4 cm toward the pillar) and the tongue turns a little in the grip, so the hand
-# is sent past the buckle and turned 4 deg to bring the blade over the mouth; it lowers the blade into the mouth and
-# pushes 10 mm past the latch point, holds, lets go, rises and goes back to the ready pose.
-# BELT_JERK=1 (the wrong way): the same, but the first 15 cm of the draw is a jerk in 0.1 s, as when a belt is
-# snatched: the retractor locks, the webbing stops dead and pulls the tongue out of the fingers, and it swings back to
-# the pillar; the rest of the demo goes on with an empty hand.
+# The prescribed motion lifts the tongue clear of the occupant's thighs, crosses the lap from the front, rotates the
+# blade into the narrow inboard buckle and releases it. All gripper targets are fixed waypoints. In jerk mode the
+# wide lateral draw begins abruptly from a pose clear of the surrogate.
 OPEN_C = -0.047
 JERK = _E("BELT_JERK") == "1"
 R_Y = grip_rotation(0.0)  # straight down, the fingers closing along y
 P = {k: float(_E("BELT_" + k.upper(), v)) for k, v in dict(
-    open="-0.018", pinch="-0.0045", grip_dz="-0.010", draw_s="5.0", push="0.010", lift="0.050",
-    aim_dx="0.004", aim_dy="-0.023", over_dz="0.016", roll="-4.0").items()}
+    open="-0.018", pinch="-0.0015", grip_dz="-0.010", draw_s="5.0", push="0.042", lift="0.050",
+    aim_dx="-0.004", aim_dy="-0.030", over_dz="0.014", roll="-4.0", ready_pitch="18",
+    travel_pitch="45", seat_pitch="20").items()}
 
 
 def _good_ik(arm: str, pos, rot):
@@ -550,48 +584,57 @@ def _dur(wps) -> float:
     return float(sum(w.duration for w in wps))
 
 
-def _roll(deg: float) -> np.ndarray:
-    """The straight-down grip turned ``deg`` about the world x axis (the tongue's tip toward +y for deg > 0)."""
-    t = math.radians(deg)
-    rx = np.array([[1.0, 0.0, 0.0], [0.0, math.cos(t), -math.sin(t)], [0.0, math.sin(t), math.cos(t)]])
-    return rx @ R_Y
+def _grip(roll: float = 0.0, pitch: float = 0.0) -> np.ndarray:
+    from yam_arena.urdf import axis_angle_matrix
+
+    rx = axis_angle_matrix(np.array([1.0, 0.0, 0.0]), math.radians(roll))
+    ry = axis_angle_matrix(np.array([0.0, 1.0, 0.0]), -math.radians(pitch))
+    return rx @ ry @ R_Y
 
 
-def _minjerk(p0, p1, seconds, finger, label, n=40, roll=(0.0, 0.0)) -> list:
+def _minjerk(p0, p1, seconds, finger, label, n=20, roll=(0.0, 0.0), pitch=(0.0, 0.0)) -> list:
     out = []
     for k in range(1, n + 1):
         s = k / n
         f = 10 * s ** 3 - 15 * s ** 4 + 6 * s ** 5
-        out.append(_wp(seconds / n, p0 + (p1 - p0) * f, finger, label, _roll(roll[0] + (roll[1] - roll[0]) * f)))
+        rot = _grip(roll[0] + (roll[1] - roll[0]) * f, pitch[0] + (pitch[1] - pitch[0]) * f)
+        out.append(_wp(seconds / n, p0 + (p1 - p0) * f, finger, label, rot))
     return out
 
 
 def _right() -> list:
     g = np.array(_w(SLOT0)) + [0.0, 0.0, P["grip_dz"]]  # TCP holding the tongue's head
     above = g + [0.0, 0.0, 0.02]
-    # aimed past the buckle along +y (and x): under the webbing's pull the arm stops about that much short
+    # The tongue travels forward and up before crossing both thighs. It only descends outside the inboard thigh.
+    lift = np.asarray(_w((0.282, -0.092, 0.227)))
+    mid = np.asarray(_w((0.247, -0.311, 0.252)))
+    side = np.asarray(_w((0.279, -0.532, 0.223)))
     bx, by = BUCKLE[0] + P["aim_dx"], BUCKLE[1] + P["aim_dy"]
     over = np.array([bx, by, TOP + MOUTH - TIP_Z + P["over_dz"] + P["grip_dz"]])  # blade tip just over the mouth
     seat = np.array([bx, by, TOP + MOUTH + HEAD[2] - 0.002 + P["grip_dz"] - P["push"]])
-    mid = np.array([(g[0] + over[0]) / 2, (g[1] + over[1]) / 2, max(g[2], over[2]) + 0.01])
-    out = _lead_in("right", above, R_Y, P["open"], "over the hanging tongue, fingers open")
-    out += [_wp(1.5, g, P["open"], "fingers either side of the tongue's head"),
-            _wp(1.0, g, P["pinch"], "pinch the head"),
-            _wp(0.5, g, P["pinch"], "settle")]
-    start = g
+    start_pitch, travel_pitch = P["ready_pitch"], P["travel_pitch"]
+    start_rot = _grip(pitch=start_pitch)
+    out = _lead_in("right", above, start_rot, P["open"], "over the hanging tongue, fingers open")
+    out += [_wp(1.5, g, P["open"], "fingers either side of the tongue's head", start_rot),
+            _wp(1.0, g, P["pinch"], "pinch the head", start_rot),
+            _wp(0.5, g, P["pinch"], "settle", start_rot)]
+    out += _minjerk(g, lift, 2.1, P["pinch"], "raise forward of the occupant", pitch=(start_pitch, travel_pitch))
+    start = lift
     if JERK:
-        d = mid - g
-        j = g + d / np.linalg.norm(d) * 0.15
-        out += [_wp(0.1, j, P["pinch"], "snatch the belt out")]
-        start = j
-    out += _minjerk(start, mid, P["draw_s"] / 2 if not JERK else P["draw_s"] / 2.5, P["pinch"],
-                    "draw the tongue across the seat", 20)
+        start = lift + 0.61 * (mid - lift)
+        out += [_wp(0.1, start, P["pinch"], "snatch the belt out", _grip(pitch=travel_pitch))]
+    out += _minjerk(start, mid, P["draw_s"] / 2, P["pinch"], "clear the upper thighs", pitch=(travel_pitch, travel_pitch))
+    out += _minjerk(mid, side, P["draw_s"] / 2, P["pinch"], "draw to the inboard side", pitch=(travel_pitch, travel_pitch))
     rl = P["roll"]  # the hand turns so the tongue's blade, pulled askew by the webbing, points straight down
-    out += _minjerk(mid, over, P["draw_s"] / 2, P["pinch"], "to over the buckle", 20, roll=(0.0, rl))
-    out += [_wp(0.5, over, P["pinch"], "settle over the mouth", _roll(rl))]
-    out += _minjerk(over, seat, 2.0, P["pinch"], "push the blade into the buckle until it latches", 10, roll=(rl, rl))
-    out += [_wp(1.0, seat, P["pinch"], "hold", _roll(rl)),
-            _wp(1.0, seat, P["open"], "let go", _roll(rl)),
+    seated_pitch = P["seat_pitch"]
+    seated_rot = _grip(rl, seated_pitch)
+    out += _minjerk(side, over, 2.6, P["pinch"], "align above the inboard buckle",
+                    roll=(0.0, rl), pitch=(travel_pitch, seated_pitch))
+    out += [_wp(0.5, over, P["pinch"], "settle over the mouth", seated_rot)]
+    out += _minjerk(over, seat, 2.0, P["pinch"], "push the blade into the buckle until it latches", 10,
+                    roll=(rl, rl), pitch=(seated_pitch, seated_pitch))
+    out += [_wp(1.0, seat, P["pinch"], "hold", seated_rot),
+            _wp(1.0, seat, P["open"], "let go", seated_rot),
             _wp(1.2, seat + [0.0, 0.04, P["lift"]], P["open"], "rise clear")]
     out += _lead_out("right", seat + [0.0, 0.04, P["lift"]], R_Y, OPEN_C, "back to the ready pose")
     return out
