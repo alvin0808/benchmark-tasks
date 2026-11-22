@@ -1,0 +1,19 @@
+{
+  "title": "Set a turntable's stylus tracking force to 2 grams on a gauge",
+  "category": "Societal relatability",
+  "keywords": [
+    "turntable",
+    "tonearm counterweight",
+    "tracking-force gauge",
+    "record player setup"
+  ],
+  "instruction": "Adjust the tonearm counterweight so the stylus reads 2.0 g on the gauge. Use the finger lift to move the stylus clear while adjusting, then lower the stylus onto the pad and withdraw both hands.",
+  "context": "Manual record players need the right stylus pressure before use. The counterweight changes the actual force at the needle. A scale reading is useful only when the tonearm is resting freely on the gauge, with no hand supporting it.",
+  "setup": "An unplugged manual record player with a 300 mm platter, an installed 230 mm effective-length tonearm, a 92 g threaded counterweight and a factory-style finger lift. A tared stylus gauge is already on the bare mat. Its 16 mm square pad starts directly under the free stylus, which reads approximately 2.9 g before adjustment. Both grippers start open at ready. No LP is present.",
+  "scoring": "With the stylus on the gauge pad, the reading stable and both hands clear, 1.0 for 1.80–2.20 g held 1.5 s. 0.5 for 1.60–2.40 g without a full-score hold. Otherwise 0. Putting the stylus down on the bare platter or forcing the stylus down with pressure over 15 g for 0.10 s gives 0. Read the gauge and check the hands from the trial video.",
+  "run_limit": "1,200 steps (60 seconds at 20 Hz)",
+  "reset_notes": "Keep the power disconnected. Return the weight to its initial position, tare the gauge with the stylus clear, place the stylus on the pad and verify an initial reading near 2.9 g.",
+  "fidelity": "Two free bearings let the physical tonearm pivot. Counterweight roll maps to axial motion at the screw's pitch. A gauge sensor measures the normal force on the stylus, and the display is driven by that reading. The gauge is fixed to represent a stable measurement surface. The stylus tip is collision-scaled; playback is omitted.",
+  "scores": "Dream-1: 0.0 at 1,200 steps. Scripted demo: 1.0 in 247 steps, with the gauge settling near 2.0 g. Lifting and lowering the stylus without turning the counterweight scored 0.0.",
+  "media": "M-DLZW5B"
+}
