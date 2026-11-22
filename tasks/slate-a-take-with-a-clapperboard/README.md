@@ -88,13 +88,17 @@ gives a clean sync frame (the frame before shows the sticks clearly apart, the n
 spreads the meeting over several frames. The YAM's scripted snap reaches it (the demo closes from 10 deg in
 45.8 ms), so the threshold is one the robot can meet.
 
-Doing nothing scores 0. A real trial is scored from the phone's own 60 fps video and the overhead video: the closing
-time is the count of frames from the last frame with the sticks 10 deg or more apart (the gap at the stick's free end
-5.0 cm or more) to the first frame with them shut, at most 3 frames at
-60 fps (50 ms); the slate moving 1 cm or more is read against the tape and the board's printed lines in the frames
-round the clap; facing is read from the overhead video against the tape on the camera's axis (the board's top edge
-within 20 deg of square to it); in frame is read on the phone's video (the whole slate visible at the clap); claps are
-counted on the video (or as peaks in the phone's audio).
+Doing nothing scores 0. For real trials, record the full slate with the phone at 240 captured frames per second and
+use the overhead video to check facing. Step through the original captured frames. Mark frame i as the last frame
+with the upper stick at least 10 deg open before the first clap (about a 5.0 cm gap at the free end). Mark frame j as
+the first subsequent frame with the upper stick within 1 deg of shut (about a 5 mm gap at the free end). If the
+stick passes the 10 deg mark more than once, use the last passage into the closing stroke. Closing time is
+(j - i) / 240 seconds. For example, frames 100 through 112 span 12 intervals, or 50 ms, and pass. Use the capture
+rate when stepping through slow-motion exports, which may play back at a different rate.
+
+Read slate movement against the tape and the board's printed lines over the 0.25 s before and after the clap.
+Read facing from overhead against the tape on the camera axis (the board's top edge must be within 20 deg of square
+to it). Check that the whole slate is visible in the phone's frame at the clap. Count claps in the video.
 
 Dream-1 (needs a key in `~/.dreamlabs/credentials`):
 
@@ -162,10 +166,10 @@ None needed: with `-E object_jitter=0` the layout is fixed and the scripted demo
 
 A 30 x 25 cm acrylic clapperboard (Neewer acrylic director's clapboard, about 15 USD), its hinge screw tightened so
 the stick stays open at any angle; a small hard equipment case (or any box) about 20 x 16 x 15 cm, 2 kg; a phone on a
-tabletop tripod with its lens 13 cm above the table, 43 cm in front of the slate's face, filming in 16:9 at 60 fps; a
-strip of tape on the table along the camera's axis. For each trial lean the slate, stick shut, on the case as in the
-screenshot (its bottom edge 27 cm in front of the arm bases, leaning back 28 deg), start the phone recording at 60 fps, and
-start.
+tabletop tripod with its lens 13 cm above the table, 43 cm in front of the slate's face, filming in 16:9 at 240 fps;
+a strip of tape on the table along the camera's axis. For each trial lean the slate, stick shut, on the case as in the
+screenshot (its bottom edge 27 cm in front of the arm bases, leaning back 28 deg). Start the phone in 240 fps capture
+mode and start the overhead recording before the trial.
 
 [pvc]: https://www.provideocoalition.com/the-secret-art-of-the-slate-25-tips-to-help-you-slate-like-a-pro/
 [neewer]: https://neewer.com/products/neewer-acrylic-plastic-directors-film-clapboard-cut-66601326
