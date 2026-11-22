@@ -1,9 +1,9 @@
-# Roll five dice from a dice cup into the game-box lid: every die tumbles out, lands flat and stays in the lid
+# Roll five dice from a dice cup into the game-box lid
 
 Rolling dice out of a dice cup is how every turn of Yahtzee, Farkle or Liar's dice starts, and most people have done
 it. The lid of a square board-game box lies open side up on the table as the dice tray, and beside it stands a
-felt-lined leather dice cup with five dice in it. The instruction asks for the five dice to be rolled out of the cup
-into the box lid; it does not say how.
+felt-lined leather dice cup with five dice in it. The instruction calls for an airborne cast into the lid, with
+the dice bouncing and then settling flat. This is a repeatable tabletop version of a dice-cup roll.
 
 What makes it hard is the hand skill. The cup is round and the dice are loose inside it: one hand takes the cup by its
 side (the fingers must stay off the dice), lifts it over the lid and turns it mouth-down in one quick turn of the
@@ -20,8 +20,8 @@ The task is the task file [`roll_five_dice_from_a_dice_cup.py`](roll_five_dice_f
 
 Dice games are among the most familiar table games, and the dice cup is how they are played: Yahtzee lists "1 Dice cup
 or shaker" in its equipment ([Yahtzee Manifesto, rules][rules]) and each turn starts by rolling all five dice with it.
-Someone watching a ten-second clip knows at once what the robot is doing. A roll only counts if each die tumbles and
-comes to rest flat on one face; a die left propped against a wall or balanced on an edge must be re-rolled
+For this station, the dice are cast from clear of the lid and must settle flat on one face. A die left propped
+against a wall or balanced on an edge must be re-rolled
 ([backgammon federation rule FAQ on valid rolls][cocked]), and a tray "is a good way to keep your cubes in check"
 ([dice etiquette guide][tray]). The same hand skill, emptying loose small parts out of a held container with one
 controlled turn so they spread rather than slide out in a heap, is used whenever a cup or scoop of small things is
@@ -61,22 +61,33 @@ left, z up from the table top.
 
 The scorer is `task_score`: 1.0 when `success()` has held for 1 s, otherwise the score at the end of the run. Every
 control step the task file reads the pose of the cup and of each die, and the points of each finger's collision hulls.
-A die counts (0.2 each) when all of these hold:
+Both simulation and real trials use the same cast and final-position checks. First check the cast as a whole:
 
-- it has left the cup: its centre is outside the cup's inner cylinder (radius 38.5 mm, from the base to the rim);
-- no gripper finger has touched it at any time in the trial (no finger point within 1.5 mm of it; once touched, the
-  die never counts again in that trial);
-- it rolled: after leaving the cup it turned over by 90 deg or more at some moment (the angle by which its rotation
-  since leaving the cup tips the vertical; spinning flat on the floor does not count). A die that slides out and lands
-  on the face it lay on in the cup has turned only about 20 to 70 deg;
-- it rests flat on the lid floor: its lowest point within 1.5 mm of the floor, its faces within 5 deg of level (not
+- When dice pass through the cup mouth, the lowest edge of the rim is at least 50 mm above the lid floor.
+- At least one untouched die rebounds, with its whole body at least 5 mm clear of the lid floor within 0.15 s of
+  first touching that floor.
+
+The simulation samples these events at 240 Hz. If the cast passes, a die counts (0.2 each) when all of these hold:
+
+- It passed out through the cup mouth.
+- No gripper finger has touched it at any time in the trial (no finger point within 1.5 mm of it; once touched, the
+  die never counts again in that trial).
+- It rests flat on the lid floor: its lowest point within 1.5 mm of the floor, its faces within 5 deg of level (not
   cocked on another die or against a wall), its centre inside the lid's walls, at least 14 mm from the cup (not
   touching it), and still (moving under 1 mm in 1 s).
 
-Score: 0.2 x the number of such dice. Success (1.0, held 1 s): all five. Doing nothing scores 0. A real trial is scored
-from the trial video and a photo from above at the end: for each die, whether it left the cup untouched, whether it
-turned over at least once (a quarter turn over an edge) after leaving the cup, and whether it lies flat on the lid
-floor (a die that a second die laid on top would slide off is cocked) and not touching the cup.
+Score: 0.2 times the number of qualifying dice. Full score requires all five to qualify for 1 s. Doing nothing
+scores 0.
+
+For a real trial, record the cup and full lid in a close oblique view at 240 captured fps, high enough to see the
+entire floor over the near rim, and record a second view from above to confirm that the grippers stay off the dice.
+Before the trial, film a millimetre ruler standing on the floor at the near and far ends of the lid to establish
+the floor plane and the 5 mm and 50 mm height references. Remove the ruler before starting without moving the
+cameras. Step through the original high-speed frames. Check the lower rim height during the interval when dice
+leave the cup. Find any die that touches the lid floor and then has a clear gap of at least 5 mm beneath it
+within the next 36 frame intervals. Finally use a photo from above and the last second of video to count the dice
+that are flat on the lid floor, inside the walls, clear of the cup, stationary and untouched. The frame with the
+rebound can be from any one die in the cast.
 
 Dream-1 (needs a key in `~/.dreamlabs/credentials`):
 
@@ -84,7 +95,7 @@ Dream-1 (needs a key in `~/.dreamlabs/credentials`):
 inspect-robots run --embodiment yam_arena --policy dream \
   -E task=roll_five_dice_from_a_dice_cup.py -E object_jitter=0 -E control_hz=20 \
   -E cam_width=320 -E cam_height=176 \
-  --instruction "Roll the five dice out of the dice cup into the box lid." \
+  --instruction "Roll the five dice from the cup into the box lid so they bounce and settle flat. Keep the cup rim at least 5 cm above the lid floor as they leave." \
   --scorer task_score --max-steps 2400 --store-frames --log-dir ~/yam-eval/dice-dream
 ```
 
@@ -94,14 +105,15 @@ above the table, closes 4 mm inside the cup's sides, lifts it and gives it a gen
 It brings the cup, upright, over the right part of the lid with the grip 25 cm above the table. Then, in one turn of
 0.6 s, it turns the wrist 150 deg about its pointing direction, so the cup's mouth turns down toward the open part of
 the lid (the cup ends tilted 130 deg), while sweeping the cup 6 cm left: the dice fall 15 to 20 cm, tumble and spread
-over the lid floor. After 0.6 s it turns the cup back upright while moving it 10 cm right, clear of the lid; the
-trial ends on success at step 332 (16.6 s), while the cup is carried back to its place.
+over the lid floor. In the revised scorer's debug run the rim was 187 to 188 mm above the floor at release, and
+the largest clear rebound was 16.1 mm. After 0.6 s the gripper turns the cup back upright while moving it 10 cm
+right, clear of the lid. The trial ends on success at step 332 (16.6 s), while the cup is carried back to its place.
 
 ```bash
 inspect-robots run --embodiment yam_arena --policy yam_scripted \
   -E task=roll_five_dice_from_a_dice_cup.py -E object_jitter=0 -E control_hz=20 \
   -E cam_width=320 -E cam_height=176 \
-  --instruction "Roll the five dice out of the dice cup into the box lid." \
+  --instruction "Roll the five dice from the cup into the box lid so they bounce and settle flat. Keep the cup rim at least 5 cm above the lid floor as they leave." \
   --scorer task_score --max-steps 700 --store-frames --log-dir ~/yam-eval/dice-demo
 ```
 
@@ -113,18 +125,12 @@ for log in ~/yam-eval/dice-dream/*.json; do inspect-robots video "$log"; done
 
 `DICE_DEBUG=1` prints, every 5 steps (`DICE_DEBUG_EVERY=1` for every step), the number of dice that count, the cup's
 position, height and tilt, the right gripper's position and opening, and for each die its position, the height of its
-lowest point over the lid floor, its tilt from flat, its largest turn since leaving the cup, and flags: X it has left
-the cup, T a finger touched it, OUT outside the lid, G it counts.
+lowest point over the lid floor, tilt from flat, the rim height at release (`h`, in mm), the rebound height
+(`b`, in mm), and flags: X it has left the cup, T a finger touched it, OUT outside the lid, G it counts.
 
-`DICE_MODE=slide` runs the demo the wrong way: the same grip and turn, but the cup is tipped slowly (over 1.6 s) and
-low, its lip ending about 15 mm over the lid floor, without the sweep, the way one pours from a cup. The dice slide
-out over the lip and lie down on the face they lay on in the cup (largest turns 7 to 66 deg): none rolled, score 0.
-
-How reliable the roll is: with the same grip and a turn of 145 to 150 deg, seven variants of the throw (grip 20, 23,
-25, 30 or 35 cm above the table; turn 0.4 to 0.6 s; with or without the 6 cm sweep) scored 1.0 six times and 0.8
-once (from 35 cm one die landed after turning 82 deg); no die left the lid in any of them. The same turn made low, the
-lip 5 to 7 cm over the floor, scored 0.2 to 1.0 (mean 0.6 over 14 variants): many dice slid out and turned less than 90 deg. Slow, low
-tips like `DICE_MODE=slide` scored 0 to 0.2. In an early test a cup turned only to 114 deg left two dice inside it.
+`DICE_MODE=slide` runs the demo the wrong way: the same grip and turn, but the cup is tipped slowly (over 1.6 s)
+and low, without the sideways sweep. The debug run measured an 18 mm rim height at release and a largest rebound
+of 3.4 mm. All five dice came to rest in the lid, and this low slide scored 0.
 
 ## What is modelled and what is not
 

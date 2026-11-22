@@ -1,6 +1,7 @@
 """On the station table: the lid of a square board-game box lying open side up (taped down), used as the dice tray,
 and beside it, to the robot's right, a felt-lined leather dice cup standing upright with five 16 mm dice inside.
-Task (instruction): roll the five dice out of the cup into the box lid. The instruction does not say how.
+Task: roll the five dice into the lid so they bounce and settle flat, with the cup rim at least 5 cm above
+the lid floor while they leave the cup.
 
 How it is done: in Yahtzee, Farkle, Liar's dice and the like, a player shakes the dice in the cup and rolls them out
 onto the table or into the box lid; a die that lands off the table or "cocked" (resting tilted, against a wall or on
@@ -23,11 +24,11 @@ World frame (m): x forward from the arm bases, y to the robot's left, z up; the 
 Restitution 0.30 for the dice and the lid (cardboard), 0.05 for the cup's felt lining; PhysX averages the two touching
 materials' values.
 
-Score (0.2 per die, from the poses; full score held 1 s). A die scores when all of these hold:
-- it left the cup (its centre is outside the cup's inner cylinder);
+Score (0.2 per die, from the poses; full score held 1 s). First check the cast as a whole: the lower edge of the
+cup's mouth is at least 50 mm above the lid floor at each release, and at least one untouched die rebounds at least
+5 mm clear of the lid floor within 0.15 s of first touching it. A die counts when all of these hold:
+- it passes out through the cup mouth;
 - it was never touched by a gripper finger during the episode (no finger point within 1.5 mm of it: latched);
-- it rolled: between leaving the cup and now, at some moment it had turned over by 90 deg or more (the angle by which
-  its turn since leaving the cup tips the vertical: spinning flat does not count);
 - it rests flat on the lid floor: its lowest corner within 1.5 mm of the floor, its faces within 5 deg of level (not
   cocked), its centre inside the lid's inner walls, at least 14 mm from the cup (not touching it), and still (moved
   under 1 mm in the last 1 s).
@@ -162,7 +163,9 @@ OBJECTS = [LID, CUP] + DICE
 
 # -- tracking and scoring -------------------------------------------------------------------------------------------
 TOUCH = 1.5 * MM  # a finger point this close to a die: touched
-ROLL_DEG = 90.0
+RELEASE_HEIGHT = 50 * MM
+REBOUND_HEIGHT = 5 * MM
+REBOUND_STEPS = 36  # 0.15 s at 240 Hz
 ON_FLOOR = 1.5 * MM
 FLAT_DEG = 5.0
 CUP_CLEAR = 0.014
@@ -176,9 +179,11 @@ _CORNERS = np.array([[a, b, c] for a in (-0.5, 0.5) for b in (-0.5, 0.5) for c i
 
 @on_reset
 def _reset() -> None:
-    _EP.update(tick=0, step=0, counted=-1, hist=[], dice=[dict(exited=False, R_exit=None, swing=0.0, touched=False,
-                                                                 good=False, info={}) for _ in DICE],
-               n_good=0, cup=None, tcp={}, gaps={})
+    _EP.clear()
+    _EP.update(tick=0, step=0, counted=-1, hist=[], physics_tick=0, dice=[
+        dict(exited=False, rim_gap=None, landed=None, rebound=0.0, touched=False, good=False, info={})
+        for _ in DICE
+    ], n_good=0, cup=None, tcp={}, gaps={})
 
 
 _reset()
@@ -220,6 +225,40 @@ def _cup_dist(p, cup) -> tuple[float, float, float]:
     return rho, a, d
 
 
+def _inside_lid(pos) -> bool:
+    return abs(pos[0] - LID_C[0]) < LID_IN / 2 and abs(pos[1] - LID_C[1]) < LID_IN / 2
+
+
+def _sample_cast(base, origin) -> None:
+    """Read the cup mouth and dice at the same rate as the real-trial video protocol."""
+    _EP["physics_tick"] += 1
+    tick = _EP["physics_tick"]
+    cup_pose = as_numpy(base.scene["cup"].data.root_link_pose_w)[0]
+    cup_axis = rotation(cup_pose[3:7])[:, 2]
+    mouth = cup_pose[:3] - origin + CUP_H * cup_axis
+    rim_gap = mouth[2] - CUP_R * np.linalg.norm(cup_axis[:2]) - FLOOR
+    for die, state in zip(DICE, _EP["dice"]):
+        landed = state["landed"]
+        if landed is not None and tick - landed > REBOUND_STEPS:
+            continue
+        pose = as_numpy(base.scene[die.name].data.root_link_pose_w)[0]
+        pos = pose[:3] - origin
+        if not state["exited"]:
+            if (pos - mouth) @ cup_axis <= 0:
+                continue
+            state["exited"] = True
+            state["rim_gap"] = float(rim_gap)
+        if not _inside_lid(pos):
+            continue
+        up = rotation(pose[3:7])[2, :]
+        support = (DIE / 2 - DIE_RC) * np.abs(up).sum() + DIE_RC
+        clearance = float(pos[2] - support - FLOOR)
+        if landed is None and clearance <= ON_FLOOR:
+            state["landed"] = tick
+        elif landed is not None:
+            state["rebound"] = max(state["rebound"], clearance)
+
+
 @on_step
 def _track(env) -> None:
     try:
@@ -238,6 +277,16 @@ def _track_inner(env) -> None:
     _EP["tick"] += 1
     base = getattr(env, "unwrapped", env)
     origin = as_numpy(base.scene.env_origins[0])
+    if getattr(base.scene, "_dice_cast_hook", None) is not _sample_cast:
+        update_scene = base.scene.update
+
+        def update(*args, **kwargs):
+            result = update_scene(*args, **kwargs)
+            _sample_cast(base, origin)
+            return result
+
+        base.scene.update = update
+        base.scene._dice_cast_hook = _sample_cast
     if "fingers" not in _IDS:
         _IDS["fingers"] = _finger_points()
     fingers = []
@@ -257,7 +306,6 @@ def _track_inner(env) -> None:
     cp = as_numpy(base.scene["cup"].data.root_link_pose_w)[0]
     cup = (cp[:3] - origin, rotation(cp[3:7]))
     _EP["cup"] = cup
-    n_good = 0
     for k, d in enumerate(DICE):
         p = as_numpy(base.scene[d.name].data.root_link_pose_w)[0]
         pos, R = p[:3] - origin, rotation(p[3:7])
@@ -267,18 +315,12 @@ def _track_inner(env) -> None:
         out = np.maximum(np.abs(loc) - DIE / 2, 0.0)
         if float(np.sqrt((out ** 2).sum(1)).min()) < TOUCH:
             st["touched"] = True
-        rho, a, dcup = _cup_dist(pos, cup)
-        inside = rho < CUP_RIN and -0.005 < a < CUP_H
-        if not st["exited"] and not inside:
-            st["exited"], st["R_exit"] = True, R.copy()
-        if st["exited"]:
-            rel = R @ st["R_exit"].T
-            st["swing"] = max(st["swing"], math.degrees(math.acos(max(-1.0, min(1.0, rel[2, 2])))))
+        _, _, dcup = _cup_dist(pos, cup)
         low = float((pos + _CORNERS @ R.T)[:, 2].min() - FLOOR)
         flat = math.degrees(math.acos(min(1.0, float(np.abs(R[2, :]).max()))))
-        in_lid = abs(pos[0] - LID_C[0]) < LID_IN / 2 and abs(pos[1] - LID_C[1]) < LID_IN / 2
+        in_lid = _inside_lid(pos)
         st["info"] = dict(pos=pos, low=low, flat=flat, in_lid=in_lid, dcup=dcup)
-        st["rest"] = bool(st["exited"] and not st["touched"] and st["swing"] >= ROLL_DEG and abs(low) <= ON_FLOOR
+        st["rest"] = bool(st["exited"] and not st["touched"] and abs(low) <= ON_FLOOR
                           and flat <= FLAT_DEG and in_lid and dcup >= CUP_CLEAR)
     _EP["dice_pos"] = np.array([_EP["dice"][k]["info"]["pos"] for k in range(len(DICE))])
 
@@ -290,9 +332,12 @@ def _tally() -> dict:
         hist.append(_EP["dice_pos"].copy())
         del hist[:-STILL_STEPS]
     n_good = 0
-    for k, st in enumerate(_EP["dice"]):
+    dice = _EP["dice"]
+    cast = all(not die["exited"] or die["rim_gap"] >= RELEASE_HEIGHT for die in dice)
+    cast = cast and any(not die["touched"] and die["rebound"] >= REBOUND_HEIGHT for die in dice)
+    for k, st in enumerate(dice):
         still = len(hist) == STILL_STEPS and all(np.abs(h[k] - hist[-1][k]).max() * 1000 < STILL_MM for h in hist)
-        st["good"] = bool(st.get("rest") and still)
+        st["good"] = bool(cast and st.get("rest") and still)
         n_good += st["good"]
     _EP["n_good"] = n_good
     return dict(n_good=n_good, done=n_good == len(DICE))
@@ -306,7 +351,9 @@ def _debug() -> None:
     for k, st in enumerate(_EP["dice"]):
         i = st["info"]
         p = i["pos"]
-        ds.append(f"d{k}=({p[0]:.3f},{p[1]:.3f},{i['low'] * 1000:.1f}mm f{i['flat']:.0f} sw{st['swing']:.0f}"
+        gap = f" h{st['rim_gap'] * 1000:.0f}" if st["exited"] else ""
+        ds.append(f"d{k}=({p[0]:.3f},{p[1]:.3f},{i['low'] * 1000:.1f}mm f{i['flat']:.0f}"
+                  f"{gap} b{st['rebound'] * 1000:.1f}"
                   f"{' X' if st['exited'] else ''}{' T' if st['touched'] else ''}{'' if i['in_lid'] else ' OUT'}"
                   f"{' G' if st['good'] else ''})")
     c = _EP["cup"]
