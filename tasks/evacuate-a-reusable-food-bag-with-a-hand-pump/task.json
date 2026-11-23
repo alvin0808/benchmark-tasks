@@ -1,0 +1,20 @@
+{
+  "title": "Draw the air out of a reusable food bag with a manual pump while holding its valve seal",
+  "category": "Societal relatability",
+  "keywords": [
+    "food storage",
+    "one-way valve",
+    "manual vacuum pump",
+    "continuous seal",
+    "bimanual"
+  ],
+  "instruction": "Pump the air out of the sealed reusable food bag. Keep the pump foot sealed against the valve throughout each stroke, then set it upright beside the bag.",
+  "context": "A hand vacuum pump draws air from a reusable zipper bag through its valve. The other hand holds the pump foot square under load so air cannot enter around the gasket when the piston is pulled. The bag needs multiple strokes and the side pocket should stay flat after the pump is removed.",
+  "setup": "Two YAM arms 61 cm apart start ready. A sealed 21.8 × 22 cm reusable plastic food bag with dry crackers lies centered 37.4 cm forward and 2.2 cm left of the base midpoint. Its 4 cm diameter one-way valve is 6.1 cm right of the midpoint. A 14 cm upright manual piston pump with a rubber foot starts on the valve. The usable stroke is about 5.7 cm. The raised free-air pocket initially stands about 4.4 cm high.",
+  "scoring": "Score 0.25 after one sealed stroke with the pocket at most 38 mm high, 0.50 after two with it at most 29 mm, and 0.75 after three with it at most 18 mm. A stroke extends at least 45 mm and returns within 13 mm of fully down while the rubber foot remains sealed. Score 1.0 if the bag remains flat on the table and the pocket stays down for 1 second after the pump is released upright within 3.7 cm of the parking center to the right. Keep both hands 3.6 cm from the shaft, 4 cm from the handle and 8 cm from the pocket during that second. Use side video and a ruler.",
+  "run_limit": "1,200 steps (60 seconds at 20 Hz)",
+  "reset_notes": "Use the same pump and one-way valve bag and leave its zipper fully closed. Reopen the valve between trials and refill the same marked air pocket to 44 ± 2 mm. Put the pump foot back on the valve without pumping and leave the tabletop dry.",
+  "fidelity": "A prismatic piston moves against estimated seal drag. Vacuum increases only on completed strokes with measured foot contact and valve alignment. A sprung film section moves down as its approximately 100 mL air pocket empties; gas flow, plastic creasing and retention over long storage times are approximated.",
+  "scores": "Dream-1: 0.0 in 1,200 steps. Scripted demo: 1.0 in 416 steps. The unbraced control scored 0.0 in 460 steps.",
+  "media": "M-3D7KJ6"
+}
