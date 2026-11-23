@@ -1,0 +1,20 @@
+{
+  "title": "Activate a room-temperature instant cold pack and mix it without opening the outer pouch",
+  "category": "Societal relatability",
+  "keywords": [
+    "first aid kit",
+    "cold pack",
+    "compliant squeeze",
+    "mixing",
+    "bimanual"
+  ],
+  "instruction": "Activate the instant cold pack and mix it until both sides are cold. Keep the outer pouch sealed and put it back in the holder.",
+  "context": "An instant cold pack from a first-aid kit is activated by pressing through its flexible outer pouch until the inner water pouch opens. The outer seal must stay intact. The pack is then shaken to distribute the cooling mixture. The manipulation needs a controlled squeeze through two soft layers, followed by changes of direction while the slippery pouch is held.",
+  "setup": "Table between two YAM arms 61 cm apart. A 22.9 × 12.7 cm Dynarex 4518 type single-use cold pack stands upright, long edge across the table, in a fixed 26.8 × 8.5 cm ABS holder centered 30.5 cm forward and 0.6 cm right of the arm-base midpoint. Two 25 cm lips rise 1.7 cm. The filled pouch is about 3.4 cm thick. A temperature strip is on each broad face. Arms start ready.",
+  "scoring": "0.25 once the inner water pouch opens at least 1 cm above the holder lips. 0.75 if both broad faces cool by at least 8 °C from their starting temperatures. 1.0 also requires the pack released upright in the holder, gripper centers at least 3.5 cm from it, with the result held for 1 s. An outer-pouch leak invalidates the trial. Time the lift and release from video, verify the inner pop on audio or by the absence of the inner pocket after the run, and check both faces with the same contact thermometer.",
+  "run_limit": "1,200 steps (60 seconds at 20 Hz)",
+  "reset_notes": "Use a fresh Dynarex 4518 pack at 22 ± 1 °C. Verify baseline temperature on both faces. Dry the holder, place the fresh pack and clear the robot workspace. Use clean removable pad covers and a catch tray. The README gives a batch qualification check.",
+  "fidelity": "Two sprung walls model compression of the inner water pouch. A nominal 12 N activation and 22 mm compression limit approximate the internal burst and the outer seam. Reversals of at least 75 mm model mixing, followed by a simplified cooling curve with external color indicators. The resistance and cooling are simulation estimates. Verify the physical batch and force–travel curve with the checks in README.md.",
+  "scores": "Dream-1 scored 0.0 in 1,200 steps. The scripted demo reached 1.0 in 310 steps. The gentle-squeeze control scored 0.0 in 371 steps.",
+  "media": "M-87HHHQ"
+}
