@@ -1,0 +1,20 @@
+{
+  "title": "Stretch a reusable silicone lid over the four corners of a square food pan",
+  "category": "Societal relatability",
+  "keywords": [
+    "food storage",
+    "silicone lid",
+    "elastic stretch",
+    "skirt",
+    "opposed grasp"
+  ],
+  "instruction": "Cover the square pan with the silicone lid. Pull its two tabs so the flexible skirt passes over the rim, then release the tabs with the skirt seated below the rim on both ends and at all four corners.",
+  "context": "Reusable stretch lids cover bowls and baking pans during food storage. The lid is narrower than the pan at rest. Pulling in opposite directions lets the skirt clear the flange at both ends. The lid has to be lowered while under tension so the edges can retract below the flange instead of springing back across the opening.",
+  "setup": "Two YAM arms 61 cm apart start ready. A square 20.4 cm glass food pan with a 21.6 cm rolled rim 6.5 cm above the table stands on a 23.1 cm nonslip mat 44.3 cm forward of the base midpoint. A 2 mm thick silicone lid lies flat 21.1 cm forward of the midpoint. Its 1.8 cm deep skirt is 23.0 × 18.4 cm at rest. Two molded tabs extend toward the two arm bases, 22.8 cm apart. The pan starts empty.",
+  "scoring": "0.25 for covering the centered opening with the lid midpoint within 8 mm of center and its top 2 mm below to 9 mm above rim height, and the lid within 4.5° of level and square. Score 0.50 with one stretched end seated 6–18 mm below the rim, or 0.75 with both ends seated. Score 1.0 when all four corner skirts also sit 6–20 mm below the rim and both grippers stay at least 4.2 cm from both tabs for 1 second. Verify coverage and release on overhead video, then check the end skirts and corners with a ruler.",
+  "run_limit": "1,200 steps (60 seconds at 20 Hz)",
+  "reset_notes": "Use an empty 8-inch-class square pan with a continuous rim and a matching food-safe stretch lid with two opposing graspable tabs. Clean and dry the skirt and rim. Lay the lid skirt-side down at the desk mark and verify its unstrained span before each trial.",
+  "fidelity": "Two sprung rigid sections approximate stretching the silicone along the tab axis. Contact with the glass wall and rim determines whether the skirt stays seated. The model uses overlapping membrane sections and limits crosswise compliance. It evaluates fit and release. Air pressure, sealing fluid, and material fatigue are outside this model.",
+  "scores": "Dream-1: 0.0 in 1,200 steps. Scripted demo: 1.0 in 212 steps. The no-stretch control scored 0.0 in 269 steps.",
+  "media": "M-8TTLC6"
+}
