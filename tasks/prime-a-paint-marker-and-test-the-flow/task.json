@@ -1,0 +1,20 @@
+{
+  "title": "Prime a dry paint marker by pumping its nib, then draw an uninterrupted test stroke",
+  "category": "Societal relatability",
+  "keywords": [
+    "paint marker",
+    "valve nib",
+    "spring travel",
+    "flow test",
+    "contact control"
+  ],
+  "instruction": "Prime the blue paint marker on the scrap paper. Draw one unbroken test line between the two short gray ticks, then set the marker down beside the paper.",
+  "context": "Paint markers are used to make visible marks on crafts, signs and dark surfaces. A valve-action marker with a dry felt tip makes no mark until the user presses it against scrap paper and lets it spring back several times. Ink reaching the nib is visible. The following test line needs continuous low-force contact while moving the pen sideways. The scene starts after shaking and uncapping.",
+  "setup": "Station bench. Coordinates in cm from the middle of the arm bases, with x forward and y to the robot's left. The blue 14.3 cm paint marker (19 mm barrel diameter, 3 mm felt tip) is nib toward the robot in the dark pen tray centered at x 32, y -19. The flat rough scrap sheet is 15.5 x 19.9 cm, centered at x 27.7, y -3.5, with three gray ticks. The longer tick is the priming area. The two short ticks are centered on x 27.8 at y -7.1 and +0.4. Both arms start at ready with open grippers.",
+  "scoring": "0.25 if blue first emerges from the dry nib onto the sheet. 0.5 if an uninterrupted portion of the test stroke covers at least 35 mm of the 75 mm interval. 1.0 if it covers at least 70 mm within 18 mm of the tick centers in x, and the marker is still, lying on the bench with both grippers clear for 1.1 s. Inspect the blue ink and measure the extent along the line between ticks with a ruler. No blue ink gives 0.",
+  "run_limit": "1,200 steps (60 seconds at 20 Hz)",
+  "reset_notes": "Use a freshly shaken, uncapped valve-action marker with a dry nib and a clean scrap sheet. A water-based PC-5M with a new dry nib can be reset by replacing the nib. Return the marker to the tray nib toward the robot. Each simulation trial clears all previous marks.",
+  "fidelity": "Rigid barrel with a 3.5 mm sprung nib. A pump needs measured paper contact and 2.65 mm compression before spring return. Four pumps wet the tip. Marking needs actual paper contact or a tip under spring load in the surface contact band between readings. Paint transfer and absorbency are approximated. The paper records a near-vertical priming motion and a test stroke at a normal writing angle.",
+  "scores": "Dream-1: 0.0 in 1,200 steps. Scripted demo: 1.0 in 480 steps, leaving a full 75 mm line. One deliberate pump followed by the same stroke: 0.0 (two total compression cycles, no ink).",
+  "media": "M-V8UTDX"
+}
