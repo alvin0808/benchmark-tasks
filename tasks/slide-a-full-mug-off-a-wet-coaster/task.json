@@ -1,0 +1,21 @@
+{
+  "title": "Slide a filled mug free of a wet coaster without lifting the coaster or spilling water",
+  "category": "Societal relatability",
+  "keywords": [
+    "coaster",
+    "condensation",
+    "adhesion",
+    "shear",
+    "filled mug",
+    "bimanual"
+  ],
+  "instruction": "Free the filled mug from the wet coaster and move it to the wooden pad. Keep the mug upright and leave the coaster flat at its original position.",
+  "context": "Condensation can hold a cold drink's mug and a smooth coaster together. Pulling straight up can carry the coaster with the mug. A short sideways movement frees the wet contact while the other hand steadies the coaster. The mug then has to cross the small gap to the neighboring pad without rocking.",
+  "setup": "Two YAM arms 61 cm apart start ready. An 8 cm diameter × 8.6 cm high blue handled mug weighs 290 g including about 190 mL of water. It rests 1.1 cm left of center on a smooth 12.8 cm square ceramic coaster at (37.6 cm forward, 4.8 cm right). The loop handle points left and forward. A 14.5 × 11.6 cm wooden pad lies immediately to the left at (37.6 cm forward, 7.5 cm left), approximately level with the coaster top.",
+  "scoring": "0.25 once the mug shifts at least 7 mm across the coaster. 0.75 when it is free and its center is at least 10.7 cm from the coaster center. 1.0 also requires the mug resting within 1.2 cm of the wooden pad's center for 1 second, both grippers at least 4.8 cm from the mug's handle and 9.5 cm from the center of each object. Any spill, tilt over 10°, lift of the coaster over 4 mm, or shift of the coaster over 9 mm invalidates the trial. Use video, a ruler and a kitchen scale.",
+  "run_limit": "1,000 steps (50 seconds at 20 Hz)",
+  "reset_notes": "Use smooth, glazed, chip-free surfaces and room-temperature water. Wet the bottom contact ring with a measured 0.2 mL of tap water and confirm the coaster adheres on a spare validation lift before setting up the actual trial. Dry the wooden pad and reset both props to their marks.",
+  "fidelity": "A planar spring models the thin wet contact and releases at 15 mm of lateral shift. Actual finger and table contact move the mug and coaster. A quasi-static liquid model estimates spill from cup orientation and smoothed acceleration. Surface tension and transient sloshing are approximated. The README describes hardware checks for film strength and spills.",
+  "scores": "Dream-1: 0.0 in 1,000 steps. Scripted demo: 1.0 in 186 steps. The vertical-lift control scored 0.0 in 220 steps.",
+  "media": "M-VWT25R"
+}
