@@ -1,0 +1,20 @@
+{
+  "title": "Press a flat parchment sling into a loaf pan and leave both lift tabs standing",
+  "category": "Societal relatability",
+  "keywords": [
+    "baking",
+    "loaf pan",
+    "parchment sling",
+    "thin-sheet folding",
+    "bimanual"
+  ],
+  "instruction": "Press the parchment into the loaf pan so the center lies flat on the bottom, the two ends follow the side walls, and both lift tabs stick up past the rim.",
+  "context": "A parchment sling lets a baker lift a loaf after it has cooled. The sheet must contact the floor so it does not lift or catch when batter is poured. Pushing only the middle of a flat sheet allows an end to slide away. Press close to the two opposite folds to conform the sheet to the pan and keep the lift tabs accessible.",
+  "setup": "Two YAM arms 61 cm apart start ready. A cool 22.5 × 12.4 × 5.9 cm metal loaf pan is 36.9 cm forward of the midpoint and runs across the robot. A flat 36.8 × 9.4 cm strip of food-grade parchment lies across the two short rims, evenly overhanging on both sides and centered on the pan's long axis. Its intended center floor section is 19.2 cm long. Start with no batter or loose tools.",
+  "scoring": "Score 0.25 when the center of the paper is flat within 5 mm of the pan floor and centered within 6 mm on both axes. Add 0.25 for each end that follows its short wall and has an accessible tab 18–40 mm above the rim. Score 1.0 when both ends qualify and the paper stays in place for 1 second with both gripper centers at least 52 mm above the rim. Check the floor and both ends with side and overhead photos and a ruler.",
+  "run_limit": "800 steps (40 seconds at 20 Hz)",
+  "reset_notes": "Use a new flat strip for every trial. The pan is dry, empty and at room temperature. Center the uncreased parchment across the two short rims with 7.3 cm of overhang on each end. The strip is cut to width to lie between the long walls.",
+  "fidelity": "Three thin rigid panels and two low-torque joints approximate the two dominant folds. The paper moves into the pan from actual finger and rim contact. The model omits small wrinkles and surface adhesion. Finger and rim contact alone folds and seats the sheet.",
+  "scores": "Dream-1: 0.0 in 800 steps. Scripted demo: 1.0 in 152 steps. The no-depth control scored 0.0 in 201 steps.",
+  "media": "M-FWN8JY"
+}
