@@ -1,22 +1,34 @@
 # Cut six complete cookies from one sheet of rolled dough
 
-The task uses a 52 mm round stainless steel cookie cutter on one rolled sheet. Every cut must go through the dough, stay inside the sheet and leave at least 1 mm between it and every earlier outline. The six shapes remain in the sheet for judging. The cutter goes back on the bench.
+Stamp six 52 mm circles that each go through the entire sheet. Leave at least 1 mm between the outlines and between each outline and the slab edge. Leave the shapes in the sheet and set the cutter back on the bench.
 
-Cut-out cookies are made by stamping rolled, chilled dough. King Arthur Baking gives a [standard cut-out recipe](https://www.kingarthurbaking.com/recipes/classic-cut-out-cookies-recipe). Use supermarket sugar cookie dough, a regular 52 mm round cutter and a flat pastry board for the physical trial. Roll the dough to 4.2 mm between guides. Trim an outside rectangle of 19.8 × 13.7 cm with a ruler and remove the trim before the trial. Set up at the positions in `task.json`. Use a fresh sheet for each trial. A comparable food-safe modelling dough can stand in on shared hardware.
+## Physical setup
 
-## Simulation
+Use a smooth wooden pastry board, a 52 mm round stainless steel cutter, a rolling pin with 4.2 mm guides, a ruler, a probe thermometer and a thin pastry turner. Fit removable washable silicone fingertip covers on shared grippers and handle the cutter by its rolled upper lip. Photograph the setup from above with a ruler visible.
 
-`cut_six_cookies_from_rolled_dough.py` contains the scene, scorer and scripted demonstration. It needs yam-isaac-lab-arena with Isaac Lab, real-time RTX rendering and the `bodykit.py` included here. All geometry is generated from the source. There are no third-party assets.
+A 300 g batch of the study’s control short dough uses 150 g soft wheat flour (11% protein), 90 g baking shortening (the study used St. Auvent), 45 g sugar, 0.90 g milk powder, 0.30 g salt, 0.30 g sodium bicarbonate, 0.18 g ammonium hydrogen carbonate and 13.32 g water. Mix the shortening on low for 4 min. Add the sugar and mix for 2 min at medium speed, then dissolve the milk powder in the water and mix it in on low for 2 min. Add the flour, salt and leaveners and mix on low for 2 min. Roll to 4.2 mm, trim to 19.8 × 13.7 cm and chill flat for 30 min at 4 °C. Start at 4 ± 1 °C, checked by inserting a probe horizontally into a same-thickness scrap from the batch. Use a fresh sheet and clean, dry cutter for every trial. [Laguna et al. (2011), Sections 2.2 and 2.5.2](https://doi.org/10.1016/j.lwt.2010.05.034)
 
-The model supplies a rigid open steel cutter with a thin lower rim and thicker rolled lip. The visible dough is 4.2 mm thick. Contact at its lower surface represents the resistance near the end of the cut. The farthest point of the cutting edge must come within 2.2 mm of that surface and the rim must bear on the collision layer with at least 0.8 N. The simulated cut appears as a dark circular seam where the tool made contact. The approximation skips dough flow, adhesion and lifting the cutouts.
+From overhead, check the number, edge clearance and spacing using the ruler. Once the robot stops, gently lift each circle with the thin turner. A circle with any attached section fails the through-cut criterion. Record the whole lift from above so incomplete cuts remain visible.
 
-Scoring is end-of-trial. Each intact cut is worth 0.125 to a maximum of 0.75. A cut crossing an earlier cut or the slab edge zeros the trial. After six, the cutter must be lying still, outside the slab and at least 7 mm from it with the grippers clear for 1 s. In a physical trial, count from overhead, measure the gaps with a ruler and verify the dough is cut through. An outlined shape which remains connected to the sheet after gently lifting with a thin turner does not count.
+## Dough load and through-cut scoring
 
-```bash
+The published wire test used a 30 mm engaged length of straight wire at 1 mm/s after a 30 min rest at 4 °C. The six control specimens averaged 0.26 ± 0.03 N in the steady region. The simulation interpolates the first 4.2 mm of the representative trace, including a 0.25 mm approach before the reported 0.049 N trigger, and normalizes the trace to the mean plateau. At each rim sector, the modeled force scales with the engaged edge length following the cutting-force relation for thin blades. The vertical forces at the individual rim sectors also apply a net torque to the cutter. A level rim fully engaged to the board has a nominal modeled load of about 1.35 N. The wire experiment used thicker specimens. The ring's blade geometry, friction and speed can change the corresponding physical load. [Raw-dough wire test, Table 1 and Figure 1](https://riunet.upv.es/server/api/core/bitstreams/b5e1c376-68e5-4d1b-a885-04b018d5d02c/content#page=76) · [Cutting-force relation, Equations 1–2](https://ciccotti.espci.fr/sites/ciccotti.espci.fr/IMG/pdf/lechanaultciccotti2022-eml-softcoring-final.pdf)
+
+To check the transfer on a physical setup, use a vertical test stand with a tared force gauge or load cell (0.02 N resolution or finer). Lower the same cutter through a fresh recipe-matched sheet at 1 mm/s. Log force and travel until first board contact, identifiable from the steep rise in force and verified against an empty-board stroke. Repeat with at least six fresh sheets and use the turner to check each disc. Compare the average pre-contact force curve with the simulated load. The current model is based on the published straight-wire measurements.
+
+In simulation, a circle is marked after every rim sector reaches the slab's lower surface in one continuous stamp with PhysX cutter–board contact. A 0.22 mm numerical tolerance accounts for the solver's contact clearance, with a maximum of 2.5 mm lateral drift within the stamp. Lifting clear resets partial rim coverage. A completed circle is displayed as a dark seam. The simulated force and seam approximate cutting while the slab remains visually rigid.
+
+Each valid circle earns 0.125, up to 0.75. A through-cut that overlaps another or crosses the slab edge invalidates the trial. Full credit requires six cuts and the cutter parked on the bench for 1 s, at least 7 mm from the slab with both hands clear.
+
+## Evaluation
+
+The Python file contains the scene, scorer and scripted demonstration and runs with Isaac Lab and yam-isaac-lab-arena. All simulation geometry is built in code.
+
+```sh
 inspect-robots run --embodiment yam_arena --policy yam_scripted \
   -E task=cut_six_cookies_from_rolled_dough.py -E object_jitter=0 -E control_hz=20 \
   -E cam_width=320 -E cam_height=176 --instruction "Cut six complete cookies from the rolled dough with the round cutter. Keep each cut inside the dough and separate from the others. Set the cutter down beside the dough." \
   --scorer task_score --max-steps 1200 --store-frames
 ```
 
-For an independent policy run, use `--policy dream` and the same instruction. The 1,200-step limit is 60 s of simulated time. The scripted demo uses the fixed scene geometry and takes about 24 s of simulated time. Isaac rendering takes a few minutes per trial on an RTX PRO 6000 GPU. `COOKIE_OVERLAP=1` changes the third stamp so it crosses the preceding circle and gives the overlap control.
+At seed 0, the successful scripted run took about 31 s of simulated time and 2 min 14 s on an RTX PRO 6000. For the independent policy use `--policy dream` with the same instruction and the 1,200-step limit (60 s at 20 Hz). Set `COOKIE_SHALLOW=1` to stop the cutter partway through the sheet, or `COOKIE_OVERLAP=1` to stamp a third circle across the second.
