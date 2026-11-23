@@ -1,0 +1,20 @@
+{
+  "title": "Cut six complete cookies from one sheet of rolled dough without overlapping the cuts",
+  "category": "Societal relatability",
+  "keywords": [
+    "cookie cutter",
+    "rolled dough",
+    "pattern layout",
+    "cutting pressure",
+    "baking"
+  ],
+  "instruction": "Cut six complete cookies from the rolled dough with the round cutter. Keep each cut inside the dough and separate from the others. Set the cutter down beside the dough.",
+  "context": "Cut-out cookies are stamped straight down from an already-rolled dough slab. The baker must leave enough material around every cut and fit the cutter without crossing an earlier outline. Running the rim through the entire thickness frees the shape. A partial impression or overlap leaves shapes that cannot be lifted out whole.",
+  "setup": "Station table. Measurements in cm from the midpoint between the arm bases, x forward and y toward the robot's left. A flat wooden pastry board (20.7 x 16.4 cm) is centered at x 33.4, y -0.1. An 19.8 x 13.7 cm, 4.2 mm thick chilled dough sheet is centered on the board. A single round 5.2 cm stainless cutter, 3 cm high, with its rolled lip up, rests at x 30.6, y -16.3. Both arms begin at ready with grippers open.",
+  "scoring": "0.125 per complete through-cut circle inside the slab, up to six circles and 0.75. At least 1 mm of dough remains between adjacent cut edges and any cut and the edge of the slab. A press through the slab that overlaps or crosses the slab edge invalidates the trial. 1.0 after six cuts and the cutter resting at least 7 mm from the slab on the bench, both hands clear, for 1.0 s. Verify the circles from above and lift one with a narrow turner if depth is uncertain.",
+  "run_limit": "1,200 steps (60 seconds at 20 Hz)",
+  "reset_notes": "Roll a chilled portion of ready-to-roll sugar cookie dough to 4.2 mm between guides on a lightly floured board. Cut the outside straight to 19.8 x 13.7 cm, removing the trim. Use a fresh sheet for each trial. A food-safe nonfood dough of the same thickness and comparable resistance can be used on shared equipment.",
+  "fidelity": "The cutter is a rigid, open steel ring. The dough surface is rendered at full thickness, with a collision layer near the board. A cut needs the full rim almost to that layer and at least 0.8 N of measured rim contact. A dark seam shows the resulting cut. Plastic deformation, stickiness and lifting the dough shapes are omitted.",
+  "scores": "Dream-1: 0.0 in 1,200 steps. Scripted demo: 1.0 in 482 steps. Overlapping-cut control: 0.0.",
+  "media": "M-LWXBNB"
+}
