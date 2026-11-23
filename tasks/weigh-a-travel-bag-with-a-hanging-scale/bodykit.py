@@ -372,6 +372,7 @@ class Linkage(Box):
     friction_combine: str = "average"  # how PhysX combines its friction with what it touches ("min": the lower)
     contact_offset: float = 0.002
     solver_iterations: int = 32
+    report_contacts: bool = False
 
     @staticmethod
     def build(name: str, pos, mass: float, shapes, links, color: Color = (0.6, 0.6, 0.6), **kw) -> "Linkage":
@@ -715,7 +716,7 @@ def _spawn_linkage(prim_path: str, cfg, translation=None, orientation=None, **kw
                     UsdPhysics.MeshCollisionAPI.Apply(geom.GetPrim()).CreateApproximationAttr("convexHull")
 
     base_path = f"{prim_path}/base"
-    rigid(base_path, spec.mass, spec.shapes)
+    rigid(base_path, spec.mass, spec.shapes, spec.report_contacts)
     origin = np.asarray(spec.pos, float)
     for link in spec.links:
         path = f"{prim_path}/{link.name}"

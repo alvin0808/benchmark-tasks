@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import os
+from collections import deque
 from pathlib import Path
 import sys
 
@@ -31,6 +32,8 @@ WEIGHT = 0.642
 SPRING = 980.0
 HOOK_BOWL = np.array([0.0, 0.0, -0.111])
 STILL_REQUIRED = 43
+CONTACT_TOLERANCE = 0.10
+MIN_UPWARD_HOOK_FORCE = 3.0
 BLACK = (0.055, 0.058, 0.064)
 SILVER = (0.57, 0.61, 0.66)
 SCREEN = (0.054, 0.073, 0.057)
@@ -88,9 +91,23 @@ OBJECTS = [
             segment((0.060, 0, 0.113), (0.058, 0, 0.153), 0.008, BLACK),
             segment((-0.058, 0, 0.153), (0.058, 0, 0.153), 0.011, BLACK),
         ), 0.022, tuple(BAG+HINGE), axis="X", limits=(-91, 88),
-             friction=0.013, damping=0.022, init=-70.0),
-    ], floating=True, color=BAG_BLUE, friction=(0.94, 0.77), contact_offset=0.00045, solver_iterations=40),
+             friction=0.013, damping=0.022, init=-70.0, report_contacts=True),
+    ], floating=True, color=BAG_BLUE, friction=(0.94, 0.77), contact_offset=0.00045,
+       solver_iterations=40, report_contacts=True),
 ]
+
+
+def _vertices(shapes):
+    signs = np.array([(x, y, z) for x in (-1, 1) for y in (-1, 1) for z in (-1, 1)])
+    corners = []
+    for shape in shapes:
+        local = signs * np.asarray(shape.size) / 2
+        corners.extend(local @ rotation(shape.quat()).T + shape.centre)
+    return np.asarray(corners)
+
+
+BAG_VERTICES = _vertices(OBJECTS[2].shapes)
+HANDLE_VERTICES = _vertices(OBJECTS[2].links[0].shapes)
 
 _state = {}
 
@@ -98,8 +115,9 @@ _state = {}
 @on_reset
 def _reset():
     _state.clear()
-    _state.update(arms={}, indices={}, stable=[], reading=None, loaded=False, measured=False,
-                  wrong=False, score=0.0, step=0, display=None)
+    _state.update(arms={}, indices={}, stable=deque(maxlen=STILL_REQUIRED), reading=None,
+                  loaded=False, measured=False, wrong=False, score=0.0, step=0, display=None,
+                  contact_view=None)
 
 
 _reset()
@@ -114,6 +132,35 @@ def _arm_positions(base):
         q = as_numpy(arm.data.joint_pos)[0][_state["arms"][side]]
         result[side], _ = ik.tcp_pose(q, root)
     return result
+
+
+def _support_forces(base):
+    """Measure upward hook support and the largest competing bag or hook contact in N."""
+    from isaaclab_physx.physics import PhysxManager
+    from yam_arena.robot import asset_link_paths
+
+    if _state["contact_view"] is None:
+        root = base.scene.env_prim_paths[0]
+        hook = f"{root}/scale/loadcell"
+        bag = f"{root}/bag/base"
+        handle = f"{root}/bag/handle"
+        external = [f"{root}/scale/base", f"{root}/peg_stand/body"]
+        external.extend(f"{root}/{arm}{link}" for arm in ("LeftArm", "RightArm")
+                        for link in asset_link_paths().values())
+        filters = [hook, handle, bag, *external]
+        sim = PhysxManager.get_physics_sim_view()
+        _state["contact_view"] = sim.create_rigid_contact_view(
+            [handle, bag, hook], filter_patterns=[filters] * 3,
+            max_contact_data_count=24 * len(filters),
+        )
+    view, dt = _state["contact_view"], float(base.physics_dt)
+    forces = view.get_contact_force_matrix(dt=dt).numpy()
+    net = view.get_net_contact_forces(dt=dt).numpy()
+    handle_forces, bag_forces, hook_forces = forces
+    unfiltered = np.linalg.norm(net - forces.sum(axis=1), axis=-1).max()
+    foreign = max(np.linalg.norm(forces[:, 3:], axis=-1).max(),
+                  np.linalg.norm(bag_forces[0]), np.linalg.norm(hook_forces[2]), unfiltered)
+    return float(handle_forces[0, 2]), float(foreign)
 
 
 def _draw_reading(base, value):
@@ -172,24 +219,29 @@ def _step(env):
     spos, bpos = spose[:3], bpose[:3]
     sq = float(as_numpy(scale.data.joint_pos)[0, cell_idx])
     bq = float(as_numpy(bag.data.joint_pos)[0, handle_idx])
-    handle = bpos + bdir @ (HINGE + _rx(bq) @ [0.0, 0.0, 0.041])
-    bbottom = min((bpos + bdir @ [x, y, 0.001])[2]
-                  for x in (-0.116, 0.116) for y in (-0.09, 0.09))
+    hinge_rotation = _rx(bq)
+    handle = bpos + bdir @ (HINGE + hinge_rotation @ [0.0, 0.0, 0.041])
+    handle_corners = (HANDLE_VERTICES - HINGE) @ hinge_rotation.T + HINGE
+    bbottom = bpos[2] + min((BAG_VERTICES @ bdir[2]).min(), (handle_corners @ bdir[2]).min())
     mass = max(0.0, -sq * SPRING / 9.81 - 0.013)
     wrists = _arm_positions(base)
     grip_clear = all(min(np.linalg.norm(wrist - handle), np.linalg.norm(wrist - bpos - [0, 0, 0.08])) > 0.073
                      for wrist in wrists.values())
-    hooked = abs(mass-WEIGHT) <= 0.085 and bbottom - TOP >= 0.025 and grip_clear
+    hook_up, foreign_contact = _support_forces(base)
+    hooked = (bbottom - TOP >= 0.025 and hook_up >= MIN_UPWARD_HOOK_FORCE
+              and foreign_contact <= CONTACT_TOLERANCE)
     _state["loaded"] |= hooked
     gentle = (np.linalg.norm(bvel[:3]) <= 0.034 and np.linalg.norm(bvel[3:]) <= 0.35)
     scale_held = rotation(spose[3:7])[2, 2] >= math.cos(math.radians(12))
-    if hooked and gentle and scale_held:
-        _state["stable"].append(mass)
-        if len(_state["stable"]) >= STILL_REQUIRED:
-            span = max(_state["stable"][-STILL_REQUIRED:]) - min(_state["stable"][-STILL_REQUIRED:])
-            if span <= 0.050 and not _state["measured"]:
-                _state["reading"] = round(float(np.median(_state["stable"][-STILL_REQUIRED:])), 2)
-                _state["measured"] = True
+    if mass >= 0.20 and scale_held and _state["reading"] is None:
+        _state["stable"].append((mass, spos.copy(), hooked))
+        if len(_state["stable"]) == STILL_REQUIRED:
+            readings, positions, valid_support = zip(*_state["stable"])
+            housing_travel = np.linalg.norm(np.ptp(positions, axis=0))
+            if max(readings) - min(readings) <= 0.050 and housing_travel <= 0.008:
+                reading = round(float(np.median(readings)), 2)
+                _state["reading"] = reading
+                _state["measured"] = all(valid_support) and gentle and abs(reading - WEIGHT) <= 0.085
     else:
         _state["stable"].clear()
     if _state["loaded"] and bbottom - TOP > 0.009 and bvel[2] < -0.40:
@@ -207,6 +259,8 @@ def _step(env):
     if os.getenv("BAGSCALE_DEBUG") == "1" and _state["step"] % 5 == 0:
         print(f"BAGSCALE {_state['step']:03} mass={mass:.3f} reading={_state['reading']} "
               f"handle={math.degrees(bq):.1f} bottom={bbottom-TOP:.3f} steady={len(_state['stable'])} "
+              f"hook_up={hook_up:.2f}N competing={foreign_contact:.2f}N supported={hooked} "
+              f"bag_still={gentle} "
               f"clear={grip_clear} score={_state['score']:.2f} "
               f"handle_pos={np.round(handle-[0,0,TOP],3)} hook={np.round(spos+rotation(spose[3:7])@HOOK_BOWL-[0,0,TOP],3)} scale={np.round(spos-[0,0,TOP],3)} bag={np.round(bpos-[0,0,TOP],3)} "
               f"L={np.round(wrists['left']-[0,0,TOP],3)} R={np.round(wrists['right']-[0,0,TOP],3)}", flush=True)
@@ -236,7 +290,7 @@ def demo():
     target_x = BAG[0]-0.006
     bag_y = BAG[1]
     lower = TOP + 0.253
-    lift = TOP + 0.328
+    lift = TOP + (0.308 if os.getenv("BAGSCALE_LOW_LIFT") == "1" else 0.328)
     entry = TOP + 0.219
     right = [
         Waypoint(1.6, tuple(grip_center + [-0.107,0.003,0.044]), opened, "move to the side of the peg"),
