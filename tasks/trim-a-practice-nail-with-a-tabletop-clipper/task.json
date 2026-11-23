@@ -1,0 +1,20 @@
+{
+  "title": "Trim a marked acrylic practice-nail tip with a tabletop nail clipper",
+  "category": "Societal relatability",
+  "keywords": [
+    "nail clipper",
+    "acrylic practice nail",
+    "lever",
+    "controlled cut",
+    "bimanual"
+  ],
+  "instruction": "Use the tabletop nail clipper to take the marked 4 mm strip off the end of the pink practice nail. Return the practice nail to its rest and leave the loose clipping separate.",
+  "context": "An adapted tabletop nail clipper has a large lever and a small opening between its blades. One hand feeds and holds the curved nail at the cut line while the other presses the lever. Pressing while the nail is skewed or inserted at the wrong depth removes the wrong amount. A nail-art practice swatch makes that familiar motion measurable with no person present.",
+  "setup": "Two YAM arms 61 cm apart start ready. A 13.3 × 6.7 cm non-slip tabletop clipper base holds an 8.8 cm steel lever, a 1.7 cm wide blade and a 3.1 mm resting jaw gap. The jaw is 34.0 cm forward and 2.6 cm left of the midpoint. The 12.2 × 2.3 cm beige ABS nail-tip holder is on a 5.5 × 8.8 cm ABS rest 23.0 cm forward and 19.4 cm left, its 1.1 cm wide curved pink acrylic nail pointing right. A pale stripe crosses the nail 4 mm from its free edge.",
+  "scoring": "0.25 for aligning the whole marked edge at the open jaws within 1.5 mm of the blade in depth and height and 2.8 mm laterally, within 10.5° of square and 11.5° of level. 0.75 for separating a 2.5–5.5 mm full-width clipping at the mark. 1.0 also requires the swatch resting within 2 cm of its start on the rest, with both gripper centers at least 6.8 cm away for 1 second. A cut outside the marked range invalidates the trial. Measure the clipping and score the alignment and release from video.",
+  "run_limit": "1,200 steps (60 seconds at 20 Hz)",
+  "reset_notes": "For each hardware trial fit a fresh 11 mm wide curved acrylic or ABS nail tip. Gauge the cutting mark 4 mm from the free edge, verify the swatch sits securely in its handle, and remove the previous clipping. Wipe the support and return the clipper to its outline.",
+  "fidelity": "The pad drives a sprung steel jaw through physical lever contact. A two-piece model releases the offcut only when a closing blade contacts the nail above a nominal force and at the printed line. The model approximates acrylic fracture and the jaw spring. There are no people or skin models. The README gives a procedure to check the material and force against the physical setup.",
+  "scores": "Dream-1: 0.0 in 1,200 steps. Scripted demo: 1.0 in 304 steps. The extra-depth control scored 0.0 in 340 steps.",
+  "media": "M-VJ68MX"
+}
