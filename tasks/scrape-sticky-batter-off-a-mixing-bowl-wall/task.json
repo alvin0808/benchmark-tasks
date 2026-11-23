@@ -1,0 +1,20 @@
+{
+  "title": "Scrape sticky batter down the curved wall of a mixing bowl with a silicone spatula",
+  "category": "Societal relatability",
+  "keywords": [
+    "baking",
+    "mixing bowl",
+    "flexible scraper",
+    "curved contact",
+    "bimanual"
+  ],
+  "instruction": "Gather the brown batter stuck to the mixing bowl wall into the bottom with the silicone spatula. Lift the working edge clear of the bowl when you finish and let go of the bowl.",
+  "context": "A flexible spatula follows the changing slope of a mixing bowl to recover thick batter stuck to the sides before it is poured or mixed again. The bowl can turn or slide if it is unsupported. The flexible edge must stay loaded against the surface as the operator works from the rim toward the bottom.",
+  "setup": "Two YAM arms 61 cm apart start ready. An empty 17.8 cm diameter × 7.6 cm high glass mixing bowl stands at (34.9 cm forward, 4.2 cm right) of the base midpoint. A brown sticky strip has three sections about 2.6 g each at heights of 3.4, 5.2 and 6.5 cm on the wall facing the left arm. A 21 cm blue silicone spatula stands handle-up in a 6.5 × 6.8 cm utensil rest at (23.6 cm forward, 18.4 cm left).",
+  "scoring": "Add 0.25 for each of the three sections moved off the wall and into the bowl bottom, 0.5–3.1 cm above the table and within 6.3 cm of the bowl center. At 1.0 all three are collected, the bowl is upright and within 3 cm of its initial position, and neither hand nor the working edge touches the bowl for one second. Measure the results from side and overhead video and a ruler.",
+  "run_limit": "1,200 steps (60 seconds at 20 Hz)",
+  "reset_notes": "Dry the bowl and put it back at its mark. Apply fresh room-temperature thick batter to the three marked heights and reset a clean spatula handle-up. Match each patch to a 2.6 g reference with a gram scale.",
+  "fidelity": "A sprung silicone tip follows a faceted glass bowl. Downward blade contact above a nominal load detaches each adhered batter segment. Gravity and physical contact move it to the bottom. Damped segments approximate adhesion and the slow movement of thick batter; bulk batter flow and microscopic residue are outside this model.",
+  "scores": "Dream-1: 0.0 in 1,200 steps. Scripted demo: 1.0 in 360 steps. The inward-offset control scored 0.5 in 413 steps.",
+  "media": "M-U64DF3"
+}
