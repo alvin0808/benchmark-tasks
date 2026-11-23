@@ -1,0 +1,20 @@
+{
+  "title": "Wick excess solder off a robot motor-driver pad, lifting the iron and braid together",
+  "category": "Impact on AI timelines",
+  "keywords": [
+    "robot motor controller",
+    "PCB rework",
+    "desoldering braid",
+    "soldering iron",
+    "synchronized lift"
+  ],
+  "instruction": "Remove excess solder from the marked motor-driver pad using the copper braid and soldering iron. Lift the braid and iron together, then put the iron back in its holder and leave the reel on the bench.",
+  "context": "Robotic motor-controller boards need clean pads before power or motor leads are reinstalled. Solder must melt into the braid while the braid touches the pad. Pulling the heat source away too early can let solder harden around the braid and a later pull can lift the copper pad. One hand controls the hot iron while the other holds the reel and lifts with it.",
+  "setup": "ESD bench, cm from the arm midpoint. The 9.6 × 11.7 cm FR-4 motor-driver rework coupon on its mat has one 10 × 9 mm bare copper land centered at x 32.2, y 1.3. A raised 8 × 6.4 mm solder deposit is centered on it. A 5.6 mm wide copper braid tail from a 52 mm reel lies over the deposit. The reel sits in the mat's shallow tray at x 32.2, y 11.9. The insulated iron (16.5 cm, 3.2 mm chisel tip) rests in its holder centered at x 32.2, y −16.9, tip facing the coupon. Both arms start open and clear.",
+  "scoring": "0 if the iron contacts the pad or nearby board directly, if solder freezes the braid to the pad, or if the copper land lifts. 0.25 once solder transfers visibly to the braid. 0.6 once the braid and iron have cleared the pad, leaving the copper land exposed and attached. 1.0 after that condition, iron resting in the holder, reel and braid on the bench clear of the mat, hands withdrawn and tools still for 1 s. A close top or side recording shows the joint, the lift and the two resting tools.",
+  "run_limit": "1,200 steps (60 seconds at 20 Hz)",
+  "reset_notes": "On an unpowered single-sided FR-4 rework coupon, mark the target land and form a fresh raised deposit within the marked outline. Fit a clean tip, unwind a fresh length of copper braid, lay the end over the deposit, and put both handles at the marked reset locations. The score is based on the visible solder and pad after the lift.",
+  "fidelity": "The full-size tools and braid use rigid contacts. Measured contact at both interfaces accumulates a 1.3 s modeled dwell. A visible stain represents transfer. After transfer, leaving the braid in contact or within a 1.6 mm solder-film band of the pad for 0.25 s with the iron withdrawn represents freezing. The time, temperature, adhesion and molten flow are approximated.",
+  "scores": "Dream-1: 0.0 in 1,200 steps. Scripted demo: 1.0 in 309 steps. Removing the iron first and delaying the braid lift: 0.0.",
+  "media": "M-XT7H3M"
+}
