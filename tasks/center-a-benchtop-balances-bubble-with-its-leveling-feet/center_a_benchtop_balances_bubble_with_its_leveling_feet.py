@@ -152,7 +152,7 @@ def _update(env):
         prev = _state["previous"].get(side, 0.0)
         delta = (wheel - prev + math.pi) % math.tau - math.pi
         _state["previous"][side] = wheel
-        # An anticlockwise turn of the right-hand thread extends the foot.
+        # An anticlockwise turn of the left-hand thread extends the foot.
         # A high-stiffness prismatic drive carries the balance on the physical pad.
         travel = np.clip(_state["turns"][side] + PITCH * delta / math.tau, -0.0024, 0.0098)
         _state["turns"][side] = float(travel)

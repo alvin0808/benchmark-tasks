@@ -7,18 +7,19 @@ with a fixed rear foot and two adjustable front feet][procedure].
 
 ## Setup
 
-The bench is level. The balance sits loose on it with its control panel facing the robot. It is 2.2 kg with a
+The bench is level. The balance sits loose on it with its control panel facing the robot.
+[Build the physical fixture from the dimensioned drawing and parts list](FIXTURE.md). It is 2.2 kg with a
 polymer housing 221 × 179 mm at the main body, approximately 285 mm across both corner thumbscrews. Its stainless
 pan is 144 × 153 mm, 75 mm above the body origin, and empty. The analog level is beside the display, with a green
 27 mm field, an 8.7 mm inner target ring, and a 5.8 mm diameter bubble. The three rubber-bearing feet carry the
-case. The two steel thumbscrew wheels are 45 mm across, with dark knurled edges. The fixed rear foot sits 203 mm
+case. The two steel thumbscrew wheels are 45 mm across, with dark knurled edges. The printable wheel blank, lead screw and stationary pad are dimensioned in the fixture drawing. The fixed rear foot sits 203 mm
 behind their line. The left and right front pads are 118 mm either side of the midpoint, initially 3.1 and 5.4 mm
 higher than the rear pad in the balance's frame. Both touch the bench as the case settles off level.
 
 Coordinates in metres from the arm bases' midpoint, with x pointing away from the robot and y positive toward the
 left arm. The balance origin is (0.352, 0.000) at 1 mm above the bench on reset. Front pads are at x = 0.236 m, the
 rear pad is at x = 0.439 m and y = 0. No tool is needed. Both grippers start open at the station's ready pose.
-For a repeat trial return the adjustment wheels to the original offsets and let the case and bubble settle.
+For a repeat trial restore the indexed offsets using the rear pad sole as the datum and let the case and bubble settle.
 
 ## Real trial and scoring
 
@@ -62,5 +63,5 @@ Run the scripted command again with `BALANCE_RIGHT=0` to turn just the left whee
 `inspect-robots video` on the emitted trial JSON in the log directory. Wall-clock runtime is a few minutes per trial
 on one RTX PRO 6000. Dream-1 uses the configured Dream credentials and a maximum of 60 simulated seconds.
 
-[procedure]: https://www.mt.com/us/en/home/products/Laboratory_Weighing_Solutions/precision-balances.html
+[procedure]: https://www.mt.com/dam/P5/labtec/17_Miscellaneous/QG_ML-T_Precision_and_Analytical_Balances_EN.pdf
 [arena]: https://github.com/kairosiann/yam-isaac-lab-arena
